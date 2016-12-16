@@ -1,0 +1,271 @@
+#include "token_id_compare.h"
+
+cscript::lexer::token_id_compare::token_id_compare(const list_type &list)
+	: list_(list){}
+
+cscript::lexer::token_id_compare::token_id_compare(list_type &&list)
+	: list_(static_cast<list_type &&>(list)){}
+
+bool cscript::lexer::token_id_compare::is(token_id value) const{
+	for (auto entry : list_){
+		if (entry == value)
+			return true;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::skippable_token_id::is(token_id value) const{
+	return (value == token_id::blank || value == token_id::new_line);
+}
+
+bool cscript::lexer::literal_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::exp:
+	case token_id::real:
+	case token_id::rad:
+	case token_id::hex:
+	case token_id::dec:
+	case token_id::oct:
+	case token_id::bin:
+	case token_id::quote_dbl:
+	case token_id::quote_sng:
+	case token_id::quote_back:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::numeric_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::exp:
+	case token_id::real:
+	case token_id::rad:
+	case token_id::hex:
+	case token_id::dec:
+	case token_id::oct:
+	case token_id::bin:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::integral_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::rad:
+	case token_id::hex:
+	case token_id::dec:
+	case token_id::oct:
+	case token_id::bin:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::string_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::quote_dbl:
+	case token_id::quote_sng:
+	case token_id::quote_back:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::keyword_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::class_:
+	case token_id::enum_:
+	case token_id::namespace_:
+	case token_id::using_:
+	case token_id::new_:
+	case token_id::delete_:
+	case token_id::typename_:
+	case token_id::operator_:
+	case token_id::sizeof_:
+	case token_id::typeof:
+	case token_id::echo:
+	case token_id::true_:
+	case token_id::false_:
+	case token_id::indeterminate:
+	case token_id::self:
+	case token_id::id:
+	case token_id::right:
+	case token_id::auto_:
+	case token_id::any:
+	case token_id::void_:
+	case token_id::bool_:
+	case token_id::bit:
+	case token_id::byte:
+	case token_id::nan:
+	case token_id::char_:
+	case token_id::wchar:
+	case token_id::short_:
+	case token_id::int_:
+	case token_id::long_:
+	case token_id::unsigned_:
+	case token_id::float_:
+	case token_id::double_:
+	case token_id::string:
+	case token_id::array_:
+	case token_id::construct:
+	case token_id::destruct:
+	case token_id::try_:
+	case token_id::catch_:
+	case token_id::finally_:
+	case token_id::throw_:
+	case token_id::if_:
+	case token_id::else_:
+	case token_id::unless:
+	case token_id::while_:
+	case token_id::for_:
+	case token_id::until:
+	case token_id::do_:
+	case token_id::switch_:
+	case token_id::case_:
+	case token_id::default_:
+	case token_id::break_:
+	case token_id::continue_:
+	case token_id::return_:
+	case token_id::as:
+	case token_id::in:
+	case token_id::get:
+	case token_id::set:
+	case token_id::decltype_:
+	case token_id::undefined:
+	case token_id::function:
+	case token_id::nullptr_:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::context_keyword_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::construct:
+	case token_id::destruct:
+	case token_id::default_:
+	case token_id::as:
+	case token_id::in:
+	case token_id::get:
+	case token_id::set:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::block_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::class_:
+	case token_id::enum_:
+	case token_id::namespace_:
+	case token_id::try_:
+	case token_id::catch_:
+	case token_id::finally_:
+	case token_id::if_:
+	case token_id::else_:
+	case token_id::switch_:
+	case token_id::do_:
+	case token_id::while_:
+	case token_id::for_:
+	case token_id::until:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::storage_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::class_:
+	case token_id::enum_:
+	case token_id::namespace_:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::type_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::auto_:
+	case token_id::any:
+	case token_id::void_:
+	case token_id::bool_:
+	case token_id::bit:
+	case token_id::byte:
+	case token_id::char_:
+	case token_id::wchar:
+	case token_id::short_:
+	case token_id::int_:
+	case token_id::long_:
+	case token_id::unsigned_:
+	case token_id::float_:
+	case token_id::double_:
+	case token_id::string:
+	case token_id::array_:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::control_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::try_:
+	case token_id::catch_:
+	case token_id::finally_:
+	case token_id::if_:
+	case token_id::else_:
+	case token_id::switch_:
+	case token_id::do_:
+	case token_id::while_:
+	case token_id::for_:
+	case token_id::until:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::group_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::open_sq:
+	case token_id::open_par:
+	case token_id::open_cur:
+	case token_id::close_sq:
+	case token_id::close_par:
+	case token_id::close_cur:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
