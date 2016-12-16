@@ -25,6 +25,11 @@ namespace cscript{
 				source_cache()
 					: offset_(list_.begin()){}
 
+				void clear(){
+					if (offset_ != list_.end())
+						list_.erase(offset_, list_.end());
+				}
+
 				void branch(){
 					branches_.push_back(offset_value_);
 					offset_value_ = list_.size();
@@ -81,7 +86,7 @@ namespace cscript{
 				}
 
 				size_type size() const{
-					return branches_.size();
+					return (list_.size() - offset_value_);
 				}
 
 				bool is_branched() const{
@@ -187,6 +192,8 @@ namespace cscript{
 							value = '\n';
 							update_markers_();
 						}
+						else//Advance column
+							++index_.column;
 					}
 
 					return value;
@@ -224,52 +231,58 @@ namespace cscript{
 
 				virtual token_type next_(source_info &info, int count, bool cache){
 					auto_lock lock(lock_);
-					if (!has_more())//No more tokens
+					if (count <= 0 || !has_more())//No more tokens
 						return nullptr;
 
-					auto value = cache_.get(count, !cache);//Check in cache
-					if (value != nullptr)//Found in cache
-						return value;
+					auto cache_size = static_cast<int>(cache_.size());
+					if (count <= cache_size)
+						return cache_.get(count, !cache);//Inside cache
 
+					if (!cache)//Delete entries
+						cache_.clear();
+
+					token_type value = nullptr;
 					generic_rule::match_info match_info{};
+
+					count -= cache_size;
 					if (!info.rule.match(current_, end_, match_info)){
 
 					}
 
-					auto index = index_;
 					auto id = info.rule.map_index(match_info.index);
-					std::string matched_value(current_, current_ + match_info.size);
+					generic_token_formatter::match_info formatted_info{
+						index_,
+						std::string(current_, current_ + match_info.size),
+						match_info.index,
+						info.rule.get_adjument(match_info.index)
+					};
 
 					current_ += match_info.size;
 					switch (id){
 					case token_id::identifier://Try expanding token
-						++index_.column;
+						index_.column += static_cast<int>(match_info.size);
 						break;
 					case token_id::new_line://Update markers
 						update_markers_();
 						break;
 					default:
-						++index_.column;
+						index_.column += static_cast<int>(match_info.size);
 						break;
 					}
 					
 					if (info.formatter != nullptr){//Pass to formatter
-						generic_token_formatter::match_info formatter_info{
-							index,
-							matched_value,
-							match_info.index
-						};
-
 						cache_.branch();
-						if ((value = info.formatter->format(formatter_info, info)) != nullptr)
+						if ((value = info.formatter->format(formatted_info, info)) != nullptr)
 							id = info.rule.map_index(value->get_match_index());
 
 						cache_.unbranch();
 					}
 
 					if (cache){//Cache
-						if (value == nullptr)//Create value
-							cache_.append(value = std::make_shared<token>(index, matched_value, match_info.index));
+						if (value == nullptr){//Create value
+							cache_.append(value = std::make_shared<token>(formatted_info.index, formatted_info.value,
+								formatted_info.match_index, formatted_info.adjustment));
+						}
 						else//Use value
 							cache_.append(value);
 					}
@@ -277,7 +290,15 @@ namespace cscript{
 					if (info.skipper != nullptr && info.skipper->is(id))//Skip value
 						return next_(info, count, cache);
 
-					return (value == nullptr) ? std::make_shared<token>(index, matched_value, match_info.index) : value;
+					if (count > 1){//Get next
+						cache_.branch();
+						value = next_(info, count - 1, cache);
+						cache_.unbranch();
+						return value;
+					}
+
+					return (value == nullptr) ? std::make_shared<token>(formatted_info.index, formatted_info.value,
+						formatted_info.match_index, formatted_info.adjustment) : value;
 				}
 
 				virtual void update_markers_(){

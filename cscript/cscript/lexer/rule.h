@@ -11,6 +11,7 @@ namespace cscript{
 	namespace lexer{
 		class rule : public generic_rule{
 		public:
+			typedef std::vector<token::adjustment> adjustment_list_type;
 			typedef std::vector<token_id> list_type;
 			typedef list_type::size_type size_type;
 
@@ -25,6 +26,8 @@ namespace cscript{
 			virtual int get_error_index() const override;
 
 			virtual token_id map_index(int index) const override;
+
+			virtual const token::adjustment &get_adjument(int index) const override;
 
 			virtual const regex_type &get_compiled() const override;
 			
@@ -41,6 +44,8 @@ namespace cscript{
 			}
 
 			static const list_type map_;
+			static const adjustment_list_type adjustment_;
+			static const token::adjustment no_adjustment_;
 
 			regex_type compiled_;
 		};

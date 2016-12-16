@@ -21,7 +21,7 @@ int main(){
 
 	while (ss.has_more()){
 		auto v = ss.next(info);
-		std::cout << v->get_value() << "\n";
+		std::cout << v->to_string() << "\n";
 	}
 
 	return 0;

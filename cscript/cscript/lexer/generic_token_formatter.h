@@ -20,8 +20,9 @@ namespace cscript{
 
 			struct match_info{
 				token::index index;
-				std::string &value;
+				std::string value;
 				int match_index;
+				token::adjustment adjustment;
 			};
 
 			virtual ~generic_token_formatter(){}

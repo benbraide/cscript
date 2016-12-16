@@ -6,6 +6,7 @@
 #include <boost/regex.hpp>
 
 #include "token_id.h"
+#include "token.h"
 
 namespace cscript{
 	namespace lexer{
@@ -30,6 +31,8 @@ namespace cscript{
 			virtual int get_error_index() const = 0;
 
 			virtual token_id map_index(int index) const = 0;
+
+			virtual const token::adjustment &get_adjument(int index) const = 0;
 
 			virtual const regex_type &get_compiled() const = 0;
 		};

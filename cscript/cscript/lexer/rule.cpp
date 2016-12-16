@@ -2,7 +2,8 @@
 
 #define CSCRIPT_LEXER_RULE_REAL			"[0-9]+\\.[0-9]*"
 #define CSCRIPT_LEXER_RULE_REAL2		"\\.[0-9]+"
-#define CSCRIPT_LEXER_RULE_EXCLUDES		"\\s\\r\\n\\w\\d\\(\\)\\[\\]\\{\\}\"'`\\/\\\\,;$_#@"
+#define CSCRIPT_LEXER_RULE_EXCLUDES		"\\s\\r\\n\\w\\d\\(\\)\\[\\]\\{\\}\"'`\\/\\\\,;$_"
+#define CSCRIPT_LEXER_RULE_ID			"[$_a-zA-Z][$_a-zA-Z0-9]*"
 
 cscript::lexer::rule::rule(){
 	std::vector<std::string> reserved({
@@ -25,12 +26,20 @@ cscript::lexer::rule::rule(){
 		"[1-9][0-9]*",												//Decimal integer
 		"[0][0-7]*",												//Octal integer
 		"0b[01]+",													//Binary integer
-		"[$_a-zA-Z][$_a-zA-Z0-9]*",									//Identifier
+		CSCRIPT_LEXER_RULE_ID,										//Identifier
 		"@\"",														//Double quoted string
 		"@'",														//Single quoted string
 		"@`",														//Back quoted string
-		"@",														//Modifier
-		"#",														//Preprocessor
+		"@" CSCRIPT_LEXER_RULE_ID,									//Property
+		"@\\[",														//Property list
+		"#include.*?\".*?\"",										//Preprocessor
+		"#include.*?<.*?>",											//Preprocessor
+		"#define.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
+		"#ifdef.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
+		"#ifndef.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
+		"#else",													//Preprocessor
+		"#endif",													//Preprocessor
+		"#pragma.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
 		"\\[",														//Symbol
 		"\\(",														//Symbol
 		"\\{",														//Symbol
@@ -103,7 +112,11 @@ cscript::lexer::token_id cscript::lexer::rule::map_index(int index) const{
 	if (index < 0)//Error index
 		return token_id::error;
 
-	return (static_cast<size_type>(index) < map_.size()) ? map_[index] : token_id::nil;
+	return (static_cast<size_type>(index) < map_.size()) ? map_[index] : static_cast<token_id>(index);
+}
+
+const cscript::lexer::token::adjustment &cscript::lexer::rule::get_adjument(int index) const{
+	return (static_cast<size_type>(index) < adjustment_.size()) ? adjustment_[index] : no_adjustment_;
 }
 
 const cscript::lexer::generic_rule::regex_type &cscript::lexer::rule::get_compiled() const{
@@ -188,8 +201,16 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::quote_dbl,
 	token_id::quote_sng,
 	token_id::quote_back,
-	token_id::mod,
-	token_id::prep,
+	token_id::prop_sng,
+	token_id::prop_multi,
+	token_id::prep_incl_qt,
+	token_id::prep_incl_sq,
+	token_id::prep_def,
+	token_id::prep_ifdef,
+	token_id::prep_ifndef,
+	token_id::prep_else,
+	token_id::prep_endif,
+	token_id::prep_pragma,
 	token_id::open_sq,
 	token_id::open_par,
 	token_id::open_cur,
@@ -209,3 +230,113 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::new_line,
 	token_id::blank,
 });
+
+const cscript::lexer::rule::adjustment_list_type cscript::lexer::rule::adjustment_({
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{ 2, 1 },
+	token::adjustment{ 2, 1 },
+	token::adjustment{ 2, 1 },
+	token::adjustment{ 1 },
+	token::adjustment{},
+	token::adjustment{ 8 },
+	token::adjustment{ 8 },
+	token::adjustment{ 7 },
+	token::adjustment{ 6 },
+	token::adjustment{ 7 },
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{ 7 },
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{ 1, 1 },
+	token::adjustment{ 1, 1 },
+	token::adjustment{ 1, 1 },
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+	token::adjustment{},
+});
+
+const cscript::lexer::token::adjustment cscript::lexer::rule::no_adjustment_{};

@@ -71,11 +71,16 @@ namespace cscript{
 				int column;
 			};
 
+			struct adjustment{
+				int left;
+				int right;
+			};
+
 			token();
 
-			token(const index &index, const std::string &value, int match_index);
+			token(const index &index, const std::string &value, int match_index, const adjustment &adjustment);
 
-			token(const index &index, std::string &&value, int match_index);
+			token(const index &index, std::string &&value, int match_index, const adjustment &adjustment);
 
 			virtual ~token();
 
@@ -93,9 +98,15 @@ namespace cscript{
 
 			token &update(int match_index);
 
+			token &set_adjustment(const adjustment &value);
+
 			const index &get_index() const;
 
+			const adjustment &get_adjustment() const;
+
 			const std::string &get_value() const;
+
+			std::string get_adjusted_value() const;
 
 			int get_line() const;
 
@@ -104,6 +115,8 @@ namespace cscript{
 			int get_match_index() const;
 
 			std::string to_string() const;
+
+			bool has_adjustments() const;
 
 			template <typename integral_type>
 			integral_type get_numerical_value(int base = 10) const{
@@ -126,17 +139,22 @@ namespace cscript{
 			index index_;
 			std::string value_;
 			int match_index_;
+			adjustment adjustment_{};
 		};
 
 		class preprocessed_token : public token{
 		public:
 			template <typename value_type>
-			preprocessed_token(const index &index, const std::string &value, int match_index, const value_type &processed_value)
-				: token(index, value, match_index), processed_value_(processed_value), value_type_info_(typeid(value_type)){}
+			preprocessed_token(const index &index, const std::string &value, int match_index,
+				const adjustment &adjustment, const value_type &processed_value)
+				: token(index, value, match_index, adjustment), processed_value_(processed_value),
+				value_type_info_(typeid(value_type)){}
 
 			template <typename value_type>
-			preprocessed_token(const index &index, const std::string &value, int match_index, value_type &&processed_value)
-				: token(index, value, match_index), processed_value_(static_cast<value_type &&>(processed_value)), value_type_info_(typeid(value_type)){}
+			preprocessed_token(const index &index, const std::string &value, int match_index,
+				const adjustment &adjustment, value_type &&processed_value)
+				: token(index, value, match_index, adjustment), processed_value_(static_cast<value_type &&>(processed_value)),
+				value_type_info_(typeid(value_type)){}
 
 			virtual bool is_processed() const override;
 

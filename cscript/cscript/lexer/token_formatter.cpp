@@ -6,6 +6,7 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::f
 		/* --> Multiline comment
 		/? --> Operator
 	*/
+
 	if (info.rule.map_index(match.match_index) != token_id::forward_slash)
 		return nullptr;
 
@@ -21,6 +22,7 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::f
 	if (id == token_id::forward_slash){//Single line comment
 		info.source.ignore(info);
 		match.value.append(1, '/');
+		match.adjustment.left = 2;
 
 		while (info.source.has_more()){//Skip to end of line
 			if (*match.value.append(1, info.source.get_char()).rbegin() == '\n'){
@@ -32,6 +34,9 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::f
 	else if (id == token_id::symbol && next->get_value()[0] == '*'){//Multiline comment
 		info.source.ignore(info);
 		match.value.append(1, '*');
+
+		match.adjustment.left = 2;
+		match.adjustment.right = 2;
 
 		auto terminated = false;
 		while (info.source.has_more()){//Skip to end of comment --> */
@@ -47,7 +52,7 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::f
 			return std::make_shared<error_token>(match.index, "Comment is not terminated");
 	}
 
-	return nullptr;//Let source do default construction
+	return std::make_shared<token>(match.index, match.value, match.match_index, match.adjustment);
 }
 
 cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::string::format(match_info &match, source_info &info){
@@ -69,7 +74,7 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::s
 		escaped = true;
 		break;
 	default:
-		return false;
+		return nullptr;
 	}
 
 	auto terminated = false;
@@ -88,5 +93,5 @@ cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::s
 	if (!terminated)//Not terminated
 		return std::make_shared<error_token>(match.index, "String is not terminated");
 
-	return nullptr;
+	return std::make_shared<token>(match.index, match.value, match.match_index, match.adjustment);
 }
