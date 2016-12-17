@@ -27,7 +27,7 @@ namespace cscript{
 
 			virtual ~generic_token_formatter(){}
 
-			virtual token_type format(match_info &match, source_info &info) = 0;
+			virtual token_type format(match_info &match, source_info &info) const = 0;
 		};
 	}
 }

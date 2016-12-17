@@ -1,3 +1,9 @@
 #include /*inner*/ "path_to_file.ext"
 
 4 + 5; ben++/*comment*/ 'c'
+
+unsigned  long long
+int2
+unsigned int
+integer
+float

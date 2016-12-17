@@ -32,14 +32,13 @@ cscript::lexer::rule::rule(){
 		"@`",														//Back quoted string
 		"@" CSCRIPT_LEXER_RULE_ID,									//Property
 		"@\\[",														//Property list
-		"#include.*?\".*?\"",										//Preprocessor
-		"#include.*?<.*?>",											//Preprocessor
-		"#define.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
-		"#ifdef.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
-		"#ifndef.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
-		"#else",													//Preprocessor
-		"#endif",													//Preprocessor
-		"#pragma.*?" CSCRIPT_LEXER_RULE_ID,							//Preprocessor
+		"#include\\b",												//Preprocessor
+		"#define\\b",												//Preprocessor
+		"#ifdef\\b",												//Preprocessor
+		"#ifndef\\b",												//Preprocessor
+		"#else\\b",													//Preprocessor
+		"#endif\\b",												//Preprocessor
+		"#pragma\\b",												//Preprocessor
 		"\\[",														//Symbol
 		"\\(",														//Symbol
 		"\\{",														//Symbol
@@ -63,9 +62,9 @@ cscript::lexer::rule::rule(){
 	std::string combined_value;
 	for (auto &value : reserved){
 		if (combined_value.empty())
-			combined_value = "(" + value + ")";
+			combined_value = "(" + value + "\\b)";
 		else//Append
-			combined_value += "|(" + value + ")";
+			combined_value += "|(" + value + "\\b)";
 	}
 
 	for (auto &value : lang){
@@ -203,8 +202,7 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::quote_back,
 	token_id::prop_sng,
 	token_id::prop_multi,
-	token_id::prep_incl_qt,
-	token_id::prep_incl_sq,
+	token_id::prep_incl,
 	token_id::prep_def,
 	token_id::prep_ifdef,
 	token_id::prep_ifndef,
@@ -311,7 +309,6 @@ const cscript::lexer::rule::adjustment_list_type cscript::lexer::rule::adjustmen
 	token::adjustment{ 2, 1 },
 	token::adjustment{ 1 },
 	token::adjustment{},
-	token::adjustment{ 8 },
 	token::adjustment{ 8 },
 	token::adjustment{ 7 },
 	token::adjustment{ 6 },

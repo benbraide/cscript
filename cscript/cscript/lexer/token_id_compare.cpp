@@ -15,7 +15,7 @@ bool cscript::lexer::token_id_compare::is(token_id value) const{
 	return false;
 }
 
-bool cscript::lexer::skippable_token_id::is(token_id value) const{
+bool cscript::lexer::blank_token_id::is(token_id value) const{
 	return (value == token_id::blank || value == token_id::new_line);
 }
 
@@ -71,11 +71,31 @@ bool cscript::lexer::integral_token_id::is(token_id value) const{
 	return false;
 }
 
+bool cscript::lexer::real_token_id::is(token_id value) const{
+	return (value == token_id::exp || value == token_id::real);
+}
+
 bool cscript::lexer::string_token_id::is(token_id value) const{
 	switch (value){
 	case token_id::quote_dbl:
 	case token_id::quote_sng:
 	case token_id::quote_back:
+	case token_id::esc_quote_dbl:
+	case token_id::esc_quote_sng:
+	case token_id::esc_quote_back:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::lexer::escaped_string_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::esc_quote_dbl:
+	case token_id::esc_quote_sng:
+	case token_id::esc_quote_back:
 		return true;
 	default:
 		break;
@@ -269,3 +289,62 @@ bool cscript::lexer::group_token_id::is(token_id value) const{
 
 	return false;
 }
+
+bool cscript::lexer::skip_token_id::is(token_id value) const{
+	switch (value){
+	case token_id::blank:
+	case token_id::new_line:
+	case token_id::comment_sng:
+	case token_id::comment_mult:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+cscript::lexer::aggregate::aggregate(const list_type &list)
+	: list_(list){}
+
+cscript::lexer::aggregate::aggregate(list_type &&list)
+	: list_(static_cast<list_type &&>(list)){}
+
+bool cscript::lexer::aggregate::is(token_id value) const{
+	for (auto entry : list_){
+		if (entry->is(value))
+			return true;
+	}
+
+	return false;
+}
+
+const cscript::lexer::blank_token_id cscript::lexer::token_id_compare_collection::blank;
+
+const cscript::lexer::literal_token_id cscript::lexer::token_id_compare_collection::literal;
+
+const cscript::lexer::numeric_token_id cscript::lexer::token_id_compare_collection::numeric;
+
+const cscript::lexer::integral_token_id cscript::lexer::token_id_compare_collection::integral;
+
+const cscript::lexer::real_token_id cscript::lexer::token_id_compare_collection::real;
+
+const cscript::lexer::string_token_id cscript::lexer::token_id_compare_collection::string;
+
+const cscript::lexer::escaped_string_token_id cscript::lexer::token_id_compare_collection::escaped_string;
+
+const cscript::lexer::keyword_token_id cscript::lexer::token_id_compare_collection::keyword;
+
+const cscript::lexer::context_keyword_token_id cscript::lexer::token_id_compare_collection::context_keyword;
+
+const cscript::lexer::block_token_id cscript::lexer::token_id_compare_collection::block;
+
+const cscript::lexer::storage_token_id cscript::lexer::token_id_compare_collection::storage;
+
+const cscript::lexer::type_token_id cscript::lexer::token_id_compare_collection::type;
+
+const cscript::lexer::control_token_id cscript::lexer::token_id_compare_collection::control;
+
+const cscript::lexer::group_token_id cscript::lexer::token_id_compare_collection::group;
+
+const cscript::lexer::skip_token_id cscript::lexer::token_id_compare_collection::skip;

@@ -10,13 +10,12 @@ using namespace cscript::lexer::source;
 int main(){
 	rule rule;
 	file ss("test/sample.txt");
-	formatter::string fs;
 
 	source_info info{
 		ss,
 		rule,
-		nullptr,
-		&fs
+		&token_id_compare_collection::skip,
+		&formatter::linked_collection::last
 	};
 
 	while (ss.has_more()){

@@ -21,6 +21,8 @@ namespace cscript{
 
 			virtual generic_source &disable_multi_thread() = 0;
 
+			virtual generic_source &advance_marker(int offset = 1) = 0;
+
 			virtual token_type next(source_info &info, int count = 1) = 0;
 
 			virtual token_type peek(source_info &info, int count = 1) = 0;
@@ -47,8 +49,58 @@ namespace cscript{
 		struct source_info{
 			generic_source &source;
 			rule &rule;
-			generic_token_id_compare *skipper;
-			generic_token_formatter *formatter;
+			const generic_token_id_compare *skipper;
+			const generic_token_formatter *formatter;
+		};
+
+		class auto_branch{
+		public:
+			explicit auto_branch(generic_source &source)
+				: source_(source){
+				source_.branch();
+			}
+
+			~auto_branch(){
+				source_.unbranch();
+			}
+
+		private:
+			generic_source &source_;
+		};
+
+		class auto_skip{
+		public:
+			auto_skip(source_info &info, const generic_token_id_compare *skipper)
+				: info_(info), skipper_(info.skipper){
+				info_.skipper = skipper;
+			}
+
+			~auto_skip(){
+				info_.skipper = skipper_;
+			}
+
+		private:
+			source_info &info_;
+			const generic_token_id_compare *skipper_;
+		};
+
+		class auto_info{
+		public:
+			auto_info(source_info &info, const generic_token_id_compare *skipper, const generic_token_formatter *formatter)
+				: info_(info), skipper_(info.skipper), formatter_(info.formatter){
+				info_.skipper = skipper;
+				info_.formatter = formatter;
+			}
+
+			~auto_info(){
+				info_.skipper = skipper_;
+				info_.formatter = formatter_;
+			}
+
+		private:
+			source_info &info_;
+			const generic_token_id_compare *skipper_;
+			const generic_token_formatter *formatter_;
 		};
 	}
 }

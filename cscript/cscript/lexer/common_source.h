@@ -26,8 +26,10 @@ namespace cscript{
 					: offset_(list_.begin()){}
 
 				void clear(){
-					if (offset_ != list_.end())
+					if (offset_ != list_.end()){
 						list_.erase(offset_, list_.end());
+						offset_ = std::next(list_.begin(), offset_value_);
+					}
 				}
 
 				void branch(){
@@ -44,6 +46,15 @@ namespace cscript{
 					}
 				}
 
+				void insert(token_type value, int count){
+					if (static_cast<int>(this->size()) <= count){
+						list_.push_back(value);
+						offset_ = std::next(list_.begin(), offset_value_);
+					}
+					else//Insert
+						list_.insert(std::next(list_.begin(), offset_value_ + count), value);
+				}
+
 				void append(token_type value){
 					list_.push_back(value);
 					if (offset_ == list_.end())
@@ -57,7 +68,7 @@ namespace cscript{
 					token_type value;
 					iterator_type end;
 
-					if (list_.size() <= (offset_value_ + count - 1)){
+					if (static_cast<int>(size()) <= count){
 						value = nullptr;
 						end = list_.end();
 					}
@@ -73,16 +84,10 @@ namespace cscript{
 				}
 
 				token_type get(int count) const{
-					if (offset_ == list_.end())
+					if (offset_ == list_.end() || static_cast<int>(size()) <= count)
 						return nullptr;
 
-					token_type value;
-					if (list_.size() <= (offset_value_ + count - 1))
-						value = nullptr;
-					else//Within range
-						value = *std::next(offset_, count);
-
-					return value;
+					return *std::next(offset_, count - 1);
 				}
 
 				size_type size() const{
@@ -154,6 +159,16 @@ namespace cscript{
 
 				virtual generic_source &disable_multi_thread() override{
 					lock_ = nullptr;
+					return *this;
+				}
+
+				virtual generic_source &advance_marker(int offset = 1) override{
+					if (offset < 0)
+						current_ -= static_cast<source_cache::size_type>(-offset);
+					else//Forward
+						current_ += static_cast<source_cache::size_type>(offset);
+
+					index_.column += offset;
 					return *this;
 				}
 
@@ -245,9 +260,8 @@ namespace cscript{
 					generic_rule::match_info match_info{};
 
 					count -= cache_size;
-					if (!info.rule.match(current_, end_, match_info)){
-
-					}
+					if (!info.rule.match(current_, end_, match_info))
+						return std::make_shared<error_token>(index_, "Unrecognized character encountered!");
 
 					auto id = info.rule.map_index(match_info.index);
 					generic_token_formatter::match_info formatted_info{
@@ -280,11 +294,11 @@ namespace cscript{
 
 					if (cache){//Cache
 						if (value == nullptr){//Create value
-							cache_.append(value = std::make_shared<token>(formatted_info.index, formatted_info.value,
-								formatted_info.match_index, formatted_info.adjustment));
+							cache_.insert(value = std::make_shared<token>(formatted_info.index, formatted_info.value,
+								formatted_info.match_index, formatted_info.adjustment), count + cache_size);
 						}
 						else//Use value
-							cache_.append(value);
+							cache_.insert(value, count + cache_size);
 					}
 
 					if (info.skipper != nullptr && info.skipper->is(id))//Skip value
