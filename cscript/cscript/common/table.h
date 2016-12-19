@@ -40,6 +40,11 @@ namespace cscript{
 						regex = &*others_.emplace(others_.end());
 						compiled_value.clear();
 					}
+					
+					if (compiled_value.empty())
+						compiled_value = "(" + entry.first + ")";
+					else//Append
+						compiled_value += "|(" + entry.first + ")";
 				}
 
 				if (!compiled_value.empty())

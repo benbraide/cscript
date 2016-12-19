@@ -7,3 +7,18 @@ int2
 unsigned int
 integer
 float;
+#define nine (4 + 5)
+#define eighteen (nine * 2) term
+#define term ;
+#define null
+null @"last"
+#ifdef nine
+echo "defined";
+#else
+echo "not defined";
+#endif
+#ifndef nine
+echo "defined";
+#else
+echo "not defined";
+#endif

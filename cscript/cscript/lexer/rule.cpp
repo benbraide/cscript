@@ -27,6 +27,9 @@ cscript::lexer::rule::rule(){
 		"[0][0-7]*",												//Octal integer
 		"0b[01]+",													//Binary integer
 		CSCRIPT_LEXER_RULE_ID,										//Identifier
+		"\"",														//Escaped double quoted string
+		"'",														//Escaped single quoted string
+		"`",														//Escaped back quoted string
 		"@\"",														//Double quoted string
 		"@'",														//Single quoted string
 		"@`",														//Back quoted string
@@ -34,6 +37,7 @@ cscript::lexer::rule::rule(){
 		"@\\[",														//Property list
 		"#include\\b",												//Preprocessor
 		"#define\\b",												//Preprocessor
+		"#undef\\b",												//Preprocessor
 		"#ifdef\\b",												//Preprocessor
 		"#ifndef\\b",												//Preprocessor
 		"#else\\b",													//Preprocessor
@@ -48,15 +52,14 @@ cscript::lexer::rule::rule(){
 		";",														//Symbol
 		",",														//Symbol
 		"\\\\",														//Symbol
-		"\\/",														//Symbol | Comment
-		"[^" CSCRIPT_LEXER_RULE_EXCLUDES "]+",						//Symbol
-		"\"",														//Escaped double quoted string
-		"'",														//Escaped single quoted string
-		"`",														//Escaped back quoted string
+		"\\/\\/",													//Single line comment
+		"\\/\\*",													//Multiline comment
 		"\\r\\n",													//New line
 		"\\n\\r",													//New line
 		"[\\r\\n]",													//New line
 		"[\\s]+",													//Blanks
+		"[^" CSCRIPT_LEXER_RULE_EXCLUDES "]+",						//Symbol
+		"\\/.*",													//Symbol
 	});
 
 	std::string combined_value;
@@ -193,6 +196,9 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::oct,
 	token_id::bin,
 	token_id::identifier,
+	token_id::esc_quote_dbl,
+	token_id::esc_quote_sng,
+	token_id::esc_quote_back,
 	token_id::quote_dbl,
 	token_id::quote_sng,
 	token_id::quote_back,
@@ -200,6 +206,7 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::prop_multi,
 	token_id::prep_incl,
 	token_id::prep_def,
+	token_id::prep_undef,
 	token_id::prep_ifdef,
 	token_id::prep_ifndef,
 	token_id::prep_else,
@@ -214,13 +221,12 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::semi_colon,
 	token_id::comma,
 	token_id::backslash,
-	token_id::forward_slash,
-	token_id::symbol,
-	token_id::esc_quote_dbl,
-	token_id::esc_quote_sng,
-	token_id::esc_quote_back,
+	token_id::comment_sng,
+	token_id::comment_mult,
 	token_id::new_line,
 	token_id::new_line,
 	token_id::new_line,
 	token_id::blank,
+	token_id::symbol,
+	token_id::symbol,
 });

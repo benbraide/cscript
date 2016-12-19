@@ -69,33 +69,74 @@ namespace cscript{
 						offset_ = std::next(list_.begin(), offset_value_);
 				}
 
-				token_type get(int count, bool discard){
-					if (offset_ == list_.end())
+				token_type get(int &count, bool discard, source_info &info){
+					if (count <= 0 || offset_ == list_.end())
 						return nullptr;
 
 					token_type value;
 					iterator_type end;
 
-					if (static_cast<int>(size()) <= count){
-						value = nullptr;
-						end = list_.end();
+					if (info.skipper == nullptr){
+						if (static_cast<int>(size()) < count){
+							value = nullptr;
+							end = list_.end();
+							count -= static_cast<int>(list_.size());
+						}
+						else{//Within range
+							value = *(end = std::next(offset_, count - 1));
+							count = 0;
+							++end;
+						}
 					}
-					else{//Within range
-						value = *(end = std::next(offset_, count - 1));
-						++end;
+					else{//Check for skips
+						for (auto iter = (end = offset_); iter != list_.end(); ++iter, ++end){
+							if (info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
+								CSCRIPT_IS(info.options, generic_source::option::invert_skipper)){
+								if (--count <= 0){
+									++end;
+									value = *iter;
+									break;
+								}
+							}
+						}
 					}
 
-					if (discard)//Erase range
+					if (discard){//Erase range
 						list_.erase(offset_, end);
+						offset_ = std::next(list_.begin(), offset_value_);
+					}
 
 					return value;
 				}
 
-				token_type get(int count) const{
-					if (offset_ == list_.end() || static_cast<int>(size()) <= count)
+				token_type get(int &count, source_info *info) const{
+					if (count <= 0 || offset_ == list_.end())
 						return nullptr;
 
-					return *std::next(offset_, count - 1);
+					token_type value;
+					if (info != nullptr && info->skipper == nullptr){
+						if (static_cast<int>(size()) < count){
+							value = nullptr;
+							count -= static_cast<int>(list_.size());
+						}
+						else{//Within range
+							value = *std::next(offset_, count - 1);
+							count = 0;
+						}
+					}
+					else{//Check for skips
+						for (auto iter = offset_; iter != list_.end(); ++iter){
+							if (info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
+								CSCRIPT_IS(info->options, generic_source::option::invert_skipper)){
+								if (--count <= 0){
+									value = *iter;
+									break;
+								}
+							}
+						}
+					}
+
+					return value;
 				}
 
 				size_type size() const{
@@ -107,7 +148,7 @@ namespace cscript{
 				}
 
 				bool is_empty() const{
-					return branches_.empty();
+					return list_.empty();
 				}
 
 			private:
@@ -228,7 +269,8 @@ namespace cscript{
 				}
 
 				virtual const token::index &get_index() const override{
-					return cache_.is_empty() ? index_ : cache_.get(1)->get_index();
+					auto count = 1;
+					return cache_.is_empty() ? index_ : cache_.get(count, nullptr)->get_index();
 				}
 
 				virtual bool has_more() const override{
@@ -257,24 +299,18 @@ namespace cscript{
 					if (count <= 0 || !has_more())//No more tokens
 						return nullptr;
 
-					auto cache_size = static_cast<int>(cache_.size());
-					if (count <= cache_size)
-						return cache_.get(count, !cache);//Inside cache
-
-					if (!cache && cache_size > 0u)//Delete entries
-						cache_.clear();
+					auto cache_offset = count;
+					auto value = cache_.get(count, !cache, info);
+					if (value != nullptr)//Found in cache
+						return value;
 
 					generic_token_formatter::creator_type creator = nullptr;
 					generic_rule::match_info match_info{};
 					
 					token_id id;
-					token_type value;
 					generic_token_formatter::match_info formatted_info;
-
 					const defined_symbols::value_type *expansion;
-					auto cache_offset = count;
-
-					count -= cache_size;
+					
 					while (count > 0){
 						if (!info.rule.match(current_, end_, match_info))
 							return std::make_shared<error_token>(index_, "Unrecognized character encountered!");
@@ -287,7 +323,7 @@ namespace cscript{
 							match_info.index
 						};
 
-						if (id == token_id::identifier){
+						if (!CSCRIPT_IS(info.options, generic_source::option::no_expansion) && id == token_id::identifier){
 							index_.column += static_cast<int>(match_info.size);
 							expansion = info.symbols.get_expansion(std::string(formatted_info.start, formatted_info.size));
 							if (expansion != nullptr){//Token expanded
@@ -322,10 +358,10 @@ namespace cscript{
 							return value;
 						}
 
-						if (info.skipper == nullptr || !info.skipper->is(id)){//Don't skip value
+						if (info.skipper == nullptr || (info.skipper->is(id) ==
+							CSCRIPT_IS(info.options, generic_source::option::invert_skipper))){//Don't skip value
 							if (value == nullptr && count == 1)
 								create_value_(info, formatted_info, creator, value);
-
 							--count;
 						}
 					}
@@ -346,11 +382,6 @@ namespace cscript{
 					}
 					else//Use creator
 						value = creator(formatted_info);
-
-					if (value == nullptr){
-						formatted_info.match_index = info.rule.get_error_index();
-						value = std::make_shared<error_token>(formatted_info.index, "Internal error!");
-					}
 				}
 
 				token::index index_{ 1, 1 };

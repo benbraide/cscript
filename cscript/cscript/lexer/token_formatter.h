@@ -22,14 +22,16 @@ namespace cscript{
 				const generic_token_formatter *next_;
 			};
 
-			class forward_slash : public linkable_token_formatter{
+			class comment : public linkable_token_formatter{
 			public:
-				explicit forward_slash(const generic_token_formatter *next = nullptr);
+				explicit comment(const generic_token_formatter *next = nullptr);
 
 				virtual creator_type format(match_info &match, source_info &info) const override;
 
 			protected:
-				creator_type format_(match_info &match, source_info &info) const;
+				creator_type format_single_line_(match_info &match, source_info &info) const;
+
+				creator_type format_multiline_(match_info &match, source_info &info) const;
 			};
 
 			class string : public linkable_token_formatter{
@@ -80,20 +82,24 @@ namespace cscript{
 
 				creator_type format_define_(match_info &match, source_info &info) const;
 
-				creator_type format_if_defined_(match_info &match, source_info &info) const;
+				creator_type format_undefine_(match_info &match, source_info &info) const;
 
-				creator_type format_if_not_defined_(match_info &match, source_info &info) const;
+				creator_type format_if_defined_(match_info &match, source_info &info, bool is_defined) const;
 
 				creator_type format_else_(match_info &match, source_info &info) const;
 
 				creator_type format_end_if_(match_info &match, source_info &info) const;
 
 				creator_type format_pragma_(match_info &match, source_info &info) const;
+
+				creator_type check_for_new_line_(match_info &match, source_info &info) const;
+
+				creator_type get_target_(match_info &match, source_info &info, token_type &target) const;
 			};
 
 			class collection{
 			public:
-				static const forward_slash					forward_slash;
+				static const comment						comment;
 				static const string							string;
 				static const type							type;
 				static const operator_symbol				operator_symbol;
@@ -103,7 +109,7 @@ namespace cscript{
 			class linked_collection{
 			public:
 				static const operator_symbol				operator_symbol;
-				static const forward_slash					forward_slash;
+				static const comment					comment;
 				static const string							string;
 				static const type							type;
 				static const preprocessor					preprocessor;

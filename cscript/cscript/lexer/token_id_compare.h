@@ -98,6 +98,21 @@ namespace cscript{
 			virtual bool is(token_id value) const override;
 		};
 
+		class single_line_skip_token_id : public generic_token_id_compare{
+		public:
+			virtual bool is(token_id value) const override;
+		};
+
+		class preprocessor_token_id : public generic_token_id_compare{
+		public:
+			virtual bool is(token_id value) const override;
+		};
+
+		class end_guard_token_id : public generic_token_id_compare{
+		public:
+			virtual bool is(token_id value) const override;
+		};
+
 		class aggregate : public generic_token_id_compare{
 		public:
 			typedef std::vector<generic_token_id_compare *> list_type;
@@ -129,6 +144,9 @@ namespace cscript{
 			static const control_token_id			control;
 			static const group_token_id				group;
 			static const skip_token_id				skip;
+			static const single_line_skip_token_id	single_line_skip;
+			static const preprocessor_token_id		preprocessor;
+			static const end_guard_token_id			end_guard;
 		};
 	}
 }
