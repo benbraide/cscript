@@ -153,8 +153,8 @@ namespace cscript{
 			template <typename value_type>
 			preprocessed_token(const index &index, const std::string &value, int match_index,
 				const adjustment &adjustment, value_type &&processed_value)
-				: token(index, value, match_index, adjustment), processed_value_(static_cast<value_type &&>(processed_value)),
-				value_type_info_(typeid(value_type)){}
+				: token(index, static_cast<std::string &&>(value), match_index, adjustment),
+				processed_value_(static_cast<value_type &&>(processed_value)), value_type_info_(typeid(value_type)){}
 
 			virtual bool is_processed() const override;
 

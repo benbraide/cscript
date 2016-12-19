@@ -32,8 +32,6 @@ namespace cscript{
 
 			virtual token_id map_index(int index) const = 0;
 
-			virtual const token::adjustment &get_adjument(int index) const = 0;
-
 			virtual const regex_type &get_compiled() const = 0;
 		};
 	}

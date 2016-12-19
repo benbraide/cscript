@@ -4,6 +4,7 @@
 #define CSCRIPT_GENERIC_SOURCE_H
 
 #include "generic_token_formatter.h"
+#include "defined_symbols.h"
 
 namespace cscript{
 	namespace lexer{
@@ -47,6 +48,7 @@ namespace cscript{
 		};
 
 		struct source_info{
+			defined_symbols &symbols;
 			generic_source &source;
 			rule &rule;
 			const generic_token_id_compare *skipper;

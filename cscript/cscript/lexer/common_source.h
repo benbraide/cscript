@@ -61,6 +61,14 @@ namespace cscript{
 						offset_ = std::next(list_.begin(), offset_value_);
 				}
 
+				void append(const list_type &value){
+					for (auto entry : value)
+						list_.push_back(entry);
+
+					if (offset_ == list_.end())
+						offset_ = std::next(list_.begin(), offset_value_);
+				}
+
 				token_type get(int count, bool discard){
 					if (offset_ == list_.end())
 						return nullptr;
@@ -253,71 +261,96 @@ namespace cscript{
 					if (count <= cache_size)
 						return cache_.get(count, !cache);//Inside cache
 
-					if (!cache)//Delete entries
+					if (!cache && cache_size > 0u)//Delete entries
 						cache_.clear();
 
-					token_type value = nullptr;
+					generic_token_formatter::creator_type creator = nullptr;
 					generic_rule::match_info match_info{};
+					
+					token_id id;
+					token_type value;
+					generic_token_formatter::match_info formatted_info;
+
+					const defined_symbols::value_type *expansion;
+					auto cache_offset = count;
 
 					count -= cache_size;
-					if (!info.rule.match(current_, end_, match_info))
-						return std::make_shared<error_token>(index_, "Unrecognized character encountered!");
+					while (count > 0){
+						if (!info.rule.match(current_, end_, match_info))
+							return std::make_shared<error_token>(index_, "Unrecognized character encountered!");
 
-					auto id = info.rule.map_index(match_info.index);
-					generic_token_formatter::match_info formatted_info{
-						index_,
-						std::string(current_, current_ + match_info.size),
-						match_info.index,
-						info.rule.get_adjument(match_info.index)
-					};
+						id = info.rule.map_index(match_info.index);
+						formatted_info = generic_token_formatter::match_info{
+							index_,
+							&*current_,
+							match_info.size,
+							match_info.index
+						};
 
-					current_ += match_info.size;
-					switch (id){
-					case token_id::identifier://Try expanding token
-						index_.column += static_cast<int>(match_info.size);
-						break;
-					case token_id::new_line://Update markers
-						update_markers_();
-						break;
-					default:
-						index_.column += static_cast<int>(match_info.size);
-						break;
-					}
-					
-					if (info.formatter != nullptr){//Pass to formatter
-						cache_.branch();
-						if ((value = info.formatter->format(formatted_info, info)) != nullptr)
-							id = info.rule.map_index(value->get_match_index());
+						if (id == token_id::identifier){
+							index_.column += static_cast<int>(match_info.size);
+							expansion = info.symbols.get_expansion(std::string(formatted_info.start, formatted_info.size));
+							if (expansion != nullptr){//Token expanded
+								current_ += match_info.size;
+								if (!expansion->empty())
+									cache_.append(*expansion);
 
-						cache_.unbranch();
-					}
-
-					if (cache){//Cache
-						if (value == nullptr){//Create value
-							cache_.insert(value = std::make_shared<token>(formatted_info.index, formatted_info.value,
-								formatted_info.match_index, formatted_info.adjustment), count + cache_size);
+								return next_(info, cache ? cache_offset : count, cache);
+							}
 						}
-						else//Use value
-							cache_.insert(value, count + cache_size);
+						else if (id == token_id::new_line)
+							update_markers_();
+						else//Advance column
+							index_.column += static_cast<int>(match_info.size);
+
+						current_ += match_info.size;
+						if (info.formatter != nullptr){//Pass to formatter
+							cache_.branch();
+							creator = info.formatter->format(formatted_info, info);
+							id = info.rule.map_index(formatted_info.match_index);
+							cache_.unbranch();
+						}
+
+						if (cache){//Cache
+							create_value_(info, formatted_info, creator, value);
+							cache_.insert(value, cache_offset++);
+						}
+
+						if (formatted_info.match_index == info.rule.get_error_index()){//Error encountered
+							if (value == nullptr)
+								create_value_(info, formatted_info, creator, value);
+							return value;
+						}
+
+						if (info.skipper == nullptr || !info.skipper->is(id)){//Don't skip value
+							if (value == nullptr && count == 1)
+								create_value_(info, formatted_info, creator, value);
+
+							--count;
+						}
 					}
 
-					if (info.skipper != nullptr && info.skipper->is(id))//Skip value
-						return next_(info, count, cache);
-
-					if (count > 1){//Get next
-						cache_.branch();
-						value = next_(info, count - 1, cache);
-						cache_.unbranch();
-						return value;
-					}
-
-					return (value == nullptr) ? std::make_shared<token>(formatted_info.index, formatted_info.value,
-						formatted_info.match_index, formatted_info.adjustment) : value;
+					return value;
 				}
 
 				virtual void update_markers_(){
 					++index_.line;
 					index_.column = 1;
+				}
+
+				virtual void create_value_(source_info &info, generic_token_formatter::match_info &formatted_info,
+					generic_token_formatter::creator_type creator, token_type &value){
+					if (creator == nullptr){//Create default
+						value = std::make_shared<token>(formatted_info.index, std::string(formatted_info.start, formatted_info.size),
+							formatted_info.match_index, formatted_info.adjustment);
+					}
+					else//Use creator
+						value = creator(formatted_info);
+
+					if (value == nullptr){
+						formatted_info.match_index = info.rule.get_error_index();
+						value = std::make_shared<error_token>(formatted_info.index, "Internal error!");
+					}
 				}
 
 				token::index index_{ 1, 1 };

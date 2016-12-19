@@ -10,8 +10,10 @@ using namespace cscript::lexer::source;
 int main(){
 	rule rule;
 	file ss("test/sample.txt");
+	defined_symbols symbols;
 
 	source_info info{
+		symbols,
 		ss,
 		rule,
 		&token_id_compare_collection::skip,

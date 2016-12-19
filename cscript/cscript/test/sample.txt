@@ -6,4 +6,4 @@ unsigned  long long
 int2
 unsigned int
 integer
-float
+float;
