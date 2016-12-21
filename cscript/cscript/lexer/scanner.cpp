@@ -3,6 +3,14 @@
 cscript::lexer::scanner::scanner(generic_source &source)
 	: source_(source){}
 
+cscript::lexer::generic_source &cscript::lexer::scanner::lock(){
+	return source_.lock();
+}
+
+cscript::lexer::generic_source &cscript::lexer::scanner::unlock(){
+	return source_.unlock();
+}
+
 cscript::lexer::generic_source &cscript::lexer::scanner::branch(){
 	return source_.branch();
 }
@@ -65,6 +73,29 @@ bool cscript::lexer::scanner::is_multi_threaded() const{
 
 int cscript::lexer::scanner::get_cached_size() const{
 	return source_.get_cached_size();
+}
+
+cscript::lexer::generic_scanner &cscript::lexer::scanner::pre_cache(source_info &info, int max_size, int min_size){
+	if (source_.is_multi_threaded())
+		return *this;
+
+	source_.enable_multi_thread();
+	std::thread thread_object([=, &info](){
+		auto caching = true;
+		while (source_.has_more()){
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			if (caching){
+				source_.cache(info);
+				if (max_size <= source_.get_cached_size())
+					caching = false;
+			}
+			else if (source_.get_cached_size() <= min_size)
+				caching = true;
+		}
+	});
+
+	thread_object.detach();
+	return *this;
 }
 
 cscript::lexer::generic_scanner &cscript::lexer::scanner::save(token_type value){

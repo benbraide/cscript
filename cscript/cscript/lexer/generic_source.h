@@ -22,6 +22,10 @@ namespace cscript{
 
 			virtual ~generic_source(){}
 
+			virtual generic_source &lock() = 0;
+
+			virtual generic_source &unlock() = 0;
+
 			virtual generic_source &branch() = 0;
 
 			virtual generic_source &unbranch() = 0;

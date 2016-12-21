@@ -3,6 +3,8 @@
 #ifndef CSCRIPT_SCANNER_H
 #define CSCRIPT_SCANNER_H
 
+#include <thread>
+
 #include "generic_scanner.h"
 
 namespace cscript{
@@ -10,6 +12,10 @@ namespace cscript{
 		class scanner : public generic_scanner{
 		public:
 			explicit scanner(generic_source &source);
+
+			virtual generic_source &lock() override;
+
+			virtual generic_source &unlock() override;
 
 			virtual generic_source &branch() override;
 
@@ -42,6 +48,8 @@ namespace cscript{
 			virtual bool is_multi_threaded() const override;
 
 			virtual int get_cached_size() const override;
+
+			virtual generic_scanner &pre_cache(source_info &info, int max_size = 0x03ff, int min_size = 0x00ff) override;
 
 			virtual generic_scanner &save(token_type value) override;
 

@@ -9,8 +9,10 @@ namespace cscript{
 	namespace parser{
 		enum class id : unsigned int{
 			nil					= (0 << 0x0000),
-			literal				= (1 << 0x0000),
+			statement			= (1 << 0x0000),
+			expression			= (1 << 0x0001),
 			term				= (1 << 0x0001),
+			literal				= (1 << 0x000),
 			unary_operator		= (1 << 0x0002),
 			binary_operator		= (1 << 0x0003),
 		};
