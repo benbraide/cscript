@@ -20,11 +20,10 @@ namespace cscript{
 
 			virtual ~generic(){}
 
-			virtual node_type parse(parser_info &info) = 0;
+			virtual node_type parse() = 0;
 		};
 
 		struct parser_info{
-			lexer::source_info &source_info;
 			lexer::generic_source::token_type token;
 		};
 	}

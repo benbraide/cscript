@@ -5,8 +5,9 @@
 
 namespace cscript{
 	namespace node{
-		enum class id : unsigned int{
-			nil				= (0 << 0x0000),
+		enum class id{
+			nil,
+			literal,
 		};
 	}
 }

@@ -3,6 +3,7 @@
 #ifndef CSCRIPT_PRIMITIVE_OBJECT_H
 #define CSCRIPT_PRIMITIVE_OBJECT_H
 
+#include "../common/env.h"
 #include "basic_object.h"
 
 namespace cscript{
@@ -17,11 +18,12 @@ namespace cscript{
 
 			class numeric : public generic{
 			public:
-				numeric(memory::virtual_address &target_memory, memory::virtual_address::size_type size);
+				explicit numeric(const type::generic::ptr_type type);
 
 				template <typename value_type>
-				explicit numeric(memory::virtual_address &target_memory, value_type value)
-					: generic(target_memory.add<value_type>()){
+				numeric(const type::generic::ptr_type type, value_type value)
+					: generic(common::env::address_space.add<value_type>()){
+					memory_.type = type;
 					memory::pool::write_unchecked(memory_.base, value);
 				}
 

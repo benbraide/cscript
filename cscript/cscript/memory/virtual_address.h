@@ -5,12 +5,17 @@
 
 #include <list>
 #include <mutex>
+#include <memory>
 
 #include "../common/preprocessor.h"
 #include "memory_pool.h"
 
 namespace cscript{
 	namespace object{
+		class generic;
+	}
+
+	namespace type{
 		class generic;
 	}
 
@@ -24,6 +29,7 @@ namespace cscript{
 
 			typedef std::mutex lock_type;
 			typedef std::lock_guard<lock_type> guard_type;
+			typedef std::shared_ptr<type::generic> generic_type;
 
 			enum class attribute : unsigned int{
 				nil				= (0 << 0x0000),
@@ -34,38 +40,43 @@ namespace cscript{
 				base_type base;
 				size_type size;
 				value_type value;
+				size_type offset;
 				attribute attributes;
 				object::generic *object;
+				generic_type type;
 			};
 
 			typedef std::list<entry> list_type;
+			typedef std::list<list_type> multi_list_type;
+
 			typedef list_type::iterator iterator_type;
 			typedef list_type::const_iterator const_iterator_type;
 
-			explicit virtual_address(pool &pool, attribute attributes = attribute::nil);
+			struct find_info{
+				iterator_type iterator;
+				list_type *list;
+			};
+
+			explicit virtual_address(pool &pool);
 
 			~virtual_address();
 
-			entry &add(size_type size);
+			entry &add(size_type size, attribute set = attribute::nil, attribute remove = attribute::nil);
 
 			template <typename type>
-			entry &add(){
-				return add(static_cast<size_type>(sizeof(type)));
+			entry &add(attribute set = attribute::nil, attribute remove = attribute::nil){
+				return add(static_cast<size_type>(sizeof(type)), set, remove);
 			}
 
-			bool remove(value_type value);
+			bool remove(const entry &entry);
 
-			bool update_ref_count(value_type value, size_type count, bool increment);
+			bool update_ref_count(const entry &entry, size_type count, bool increment);
 
-			bool decrement_ref_count(value_type value);
+			bool decrement_ref_count(const entry &entry);
 
-			bool increment_ref_count(value_type value);
+			bool increment_ref_count(const entry &entry);
 
 			bool is_none(const entry &entry) const;
-
-			bool has(value_type value) const;
-
-			entry &get_entry(value_type value);
 
 			template <typename value_type>
 			static bool write(virtual_address::value_type address, const value_type &value){
@@ -116,17 +127,19 @@ namespace cscript{
 			}
 
 		private:
-			iterator_type find_(value_type value);
+			bool remove_(find_info &info);
 
-			const_iterator_type find_(value_type value) const;
+			void find_(const entry &entry, find_info &info);
 
-			iterator_type find_available_(size_type size);
+			void find_available_(size_type size, find_info &info);
+
+			list_type *get_list_(size_type offset);
+
+			list_type *get_next_list_(size_type &offset);
 
 			pool &pool_;
-			entry *last_ = nullptr;
-			list_type list_;
+			multi_list_type list_;
 			entry none_{};
-			attribute attributes_;
 			mutable lock_type lock_;
 		};
 

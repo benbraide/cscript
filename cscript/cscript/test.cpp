@@ -6,17 +6,20 @@
 #include "lexer/scanner.h"
 
 #include "object/primitive_object.h"
+#include "node/literal_node.h"
+#include "common/env.h"
 
 using namespace cscript;
+using namespace cscript::common;
 using namespace cscript::lexer;
 using namespace cscript::lexer::source;
 
 int main(){
-	memory::pool pool;
-	memory::virtual_address va(pool);
+	/*node::literal ln(72ll, "", type::id::llong);
+	auto ob = ln.evaluate();*/
 
-	object::primitive::numeric num(va, static_cast<memory::virtual_address::size_type>(sizeof(int)));
-	object::primitive::numeric num2(va, 45ll);
+	object::primitive::numeric num(env::int_type);
+	object::primitive::numeric num2(env::llong_type, 45ll);
 
 	auto ll = memory::pool::convert_unchecked<long long>(num2.get_memory().base);
 

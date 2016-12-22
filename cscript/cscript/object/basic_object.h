@@ -4,6 +4,7 @@
 #define CSCRIPT_BASIC_OBJECT_H
 
 #include "generic_object.h"
+#include "../type/generic_type.h"
 
 namespace cscript{
 	namespace object{
