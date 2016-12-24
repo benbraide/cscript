@@ -17,6 +17,8 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse(
 			common::env::source_info->source.ignore(*common::env::source_info);
 			next->update(common::env::parser_info.token->get_value() + next->get_value());
 		}
+		else//Operator
+			return nullptr;
 
 		common::env::parser_info.token = next;//Signed number
 		id = common::env::source_info->rule.map_index(next->get_match_index());
@@ -67,20 +69,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::llong_type, std::stoll(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::ulong_type, std::stoul(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::long_type, std::stol(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::uint_type, static_cast<unsigned int>(std::stoul(value)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::int_type, std::stoi(value));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value));
 	});
 }
 
@@ -96,20 +98,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(2), nullptr, 16));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::llong_type, std::stoll(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(2), nullptr, 16));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::ulong_type, std::stoul(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(2), nullptr, 16));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::long_type, std::stol(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(2), nullptr, 16));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 16)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 16)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::int_type, std::stoi(value.substr(2), nullptr, 16));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(2), nullptr, 16));
 	});
 }
 
@@ -125,20 +127,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value, nullptr, 8));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::llong_type, std::stoll(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value, nullptr, 8));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::ulong_type, std::stoul(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value, nullptr, 8));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::long_type, std::stol(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value, nullptr, 8));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::uint_type, static_cast<unsigned int>(std::stoul(value, nullptr, 8)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value, nullptr, 8)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::int_type, std::stoi(value, nullptr, 8));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value, nullptr, 8));
 	});
 }
 
@@ -157,20 +159,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(offset + 1), nullptr, base));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::llong_type, std::stoll(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(offset + 1), nullptr, base));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::ulong_type, std::stoul(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(offset + 1), nullptr, base));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::long_type, std::stol(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(offset + 1), nullptr, base));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(offset + 1), nullptr, base)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(offset + 1), nullptr, base)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::int_type, std::stoi(value.substr(offset + 1), nullptr, base));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(offset + 1), nullptr, base));
 	});
 }
 
@@ -186,20 +188,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(2), nullptr, 2));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::llong_type, std::stoll(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(2), nullptr, 2));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::ulong_type, std::stoul(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(2), nullptr, 2));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::long_type, std::stol(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(2), nullptr, 2));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 2)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 2)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::int_type, std::stoi(value.substr(2), nullptr, 2));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(2), nullptr, 2));
 	});
 }
 
@@ -215,14 +217,14 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::float_:
-			return std::make_shared<object::primitive::numeric>(common::env::float_type, std::stof(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::float_type, std::stof(value));
 		case suffix::ldouble:
-			return std::make_shared<object::primitive::numeric>(common::env::ldouble_type, std::stold(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ldouble_type, std::stold(value));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::double_type, std::stod(value));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::double_type, std::stod(value));
 	});
 }
 

@@ -9,7 +9,7 @@
 
 #include "../type/type_id.h"
 #include "../common/env.h"
-#include "../object/primitive_object.h"
+#include "../object/numeric_object.h"
 
 namespace cscript{
 	namespace node{
@@ -17,17 +17,23 @@ namespace cscript{
 		public:
 			typedef std::function<object::generic::ptr_type(const std::string &)> creator;
 
-			literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator);
+			struct info{
+				object::generic::ptr_type value;
+				std::string error;
+			};
+
+			literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator, generic *parent = nullptr);
 
 			virtual ~literal();
 
 			virtual object::generic::ptr_type evaluate() override;
 
 		protected:
-			lexer::token::index index_;
+			virtual std::string print_() const override;
+
+			info info_;
 			std::string value_;
 			std::string suffix_;
-			creator creator_;
 		};
 	}
 }

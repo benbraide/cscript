@@ -15,6 +15,8 @@ namespace cscript{
 				int column;
 			};
 
+			nullptr_t set(const std::string &value);
+
 			template <typename index_type>
 			nullptr_t set(const std::string &value, const index_type &index){
 				return nullptr;

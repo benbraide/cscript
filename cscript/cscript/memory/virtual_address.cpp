@@ -1,19 +1,16 @@
 #include "virtual_address.h"
 
-cscript::memory::virtual_address::virtual_address(pool &pool)
-	: pool_(pool){}
-
 cscript::memory::virtual_address::~virtual_address(){
 	for (auto &list : list_){
 		for (auto &entry : list)
-			pool_.remove(entry.base);
+			delete[] entry.base;
 	}
 }
 
 cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(size_type size, attribute set, attribute remove){
 	guard_type guard(lock_);
 
-	auto base = pool_.add(size);
+	auto base = new char[size];
 	if (base == nullptr)//Failed to allocate memory
 		return none_;
 
@@ -26,6 +23,7 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 				this,
 				nullptr,
 				info.iterator->size - size,
+				0u,
 				(info.iterator->value + size),
 				info.iterator->offset
 			});
@@ -33,11 +31,12 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 
 		info.iterator->base = base;
 		info.iterator->size = size;
+		info.iterator->ref_count = 1;
 		info.iterator->attributes = set;
 
 		return *info.iterator;
 	}
-	
+
 	size_type offset;
 	info.list = get_next_list_(offset);
 
@@ -45,6 +44,7 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 		this,
 		base,
 		size,
+		1u,
 		info.list->empty() ? 1u : (info.list->rbegin()->value + info.list->rbegin()->size),
 		offset,
 		set
@@ -55,29 +55,29 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 
 bool cscript::memory::virtual_address::remove(const entry &entry){
 	guard_type guard(lock_);
-	find_info info;
+	if (&entry == &none_)
+		return false;
 
+	find_info info;
 	find_(entry, info);
-	return remove_(info);
+	remove_(info);
+
+	return true;
 }
 
 bool cscript::memory::virtual_address::update_ref_count(const entry &entry, size_type count, bool increment){
 	guard_type guard(lock_);
-	find_info info;
+	if (&entry == &none_)
+		return false;
 
+	find_info info;
 	find_(entry, info);
+
 	if (info.list == nullptr || info.iterator == info.list->end())
 		return false;
 
-	switch (pool_.update_ref_count(info.iterator->base, count, increment)){
-	case 0://Failed
-		return false;
-	case 2://All references dropped
+	if (info.iterator->ref_count == 0u || --info.iterator->ref_count == 0u)
 		remove_(info);
-		break;
-	default:
-		break;
-	}
 
 	return true;
 }
@@ -94,9 +94,31 @@ bool cscript::memory::virtual_address::is_none(const entry &entry) const{
 	return (&entry == &none_);
 }
 
-bool cscript::memory::virtual_address::remove_(find_info &info){
-	if (info.list == nullptr || info.iterator == info.list->end() || !pool_.remove(info.iterator->base))
+cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_entry(const value_info &info){
+	auto list = get_list_(info.offset);
+	for (auto list_entry = list->begin(); list_entry != list->end(); ++list_entry){
+		if (info.value >= list_entry->value && info.value < (list_entry->value + list_entry->size))
+			return *list_entry;
+	}
+
+	return none_;
+}
+
+bool cscript::memory::virtual_address::copy(const entry &source, const entry &destination){
+	if (source.base == destination.base || destination.size < source.size)
 		return false;
+
+	std::copy(source.base, source.base + source.size, destination.base);
+	return true;
+}
+
+void cscript::memory::virtual_address::copy_unchecked(const entry &source, const entry &destination){
+
+}
+
+void cscript::memory::virtual_address::remove_(find_info &info){
+	delete[] info.iterator->base;
+	info.iterator->base = nullptr;
 
 	if (info.iterator != info.list->begin()){//Check if previous slot is empty
 		auto previous_entry = std::prev(info.iterator);
@@ -107,25 +129,21 @@ bool cscript::memory::virtual_address::remove_(find_info &info){
 	}
 	else//Indicate empty slot
 		info.iterator->base = nullptr;
-
-	return true;
 }
 
 void cscript::memory::virtual_address::find_(const entry &entry, find_info &info){
-	auto list = get_list_(entry.offset);
-	if (list == nullptr){
-		info.list = nullptr;
+	info.list = get_list_(entry.offset);
+	if (info.list == nullptr)
 		return;
-	}
 
-	for (auto list_entry = list->begin(); list_entry != list->end(); ++list_entry){
+	for (auto list_entry = info.list->begin(); list_entry != info.list->end(); ++list_entry){
 		if (entry.value >= list_entry->value && entry.value < (list_entry->value + list_entry->size)){
 			info.iterator = list_entry;
 			return;
 		}
 	}
 
-	info.iterator = list->end();
+	info.iterator = info.list->end();
 }
 
 void cscript::memory::virtual_address::find_available_(size_type size, find_info &info){
@@ -160,3 +178,7 @@ cscript::memory::virtual_address::list_type *cscript::memory::virtual_address::g
 	list_.push_back(list_type{});
 	return &*list_.rbegin();
 }
+
+cscript::memory::temp_virtual_address::~temp_virtual_address(){ }
+
+void cscript::memory::temp_virtual_address::find_available_(size_type size, find_info &info){}

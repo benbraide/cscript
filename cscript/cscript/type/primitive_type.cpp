@@ -6,6 +6,9 @@ cscript::type::primitive::primitive(id id)
 	case type::id::any:
 		size_ = static_cast<memory::pool::size_type>(sizeof(memory::virtual_address::value_type));
 		break;
+	case type::id::bool_:
+		size_ = static_cast<memory::pool::size_type>(sizeof(boolean_value_type));
+		break;
 	case type::id::byte:
 		size_ = static_cast<memory::pool::size_type>(sizeof(unsigned char));
 		break;
@@ -133,7 +136,7 @@ cscript::type::generic::size_type cscript::type::primitive::get_composite_size(c
 		return 0;
 
 	auto id = type->get_id();
-	if (id_ < type::id::char_ || id_ > type::id::string || id < type::id::char_ || id > type::id::string)
+	if (id_ < type::id::char_ || id_ > type::id::ldouble || id < type::id::char_ || id > type::id::ldouble)
 		return (id_ == id) ? size_ : 0;
 
 	return (static_cast<int>(id_) < static_cast<int>(id)) ? type->get_size() : size_;
@@ -154,7 +157,7 @@ const cscript::type::generic *cscript::type::primitive::get_bully(const generic 
 		return nullptr;
 
 	auto id = type->get_id();
-	if (id_ < type::id::char_ || id_ > type::id::string || id < type::id::char_ || id > type::id::string)
+	if (id_ < type::id::char_ || id_ > type::id::ldouble || id < type::id::char_ || id > type::id::ldouble)
 		return nullptr;
 
 	return (static_cast<int>(id_) < static_cast<int>(id)) ? type : this;
@@ -171,7 +174,7 @@ int cscript::type::primitive::get_score(const generic *type) const{
 		return type->has_conversion(this) ? 18 : 0;
 
 	auto id = type->get_id();
-	if (id_ < type::id::char_ || id_ > type::id::string || id < type::id::char_ || id > type::id::string)
+	if (id_ < type::id::char_ || id_ > type::id::ldouble || id < type::id::char_ || id > type::id::ldouble)
 		return (id_ == id) ? 20 : 0;
 
 	if (id_ < id)//Narrowing conversion
@@ -188,7 +191,7 @@ bool cscript::type::primitive::has_conversion(const generic *type) const{
 		return false;
 
 	auto id = type->get_id();
-	return !(id_ < type::id::char_ || id_ > type::id::string || id < type::id::char_ || id > type::id::string);
+	return !(id_ < type::id::char_ || id_ > type::id::ldouble || id < type::id::char_ || id > type::id::ldouble);
 }
 
 bool cscript::type::primitive::is_same(const generic *type) const{
@@ -211,10 +214,72 @@ bool cscript::type::primitive::is_variadic() const{
 	return false;
 }
 
+bool cscript::type::primitive::is_class() const{
+	return false;
+}
+
 bool cscript::type::primitive::is_primitive() const{
 	return true;
 }
 
-bool cscript::type::primitive::is_class() const{
+bool cscript::type::primitive::is_numeric() const{
+	switch (id_){
+	case id::char_:
+	case id::uchar:
+	case id::short_:
+	case id::ushort:
+	case id::int_:
+	case id::uint:
+	case id::long_:
+	case id::ulong:
+	case id::llong:
+	case id::ullong:
+	case id::float_:
+	case id::double_:
+	case id::ldouble:
+		return true;
+	default:
+		break;
+	}
+
 	return false;
+}
+
+bool cscript::type::primitive::is_integral() const{
+	switch (id_){
+	case id::char_:
+	case id::uchar:
+	case id::short_:
+	case id::ushort:
+	case id::int_:
+	case id::uint:
+	case id::long_:
+	case id::ulong:
+	case id::llong:
+	case id::ullong:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::type::primitive::is_unsigned_integral() const{
+	switch (id_){
+	case id::uchar:
+	case id::ushort:
+	case id::uint:
+	case id::ulong:
+	case id::ullong:
+		return true;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+bool cscript::type::primitive::is_pointer() const{
+	return (id_ == id::pointer);
 }

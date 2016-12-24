@@ -8,6 +8,8 @@
 #include <memory>
 
 #include "../common/preprocessor.h"
+#include "../storage/generic_storage.h"
+
 #include "memory_pool.h"
 
 namespace cscript{
@@ -33,17 +35,30 @@ namespace cscript{
 
 			enum class attribute : unsigned int{
 				nil				= (0 << 0x0000),
+				temp			= (1 << 0x0000),
+				ref				= (1 << 0x0001),
+				indirect		= (1 << 0x0002),
+				uninitialized	= (1 << 0x0003),
+				constant		= (1 << 0x0004),
+				is_nan			= (1 << 0x0005),
 			};
 
 			struct entry{
 				virtual_address *address;
 				base_type base;
 				size_type size;
+				size_type ref_count;
 				value_type value;
 				size_type offset;
 				attribute attributes;
 				object::generic *object;
 				generic_type type;
+				storage::generic *storage;
+			};
+
+			struct value_info{
+				value_type value;
+				size_type offset;
 			};
 
 			typedef std::list<entry> list_type;
@@ -57,9 +72,7 @@ namespace cscript{
 				list_type *list;
 			};
 
-			explicit virtual_address(pool &pool);
-
-			~virtual_address();
+			virtual ~virtual_address();
 
 			entry &add(size_type size, attribute set = attribute::nil, attribute remove = attribute::nil);
 
@@ -78,13 +91,14 @@ namespace cscript{
 
 			bool is_none(const entry &entry) const;
 
-			template <typename value_type>
-			static bool write(virtual_address::value_type address, const value_type &value){
-				return write(address, get_entry(address), value);
-			}
+			entry &get_entry(const value_info &info);
+
+			static bool copy(const entry &source, const entry &destination);
+
+			static void copy_unchecked(const entry &source, const entry &destination);
 
 			template <typename value_type>
-			static bool write(virtual_address::value_type address, const entry &entry, const value_type &value){
+			static bool write(virtual_address::value_type address, const entry &entry, value_type value){
 				if (is_none(entry) || entry.base == nullptr)
 					return false;
 
@@ -97,12 +111,7 @@ namespace cscript{
 			}
 
 			template <typename value_type>
-			static void write_unchecked(virtual_address::value_type address, const value_type &value){
-				write_unchecked(address, get_entry(address), value);
-			}
-
-			template <typename value_type>
-			static void write_unchecked(virtual_address::value_type address, const entry &entry, const value_type &value){
+			static void write_unchecked(virtual_address::value_type address, const entry &entry, value_type value){
 				if (is_none(entry) || entry.base == nullptr)
 					return;
 
@@ -126,21 +135,43 @@ namespace cscript{
 				}
 			}
 
+			template <typename value_type>
+			static bool write_ref(virtual_address::value_type address, const entry &entry, const value_type &value){
+				if (is_none(entry) || entry.base == nullptr)
+					return false;
+
+				auto offset = entry.value - address;
+				if ((entry.size - offset) < static_cast<virtual_address::value_type>(sizeof(value_type)))
+					return false;
+
+				pool::write_ref_unchecked(entry.base + offset, value);
+				return true;
+			}
+
+			static const size_type value_type_size = static_cast<size_type>(sizeof(value_type));
+
 		private:
-			bool remove_(find_info &info);
+			void remove_(find_info &info);
 
 			void find_(const entry &entry, find_info &info);
 
-			void find_available_(size_type size, find_info &info);
+			virtual void find_available_(size_type size, find_info &info);
 
 			list_type *get_list_(size_type offset);
 
 			list_type *get_next_list_(size_type &offset);
 
-			pool &pool_;
 			multi_list_type list_;
 			entry none_{};
 			mutable lock_type lock_;
+		};
+
+		class temp_virtual_address : public virtual_address{
+		public:
+			virtual ~temp_virtual_address();
+
+		protected:
+			virtual void find_available_(size_type size, find_info &info) override;
 		};
 
 		CSCRIPT_MAKE_OPERATORS(virtual_address::attribute)

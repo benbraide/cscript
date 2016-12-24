@@ -1,14 +1,24 @@
 #include "env.h"
 
+thread_local cscript::object::generic *cscript::common::env::object_operand;
+
+thread_local cscript::node::generic *cscript::common::env::node_operand;
+
 thread_local std::shared_ptr<cscript::lexer::source_info> cscript::common::env::source_info;
 
 thread_local cscript::parser::parser_info cscript::common::env::parser_info{};
 
 thread_local cscript::common::error cscript::common::env::error;
 
-cscript::memory::pool cscript::common::env::memory_pool;
+thread_local cscript::storage::temp cscript::common::env::temp_storage;
 
-cscript::memory::virtual_address cscript::common::env::address_space(memory_pool);
+thread_local cscript::memory::static_block cscript::common::env::static_block1;
+
+thread_local cscript::memory::static_block cscript::common::env::static_block2;
+
+cscript::memory::virtual_address cscript::common::env::address_space;
+
+cscript::memory::temp_virtual_address cscript::common::env::temp_address_space;
 
 const cscript::type::generic::ptr_type cscript::common::env::any_type = std::make_shared<type::primitive>(type::id::any);
 
@@ -47,3 +57,10 @@ const cscript::type::generic::ptr_type cscript::common::env::float_type = std::m
 const cscript::type::generic::ptr_type cscript::common::env::double_type = std::make_shared<type::primitive>(type::id::double_);
 
 const cscript::type::generic::ptr_type cscript::common::env::ldouble_type = std::make_shared<type::primitive>(type::id::ldouble);
+
+cscript::object::generic *cscript::common::env::get_object_operand(){
+	if (object_operand != nullptr || node_operand == nullptr)
+		return object_operand;
+
+	return (object_operand = temp_storage.add(node_operand->evaluate()));
+}

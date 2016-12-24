@@ -48,9 +48,17 @@ namespace cscript{
 
 			virtual bool is_variadic() const = 0;
 
+			virtual bool is_class()const = 0;
+
 			virtual bool is_primitive() const = 0;
 
-			virtual bool is_class()const = 0;
+			virtual bool is_numeric() const = 0;
+
+			virtual bool is_integral() const = 0;
+
+			virtual bool is_unsigned_integral() const = 0;
+
+			virtual bool is_pointer() const = 0;
 		};
 	}
 }

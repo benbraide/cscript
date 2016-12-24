@@ -29,6 +29,80 @@ namespace cscript{
 			ldouble,
 			string,
 			array_,
+			pointer,
+		};
+
+		template <id>
+		struct id_type;
+
+		template <>
+		struct id_type<id::wchar>{
+			typedef wchar_t value;
+		};
+
+		template <>
+		struct id_type<id::char_>{
+			typedef char value;
+		};
+
+		template <>
+		struct id_type<id::uchar>{
+			typedef unsigned char value;
+		};
+
+		template <>
+		struct id_type<id::short_>{
+			typedef short value;
+		};
+
+		template <>
+		struct id_type<id::ushort>{
+			typedef unsigned short value;
+		};
+
+		template <>
+		struct id_type<id::int_>{
+			typedef int value;
+		};
+
+		template <>
+		struct id_type<id::uint>{
+			typedef unsigned int value;
+		};
+
+		template <>
+		struct id_type<id::long_>{
+			typedef long value;
+		};
+
+		template <>
+		struct id_type<id::ulong>{
+			typedef unsigned long value;
+		};
+
+		template <>
+		struct id_type<id::llong>{
+			typedef long long value;
+		};
+
+		template <>
+		struct id_type<id::ullong>{
+			typedef unsigned long long value;
+		};
+
+		template <>
+		struct id_type<id::float_>{
+			typedef float value;
+		};
+
+		template <>
+		struct id_type<id::double_>{
+			typedef double value;
+		};
+
+		template <>
+		struct id_type<id::ldouble>{
+			typedef long double value;
 		};
 	}
 }

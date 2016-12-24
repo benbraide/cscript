@@ -1,20 +1,24 @@
 #include "literal_node.h"
 
-cscript::node::literal::literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator)
-	: basic(id::literal), index_(index), value_(value), suffix_(suffix), creator_(creator){}
+cscript::node::literal::literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator, generic *parent)
+	: basic(id::literal, index, parent), value_(value), suffix_(suffix){
+	try{
+		info_.value = creator(value_);
+	}
+	catch (const std::out_of_range &){
+		info_.error = "Numeric value is too large for target type";
+	}
+	catch (...){
+		info_.error = "Could not interpret literal";
+	}
+}
 
 cscript::node::literal::~literal(){}
 
 cscript::object::generic::ptr_type cscript::node::literal::evaluate(){
-	try{
-		return creator_(value_);
-	}
-	catch (const std::out_of_range &){
-		common::env::error.set("Numeric value is too large for target type", index_);
-	}
-	catch (...){
-		common::env::error.set("Could not interpret literal", index_);
-	}
+	return (info_.value == nullptr) ? common::env::error.set(info_.error, index_) : info_.value;
+}
 
-	return nullptr;
+std::string cscript::node::literal::print_() const{
+	return (value_ + suffix_);
 }

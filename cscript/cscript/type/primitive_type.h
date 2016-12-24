@@ -7,6 +7,12 @@
 
 namespace cscript{
 	namespace type{
+		enum class boolean_value_type{
+			nil,
+			false_,
+			true_,
+		};
+
 		class primitive : public generic{
 		public:
 			explicit primitive(id id);
@@ -43,9 +49,17 @@ namespace cscript{
 
 			virtual bool is_variadic() const override;
 
+			virtual bool is_class()const override;
+
 			virtual bool is_primitive() const override;
 
-			virtual bool is_class()const override;
+			virtual bool is_numeric() const override;
+
+			virtual bool is_integral() const override;
+
+			virtual bool is_unsigned_integral() const override;
+
+			virtual bool is_pointer() const override;
 			
 		protected:
 			id id_;

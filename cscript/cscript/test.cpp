@@ -5,7 +5,7 @@
 #include "lexer/file_source.h"
 #include "lexer/scanner.h"
 
-#include "object/primitive_object.h"
+#include "object/numeric_object.h"
 #include "node/literal_node.h"
 #include "common/env.h"
 
@@ -18,10 +18,22 @@ int main(){
 	/*node::literal ln(72ll, "", type::id::llong);
 	auto ob = ln.evaluate();*/
 
-	object::primitive::numeric num(env::int_type);
+	object::primitive::numeric num(env::int_type, 27);
 	object::primitive::numeric num2(env::llong_type, 45ll);
+	object::primitive::numeric zero(env::float_type, 0.0f);
+
+	auto nc = num2.clone();
+	auto ptr = nc->evaluate(object::generic::unary_info{ true, operator_id::bitwise_and });
+	//auto pc = ptr->clone();
 
 	auto ll = memory::pool::convert_unchecked<long long>(num2.get_memory().base);
+	auto ll2 = memory::pool::convert_unchecked<long long>(nc->get_memory().base);
+
+	env::object_operand = &num2;
+	auto sum = num.evaluate(object::generic::binary_info{ operator_id::plus });
+	auto ll3 = memory::pool::convert_unchecked<long long>(sum->get_memory().base);
+	auto llb = sum->to_bool();
+	auto llc = zero.to_bool();
 
 	rule rule;
 	file ss("test/sample.txt");
