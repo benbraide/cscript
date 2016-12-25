@@ -41,6 +41,7 @@ namespace cscript{
 				uninitialized	= (1 << 0x0003),
 				constant		= (1 << 0x0004),
 				is_nan			= (1 << 0x0005),
+				byte_aligned	= (1 << 0x0006),
 			};
 
 			struct entry{
@@ -57,6 +58,7 @@ namespace cscript{
 			};
 
 			struct value_info{
+				virtual_address *address;
 				value_type value;
 				size_type offset;
 			};
@@ -71,6 +73,8 @@ namespace cscript{
 				iterator_type iterator;
 				list_type *list;
 			};
+
+			virtual_address();
 
 			virtual ~virtual_address();
 
@@ -93,9 +97,11 @@ namespace cscript{
 
 			entry &get_entry(const value_info &info);
 
-			static bool copy(const entry &source, const entry &destination);
+			value_type convert_info(const value_info &info);
 
-			static void copy_unchecked(const entry &source, const entry &destination);
+			static bool copy(const entry &destination, const entry &source);
+
+			static void copy_unchecked(const entry &destination, const entry &source);
 
 			template <typename value_type>
 			static bool write(virtual_address::value_type address, const entry &entry, value_type value){
@@ -148,6 +154,8 @@ namespace cscript{
 				return true;
 			}
 
+			static int compare(const value_info &left, const value_info &right);
+
 			static const size_type value_type_size = static_cast<size_type>(sizeof(value_type));
 
 		private:
@@ -158,6 +166,8 @@ namespace cscript{
 			virtual void find_available_(size_type size, find_info &info);
 
 			list_type *get_list_(size_type offset);
+
+			multi_list_type::iterator get_list_iterator_(size_type offset);
 
 			list_type *get_next_list_(size_type &offset);
 

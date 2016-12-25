@@ -20,6 +20,8 @@ namespace cscript{
 
 			virtual const generic *base() const = 0;
 
+			virtual const generic *remove_pointer() const = 0;
+
 			virtual std::string name() const = 0;
 
 			virtual std::string print() const = 0;
@@ -59,6 +61,16 @@ namespace cscript{
 			virtual bool is_unsigned_integral() const = 0;
 
 			virtual bool is_pointer() const = 0;
+
+			template <typename object_type>
+			object_type *query(){
+				return dynamic_cast<object_type *>(this);
+			}
+
+			template <typename object_type>
+			const object_type *query() const{
+				return dynamic_cast<const object_type *>(this);
+			}
 		};
 	}
 }

@@ -54,6 +54,9 @@ cscript::type::primitive::primitive(id id)
 	case type::id::ldouble:
 		size_ = static_cast<memory::pool::size_type>(sizeof(long double));
 		break;
+	case type::id::pointer:
+		size_ = memory::virtual_address::value_type_size;
+		break;
 	default:
 		size_ = 0;
 		break;
@@ -63,6 +66,10 @@ cscript::type::primitive::primitive(id id)
 cscript::type::primitive::~primitive(){}
 
 const cscript::type::generic *cscript::type::primitive::base() const{
+	return this;
+}
+
+const cscript::type::generic *cscript::type::primitive::remove_pointer() const{
 	return this;
 }
 
@@ -282,4 +289,54 @@ bool cscript::type::primitive::is_unsigned_integral() const{
 
 bool cscript::type::primitive::is_pointer() const{
 	return (id_ == id::pointer);
+}
+
+cscript::type::pointer::pointer(ptr_type value)
+	: primitive(id::pointer){
+	value_ = value;
+}
+
+cscript::type::pointer::~pointer(){}
+
+const cscript::type::generic *cscript::type::pointer::remove_pointer() const{
+	return value_.get();
+}
+
+std::string cscript::type::pointer::name() const{
+	return ("pointer_t<" + value_->name() + ">");
+}
+
+std::string cscript::type::pointer::print() const{
+	return ("pointer_t<" + value_->print() + ">");
+}
+
+const cscript::type::generic *cscript::type::pointer::get_bully(const generic *type) const{
+	return nullptr;
+}
+
+int cscript::type::pointer::get_score(const generic *type) const{
+	if (id_ == type::id::auto_)
+		return 19;
+
+	if (id_ == type::id::any)
+		return 18;
+
+	if (!type->is_pointer())//Type is not a pointer
+		return type->has_conversion(this) ? 18 : 0;
+
+	return type->query<pointer>()->value_->get_score(value_.get());
+}
+
+bool cscript::type::pointer::has_conversion(const generic *type) const{
+	if (type->is_any() || type->is_auto())
+		return true;
+
+	if (!type->is_pointer())
+		return false;
+
+	return type->query<pointer>()->value_->has_conversion(value_.get());
+}
+
+bool cscript::type::pointer::is_same(const generic *type) const{
+	return (type->get_id() == id::pointer && type->query<pointer>()->value_->is_same(value_.get()));
 }

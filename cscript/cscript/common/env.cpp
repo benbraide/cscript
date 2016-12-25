@@ -1,4 +1,5 @@
 #include "env.h"
+#include "../object/numeric_object.h"
 
 thread_local cscript::object::generic *cscript::common::env::object_operand;
 
@@ -57,6 +58,10 @@ const cscript::type::generic::ptr_type cscript::common::env::float_type = std::m
 const cscript::type::generic::ptr_type cscript::common::env::double_type = std::make_shared<type::primitive>(type::id::double_);
 
 const cscript::type::generic::ptr_type cscript::common::env::ldouble_type = std::make_shared<type::primitive>(type::id::ldouble);
+
+const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_shared<object::primitive::numeric>(temp_address_space, int_type, 0);
+
+const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(temp_address_space, int_type, 1);
 
 cscript::object::generic *cscript::common::env::get_object_operand(){
 	if (object_operand != nullptr || node_operand == nullptr)

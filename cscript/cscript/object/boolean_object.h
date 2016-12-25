@@ -12,15 +12,24 @@ namespace cscript{
 			public:
 				typedef type::boolean_value_type value_type;
 
-				explicit boolean(const type::generic::ptr_type type);
+				boolean();
 
-				boolean(const type::generic::ptr_type type, value_type value);
+				explicit boolean(value_type value);
 
-				boolean(memory::virtual_address &address_space, const type::generic::ptr_type type);
+				explicit boolean(memory::virtual_address &address_space);
 
-				boolean(memory::virtual_address &address_space, const type::generic::ptr_type type, value_type value);
+				boolean(memory::virtual_address &address_space, value_type value);
 
 				virtual ~boolean();
+
+				virtual generic *clone() override;
+
+				virtual generic *evaluate(const binary_info &info) override;
+
+				virtual bool to_bool() override;
+
+			protected:
+				virtual value_type get_value_();
 			};
 		}
 	}

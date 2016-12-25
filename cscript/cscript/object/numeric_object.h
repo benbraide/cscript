@@ -16,7 +16,9 @@ namespace cscript{
 
 				template <typename value_type>
 				numeric(const type::generic::ptr_type type, value_type value)
-					: numeric(common::env::address_space, type, value){}
+					: numeric(common::env::address_space, type, value){
+					CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+				}
 
 				numeric(memory::virtual_address &address_space, const type::generic::ptr_type type);
 
@@ -25,6 +27,7 @@ namespace cscript{
 					: basic(address_space.add<value_type>()){
 					memory_.type = type;
 					memory::pool::write_unchecked(memory_.base, value);
+					CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
 				}
 
 				virtual ~numeric();
@@ -36,8 +39,6 @@ namespace cscript{
 				virtual generic *evaluate(const binary_info &info) override;
 
 				virtual generic *evaluate(const unary_info &info) override;
-
-				virtual bool to_bool() override;
 
 				virtual bool is_nan();
 

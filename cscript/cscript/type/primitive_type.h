@@ -21,6 +21,8 @@ namespace cscript{
 
 			virtual const generic *base() const override;
 
+			virtual const generic *remove_pointer() const override;
+
 			virtual std::string name() const override;
 
 			virtual std::string print() const override;
@@ -64,6 +66,30 @@ namespace cscript{
 		protected:
 			id id_;
 			size_type size_;
+		};
+
+		class pointer : public primitive{
+		public:
+			explicit pointer(ptr_type value);
+
+			virtual ~pointer();
+
+			virtual const generic *remove_pointer() const override;
+
+			virtual std::string name() const override;
+
+			virtual std::string print() const override;
+
+			virtual const generic *get_bully(const generic *type) const override;
+
+			virtual int get_score(const generic *type) const override;
+
+			virtual bool has_conversion(const generic *type) const override;
+
+			virtual bool is_same(const generic *type) const override;
+
+		protected:
+			ptr_type value_;
 		};
 	}
 }

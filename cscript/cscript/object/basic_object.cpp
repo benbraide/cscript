@@ -17,23 +17,52 @@ cscript::object::generic *cscript::object::basic::cast(const type::generic *type
 	if (type->is_same(memory_.type.get()) || type->is_any() || type->is_auto())
 		return clone();
 
-	return common::env::error.set("Cannot cast to " + type->print());
+	return nullptr;
 }
 
 cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *type){
 	if (type->is_same(memory_.type.get()) || type->is_any() || type->is_auto())
 		return this;
 
-	return common::env::error.set("Cannot cast to ref " + type->print());
+	return nullptr;
 }
 
 cscript::object::generic *cscript::object::basic::evaluate(const binary_info &info){
+	if (info.id == lexer::operator_id::assignment){
+		auto operand = common::env::get_object_operand();
+		if (operand == nullptr)
+			return common::env::error.set("Operator does not take specified operand");
+
+		auto value = operand->cast(get_type().get());
+		if (value == nullptr)
+			return common::env::error.set("Cannot assign value into object");
+
+		memory::virtual_address::copy(memory_, value->get_memory());
+		return this;
+	}
+
 	return common::env::error.set("Operator does not take specified operands");
 }
 
 cscript::object::generic *cscript::object::basic::evaluate(const unary_info &info){
-	if (info.left && info.id == lexer::operator_id::bitwise_and && is_lvalue())
-		return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{ memory_.value, memory_.offset }));
+	if (info.left){
+		switch (info.id){
+		case lexer::operator_id::bitwise_and:
+			if (is_lvalue()){
+				return common::env::temp_storage.add(std::make_shared<pointer>(
+					pointer::value_type{ memory_.address, memory_.value, memory_.offset }));
+			}
+			break;
+		case lexer::operator_id::relational_not:
+		{
+			auto value = to_bool();
+			return common::env::error.has() ? nullptr : common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+				common::env::temp_address_space, value ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
+		}
+		default:
+			break;
+		}
+	}
 
 	return common::env::error.set("Operator does not take specified operand");
 }

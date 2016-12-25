@@ -11,7 +11,7 @@ cscript::object::primitive::numeric::numeric(memory::virtual_address &address_sp
 cscript::object::primitive::numeric::~numeric(){}
 
 cscript::object::generic *cscript::object::primitive::numeric::clone(){
-	auto value = std::make_shared<numeric>(memory_.type);
+	auto value = std::make_shared<numeric>(common::env::temp_address_space, memory_.type);
 
 	common::env::temp_storage.add(value);
 	memory::virtual_address::copy(memory_, value->get_memory());
@@ -20,6 +20,50 @@ cscript::object::generic *cscript::object::primitive::numeric::clone(){
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::cast(const type::generic *type){
+	switch (type->get_id()){
+	case type::id::char_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::char_type, get_value<char>()));
+	case type::id::uchar:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::uchar_type, get_value<unsigned char>()));
+	case type::id::short_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::short_type, get_value<short>()));
+	case type::id::ushort:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::ushort_type, get_value<unsigned short>()));
+	case type::id::int_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::int_type, get_value<int>()));
+	case type::id::uint:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::uint_type, get_value<unsigned int>()));
+	case type::id::long_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::long_type, get_value<long>()));
+	case type::id::ulong:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::ulong_type, get_value<unsigned long>()));
+	case type::id::llong:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::llong_type, get_value<long long>()));
+	case type::id::ullong:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::ullong_type, get_value<unsigned long long>()));
+	case type::id::float_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::float_type, get_value<float>()));
+	case type::id::double_:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::double_type, get_value<double>()));
+	case type::id::ldouble:
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
+			common::env::ldouble_type, get_value<long double>()));
+	default:
+		break;
+	}
+
 	return memory_.type->has_conversion(type) ? clone() : basic::cast(type);
 }
 
@@ -33,59 +77,65 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 		return basic::evaluate(info);
 
 	auto bully = (memory_.type->get_bully(operand_type.get()) == memory_.type.get()) ? memory_.type : operand_type;
+	auto numeric_operand = operand->query<numeric>();
+
 	switch (info.id){
 	case lexer::operator_id::compound_plus:
-		return add_(bully, *operand->query<numeric>(), true);
+		return add_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_minus:
-		return subtract_(bully, *operand->query<numeric>(), true);
+		return subtract_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_times:
-		return multiply_(bully, *operand->query<numeric>(), true);
+		return multiply_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_divide:
-		return divide_(bully, *operand->query<numeric>(), true);
+		return divide_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_modulus:
-		return modulus_(bully, *operand->query<numeric>(), true);
+		return modulus_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_left_shift:
-		return left_shift_(bully, *operand->query<numeric>(), true);
+		return left_shift_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_right_shift:
-		return right_shift_(bully, *operand->query<numeric>(), true);
+		return right_shift_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_bitwise_and:
-		return bitwise_and_(bully, *operand->query<numeric>(), true);
+		return bitwise_and_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_bitwise_or:
-		return bitwise_or_(bully, *operand->query<numeric>(), true);
+		return bitwise_or_(bully, *numeric_operand, true);
 	case lexer::operator_id::compound_bitwise_xor:
-		return bitwise_xor_(bully, *operand->query<numeric>(), true);
+		return bitwise_xor_(bully, *numeric_operand, true);
 	case lexer::operator_id::plus:
-		return add_(bully, *operand->query<numeric>(), false);
+		return add_(bully, *numeric_operand, false);
 	case lexer::operator_id::minus:
-		return subtract_(bully, *operand->query<numeric>(), false);
+		return subtract_(bully, *numeric_operand, false);
 	case lexer::operator_id::times:
-		return multiply_(bully, *operand->query<numeric>(), false);
+		return multiply_(bully, *numeric_operand, false);
 	case lexer::operator_id::divide:
-		return divide_(bully, *operand->query<numeric>(), false);
+		return divide_(bully, *numeric_operand, false);
 	case lexer::operator_id::modulus:
-		return modulus_(bully, *operand->query<numeric>(), false);
+		return modulus_(bully, *numeric_operand, false);
 	case lexer::operator_id::left_shift:
-		return left_shift_(bully, *operand->query<numeric>(), false);
+		return left_shift_(bully, *numeric_operand, false);
 	case lexer::operator_id::right_shift:
-		return right_shift_(bully, *operand->query<numeric>(), false);
+		return right_shift_(bully, *numeric_operand, false);
 	case lexer::operator_id::bitwise_and:
-		return bitwise_and_(bully, *operand->query<numeric>(), false);
+		return bitwise_and_(bully, *numeric_operand, false);
 	case lexer::operator_id::bitwise_or:
-		return bitwise_or_(bully, *operand->query<numeric>(), false);
+		return bitwise_or_(bully, *numeric_operand, false);
 	case lexer::operator_id::bitwise_xor:
-		return bitwise_xor_(bully, *operand->query<numeric>(), false);
+		return bitwise_xor_(bully, *numeric_operand, false);
 	case lexer::operator_id::less:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) < 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_((!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) < 0) ?
+			boolean::value_type::true_ : boolean::value_type::false_);
 	case lexer::operator_id::less_or_equal:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) <= 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) <= 0) ?
+			boolean::value_type::true_ : boolean::value_type::false_);
 	case lexer::operator_id::equality:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) == 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_((compare_(bully, *numeric_operand) == 0) ? boolean::value_type::true_ : boolean::value_type::false_);
 	case lexer::operator_id::inverse_equality:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) != 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_((compare_(bully, *numeric_operand) != 0) ? boolean::value_type::true_ : boolean::value_type::false_);
 	case lexer::operator_id::more_or_equal:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) >= 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) >= 0) ?
+			boolean::value_type::true_ : boolean::value_type::false_);
 	case lexer::operator_id::more:
-		return create_boolean_((compare_(bully, *operand->query<numeric>()) > 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) > 0) ?
+			boolean::value_type::true_ : boolean::value_type::false_);
 	default:
 		break;
 	}
@@ -94,11 +144,54 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::evaluate(const unary_info &info){
-	return basic::evaluate(info);
-}
+	if (info.left){
+		switch (info.id){
+		case lexer::operator_id::plus:
+			return plus_();
+		case lexer::operator_id::minus:
+			return minus_();
+		case lexer::operator_id::bitwise_inverse:
+			return bitwise_inverse_();
+		case lexer::operator_id::decrement:
+			common::env::object_operand = common::env::one.get();
+			return subtract_(nullptr, *common::env::object_operand->query<numeric>(), true);
+		case lexer::operator_id::increment:
+			common::env::object_operand = common::env::one.get();
+			return add_(nullptr, *common::env::object_operand->query<numeric>(), true);
+		default:
+			break;
+		}
+	}
+	else{//Right unary
+		switch (info.id){
+		case lexer::operator_id::decrement:
+		{
+			if (is_constant() || !is_lvalue())
+				return common::env::error.set("Operator does not take specified operand");
 
-bool cscript::object::primitive::numeric::to_bool(){
-	return (compare(0) != 0);
+			auto old = clone();
+			common::env::object_operand = common::env::one.get();
+			subtract_(nullptr, *common::env::object_operand->query<numeric>(), true);
+
+			return old;
+		}
+		case lexer::operator_id::increment:
+		{
+			if (is_constant() || !is_lvalue())
+				return common::env::error.set("Operator does not take specified operand");
+
+			auto old = clone();
+			common::env::object_operand = common::env::one.get();
+			add_(nullptr, *common::env::object_operand->query<numeric>(), true);
+
+			return old;
+		}
+		default:
+			break;
+		}
+	}
+
+	return basic::evaluate(info);
 }
 
 bool cscript::object::primitive::numeric::is_nan(){
@@ -117,7 +210,7 @@ cscript::object::generic *cscript::object::primitive::numeric::create_boolean_(b
 	if (common::env::error.has())
 		return nullptr;
 
-	return common::env::temp_storage.add(std::make_shared<boolean>(common::env::temp_address_space, common::env::bool_type, value));
+	return common::env::temp_storage.add(std::make_shared<boolean>(common::env::temp_address_space, value));
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::plus_(){
@@ -340,6 +433,12 @@ int cscript::object::primitive::numeric::compare_(type::generic::ptr_type bully,
 		return -2;
 	}
 
+	if (is_nan())
+		return operand.is_nan() ? 0 : -1;
+
+	if (operand.is_nan())
+		return is_nan() ? 0 : -1;
+
 	memory::pool::base_type left, right;
 	block_operator_type op;
 	if (bully.get() == memory_.type.get()){
@@ -369,6 +468,7 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 			return nullptr;
 		}
 
+		bully = memory_.type;
 		destination = this;
 	}
 	else//Create temp

@@ -1,4 +1,9 @@
 #include "virtual_address.h"
+#include "../common/env.h"
+
+cscript::memory::virtual_address::virtual_address(){
+	none_.type = common::env::byte_type;
+}
 
 cscript::memory::virtual_address::~virtual_address(){
 	for (auto &list : list_){
@@ -40,12 +45,18 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 	size_type offset;
 	info.list = get_next_list_(offset);
 
+	value_type value;
+	if (info.list->empty())
+		value = (info.list == &*list_.begin()) ? 1u : 0u;
+	else
+		value = (info.list->rbegin()->value + info.list->rbegin()->size);
+
 	info.list->push_back(entry{
 		this,
 		base,
 		size,
 		1u,
-		info.list->empty() ? 1u : (info.list->rbegin()->value + info.list->rbegin()->size),
+		value,
 		offset,
 		set
 	});
@@ -95,7 +106,19 @@ bool cscript::memory::virtual_address::is_none(const entry &entry) const{
 }
 
 cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_entry(const value_info &info){
-	auto list = get_list_(info.offset);
+	value_type last, value = info.value;
+	auto list = get_list_iterator_(info.offset);
+	while (list == list_.end()){
+		if (info.value < (last = (list->rbegin()->value + list->rbegin()->size)))
+			break;
+
+		++list;
+		value -= last;
+	}
+
+	if (list == list_.end())
+		return none_;
+
 	for (auto list_entry = list->begin(); list_entry != list->end(); ++list_entry){
 		if (info.value >= list_entry->value && info.value < (list_entry->value + list_entry->size))
 			return *list_entry;
@@ -104,7 +127,23 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_e
 	return none_;
 }
 
-bool cscript::memory::virtual_address::copy(const entry &source, const entry &destination){
+cscript::memory::virtual_address::value_type cscript::memory::virtual_address::convert_info(const value_info &info){
+	auto list = get_list_(info.offset);
+	if (list == nullptr)
+		return 0;
+
+	value_type value = 0;
+	for (auto &list_entry : list_){
+		if (&list_entry == list)
+			break;
+
+		value += (list_entry.rbegin()->value + list_entry.rbegin()->size);
+	}
+
+	return (value + info.value);
+}
+
+bool cscript::memory::virtual_address::copy(const entry &destination, const entry &source){
 	if (source.base == destination.base || destination.size < source.size)
 		return false;
 
@@ -112,8 +151,21 @@ bool cscript::memory::virtual_address::copy(const entry &source, const entry &de
 	return true;
 }
 
-void cscript::memory::virtual_address::copy_unchecked(const entry &source, const entry &destination){
+void cscript::memory::virtual_address::copy_unchecked(const entry &destination, const entry &source){
 
+}
+
+int cscript::memory::virtual_address::compare(const value_info &left, const value_info &right){
+	if (left.address->is_none(left.address->get_entry(left)) && right.address->is_none(right.address->get_entry(right)))
+		return 0;//Equal
+
+	if (left.offset != right.offset)
+		return (left.offset < right.offset) ? -1 : 1;
+
+	if (left.value != right.value)
+		return (left.value < right.value) ? -1 : 1;
+
+	return 0;
 }
 
 void cscript::memory::virtual_address::remove_(find_info &info){
@@ -162,6 +214,10 @@ void cscript::memory::virtual_address::find_available_(size_type size, find_info
 
 cscript::memory::virtual_address::list_type *cscript::memory::virtual_address::get_list_(size_type offset){
 	return (offset < list_.size()) ? &*std::next(list_.begin(), offset) : nullptr;
+}
+
+cscript::memory::virtual_address::multi_list_type::iterator cscript::memory::virtual_address::get_list_iterator_(size_type offset){
+	return (offset < list_.size()) ? std::next(list_.begin(), offset) : list_.end();
 }
 
 cscript::memory::virtual_address::list_type *cscript::memory::virtual_address::get_next_list_(size_type &offset){
