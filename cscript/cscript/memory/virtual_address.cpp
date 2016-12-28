@@ -30,6 +30,7 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 				info.iterator->size - size,
 				0u,
 				(info.iterator->value + size),
+				(info.iterator->value + size),
 				info.iterator->offset
 			});
 		}
@@ -57,11 +58,44 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 		size,
 		1u,
 		value,
+		value,
 		offset,
 		set
 	});
 
 	return *info.list->rbegin();
+}
+
+cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(entry &parent, size_type size, attribute set, attribute remove){
+	if (parent.size < size)
+		return none_;
+
+	guard_type guard(lock_);
+
+	find_info info{};
+	find_(parent, info);
+	if (info.list == nullptr || info.iterator == info.list->end())
+		return none_;
+
+	info.iterator = info.list->insert(info.iterator, entry{
+		this,
+		parent.base + (parent.value - parent.origin),
+		size,
+		1u,
+		parent.value,
+		parent.value,
+		parent.offset,
+		set,
+		nullptr,
+		nullptr,
+		nullptr,
+		&parent
+	});
+
+	parent.value += size;
+	parent.size -= size;
+
+	return *info.iterator;
 }
 
 bool cscript::memory::virtual_address::remove(const entry &entry){
@@ -87,7 +121,7 @@ bool cscript::memory::virtual_address::update_ref_count(const entry &entry, size
 	if (info.list == nullptr || info.iterator == info.list->end())
 		return false;
 
-	if (info.iterator->ref_count == 0u || --info.iterator->ref_count == 0u)
+	if ((info.iterator->ref_count == 0u || --info.iterator->ref_count == 0u) && info.iterator->value <= info.iterator->origin)
 		remove_(info);
 
 	return true;
@@ -173,18 +207,30 @@ int cscript::memory::virtual_address::compare(const value_info &left, const valu
 }
 
 void cscript::memory::virtual_address::remove_(find_info &info){
-	delete[] info.iterator->base;
-	info.iterator->base = nullptr;
+	auto parent = info.iterator->parent;
+	if (parent == nullptr){
+		delete[] info.iterator->base;
+		if (info.iterator != info.list->begin()){//Check if previous slot is empty
+			auto previous_entry = std::prev(info.iterator);
+			if (previous_entry->base == nullptr)//Empty
+				previous_entry->size += info.iterator->size;
 
-	if (info.iterator != info.list->begin()){//Check if previous slot is empty
-		auto previous_entry = std::prev(info.iterator);
-		if (previous_entry->base == nullptr)//Empty
-			previous_entry->size += info.iterator->size;
+			info.list->erase(info.iterator);
+		}
+		else//Indicate empty slot
+			info.iterator->base = nullptr;
+	}
+	else{//Embedded
+		parent->value -= info.iterator->size;
+		parent->size += info.iterator->size;
 
 		info.list->erase(info.iterator);
+		if (parent->value <= parent->origin && parent->ref_count == 0u){//Remove parent
+			find_info info;
+			find_(*parent, info);
+			remove_(info);
+		}
 	}
-	else//Indicate empty slot
-		info.iterator->base = nullptr;
 }
 
 void cscript::memory::virtual_address::find_(const entry &entry, find_info &info){

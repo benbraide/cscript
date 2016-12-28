@@ -55,8 +55,14 @@ std::string cscript::node::unary_operator::print_open_() const{
 }
 
 std::string cscript::node::unary_operator::print_close_() const{
-	/*switch (info_.id){
-	//case  lexer::operator_id::o
-	}*/
+	switch (info_.id){
+	case lexer::operator_id::call:
+		return ")";
+	case lexer::operator_id::index:
+		return "]";
+	default:
+		break;
+	}
+
 	return "";
 }

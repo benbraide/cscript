@@ -49,12 +49,14 @@ namespace cscript{
 				base_type base;
 				size_type size;
 				size_type ref_count;
+				value_type origin;
 				value_type value;
 				size_type offset;
 				attribute attributes;
 				object::generic *object;
 				generic_type type;
 				storage::generic *storage;
+				entry *parent;
 			};
 
 			struct value_info{
@@ -83,6 +85,13 @@ namespace cscript{
 			template <typename type>
 			entry &add(attribute set = attribute::nil, attribute remove = attribute::nil){
 				return add(static_cast<size_type>(sizeof(type)), set, remove);
+			}
+
+			entry &add(entry &parent, size_type size, attribute set = attribute::nil, attribute remove = attribute::nil);
+
+			template <typename type>
+			entry &add(entry &parent, attribute set = attribute::nil, attribute remove = attribute::nil){
+				return add(parent, static_cast<size_type>(sizeof(type)), set, remove);
 			}
 
 			bool remove(const entry &entry);

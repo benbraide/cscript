@@ -30,6 +30,8 @@ namespace cscript{
 					CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
 				}
 
+				numeric(memory::virtual_address::entry &parent, const type::generic::ptr_type type);
+
 				virtual ~numeric();
 
 				virtual generic *clone() override;

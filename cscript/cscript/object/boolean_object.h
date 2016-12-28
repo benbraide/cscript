@@ -20,6 +20,8 @@ namespace cscript{
 
 				boolean(memory::virtual_address &address_space, value_type value);
 
+				explicit boolean(memory::virtual_address::entry &parent);
+
 				virtual ~boolean();
 
 				virtual generic *clone() override;

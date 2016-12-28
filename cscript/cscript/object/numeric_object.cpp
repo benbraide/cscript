@@ -8,6 +8,11 @@ cscript::object::primitive::numeric::numeric(memory::virtual_address &address_sp
 	memory_.type = type;
 }
 
+cscript::object::primitive::numeric::numeric(memory::virtual_address::entry &parent, const type::generic::ptr_type type)
+	: basic(parent.address->add(parent, type->get_size())){
+	memory_.type = type;
+}
+
 cscript::object::primitive::numeric::~numeric(){}
 
 cscript::object::generic *cscript::object::primitive::numeric::clone(){

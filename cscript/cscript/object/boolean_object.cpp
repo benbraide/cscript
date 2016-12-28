@@ -17,6 +17,11 @@ cscript::object::primitive::boolean::boolean(memory::virtual_address &address_sp
 	memory::pool::write_unchecked(memory_.base, value);
 }
 
+cscript::object::primitive::boolean::boolean(memory::virtual_address::entry &parent)
+	: basic(parent.address->add(parent, common::env::bool_type->get_size())){
+	memory_.type = common::env::bool_type;
+}
+
 cscript::object::primitive::boolean::~boolean(){}
 
 cscript::object::generic *cscript::object::primitive::boolean::clone(){

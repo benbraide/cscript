@@ -26,6 +26,11 @@ cscript::object::pointer::pointer(memory::virtual_address &address_space, const 
 	CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::byte_aligned);
 }
 
+cscript::object::pointer::pointer(memory::virtual_address::entry &parent, const type::generic::ptr_type type)
+	: basic(parent.address->add<value_type>(parent)){
+	memory_.type = type;
+}
+
 cscript::object::pointer::~pointer(){}
 
 cscript::object::generic *cscript::object::pointer::clone(){

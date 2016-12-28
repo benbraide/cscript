@@ -17,6 +17,8 @@ namespace cscript{
 
 			pointer(memory::virtual_address &address_space, const value_type &value, type::generic::ptr_type type);
 
+			pointer(memory::virtual_address::entry &parent, const type::generic::ptr_type type);
+
 			virtual ~pointer();
 
 			virtual generic *clone() override;
