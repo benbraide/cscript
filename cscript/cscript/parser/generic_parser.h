@@ -16,6 +16,8 @@ namespace cscript{
 
 		class generic{
 		public:
+			typedef lexer::generic_source::option source_option;
+
 			typedef std::shared_ptr<node::generic> node_type;
 
 			virtual ~generic(){}
@@ -23,9 +25,33 @@ namespace cscript{
 			virtual node_type parse() = 0;
 		};
 
+		enum class state : unsigned int{
+			nil				= (0 << 0x0000),
+			typename_		= (1 << 0x0000),
+		};
+
 		struct parser_info{
 			lexer::generic_source::token_type token;
+			generic::node_type left_operand;
+			generic_context *context;
+			state states = state::nil;
 		};
+
+		class save_left_operand{
+		public:
+			explicit save_left_operand(parser_info &info)
+				: info_(info), left_operand_(info.left_operand){}
+
+			~save_left_operand(){
+				info_.left_operand = left_operand_;
+			}
+
+		private:
+			parser_info &info_;
+			generic::node_type left_operand_;
+		};
+		
+		CSCRIPT_MAKE_OPERATORS(state)
 	}
 }
 

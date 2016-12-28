@@ -29,12 +29,16 @@ cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *
 
 cscript::object::generic *cscript::object::basic::evaluate(const binary_info &info){
 	if (info.id == lexer::operator_id::assignment){
+		if (!is_lvalue() || is_constant())
+			return common::env::error.set("Operator does not take specified operands");
+
 		auto operand = common::env::get_object_operand();
 		if (operand == nullptr)
 			return common::env::error.set("Operator does not take specified operand");
 
-		auto value = operand->cast(get_type().get());
-		if (value == nullptr)
+		auto type = get_type();
+		auto value = operand->ref_cast(type.get());
+		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
 			return common::env::error.set("Cannot assign value into object");
 
 		memory::virtual_address::copy(memory_, value->get_memory());

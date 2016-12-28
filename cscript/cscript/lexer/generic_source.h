@@ -16,6 +16,8 @@ namespace cscript{
 				nil					= (0 << 0x0000),
 				no_expansion		= (1 << 0x0000),
 				invert_skipper		= (1 << 0x0001),
+				enable_skipper		= (1 << 0x0002),
+				disable_skipper		= (1 << 0x0003),
 			};
 
 			typedef generic_token_formatter::token_type token_type;
@@ -27,6 +29,8 @@ namespace cscript{
 			virtual generic_source &unlock() = 0;
 
 			virtual generic_source &branch() = 0;
+
+			virtual generic_source &branch_after(token_type token) = 0;
 
 			virtual generic_source &unbranch() = 0;
 
@@ -40,7 +44,11 @@ namespace cscript{
 
 			virtual token_type peek(source_info &info, int count = 1) = 0;
 
+			virtual token_type peek_after(token_type token, source_info &info, int count = 1) = 0;
+
 			virtual generic_source &ignore(source_info &info, int count = 1) = 0;
+
+			virtual generic_source &ignore_one(token_type token) = 0;
 
 			virtual generic_source &cache(source_info &info, int count = 1) = 0;
 
@@ -138,7 +146,12 @@ namespace cscript{
 			list_type list_;
 		};
 
-		struct source_info{
+		class source_info{
+		public:
+			source_info(defined_symbols &syms, generic_source &src, rule &rl, source_guard &gd, const generic_token_id_compare *skip,
+				const generic_token_formatter *format, generic_source::option opts = generic_source::option::nil)
+				: symbols(syms), source(src), rule(rl), guard(gd), skipper(skip), formatter(format), options(opts){}
+
 			defined_symbols &symbols;
 			generic_source &source;
 			rule &rule;

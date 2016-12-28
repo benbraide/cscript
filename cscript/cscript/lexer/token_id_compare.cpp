@@ -119,10 +119,6 @@ bool cscript::lexer::keyword_token_id::is(token_id value) const{
 	case token_id::echo:
 	case token_id::true_:
 	case token_id::false_:
-	case token_id::indeterminate:
-	case token_id::self:
-	case token_id::id:
-	case token_id::right:
 	case token_id::auto_:
 	case token_id::any:
 	case token_id::void_:
@@ -140,8 +136,6 @@ bool cscript::lexer::keyword_token_id::is(token_id value) const{
 	case token_id::double_:
 	case token_id::string:
 	case token_id::array_:
-	case token_id::construct:
-	case token_id::destruct:
 	case token_id::try_:
 	case token_id::catch_:
 	case token_id::finally_:
@@ -159,14 +153,21 @@ bool cscript::lexer::keyword_token_id::is(token_id value) const{
 	case token_id::break_:
 	case token_id::continue_:
 	case token_id::return_:
-	case token_id::as:
-	case token_id::in:
-	case token_id::get:
-	case token_id::set:
 	case token_id::decltype_:
-	case token_id::undefined:
 	case token_id::function:
 	case token_id::nullptr_:
+	case token_id::pointer:
+	case token_id::tls:
+	case token_id::static_:
+	case token_id::const_:
+	case token_id::final_:
+	case token_id::ref:
+	case token_id::private_:
+	case token_id::protected_:
+	case token_id::public_:
+	case token_id::type_cast:
+	case token_id::self:
+	case token_id::placeholder:
 		return true;
 	default:
 		break;
@@ -177,13 +178,7 @@ bool cscript::lexer::keyword_token_id::is(token_id value) const{
 
 bool cscript::lexer::context_keyword_token_id::is(token_id value) const{
 	switch (value){
-	case token_id::construct:
-	case token_id::destruct:
 	case token_id::default_:
-	case token_id::as:
-	case token_id::in:
-	case token_id::get:
-	case token_id::set:
 		return true;
 	default:
 		break;

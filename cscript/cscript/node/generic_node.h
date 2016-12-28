@@ -13,6 +13,8 @@ namespace cscript{
 	namespace node{
 		class generic{
 		public:
+			typedef std::shared_ptr<generic> ptr_type;
+
 			virtual ~generic(){}
 
 			virtual const generic *get_parent() const = 0;
@@ -29,7 +31,7 @@ namespace cscript{
 
 			virtual int get_print_tab() const = 0;
 
-			virtual object::generic::ptr_type evaluate() = 0;
+			virtual object::generic *evaluate() = 0;
 		};
 	}
 }

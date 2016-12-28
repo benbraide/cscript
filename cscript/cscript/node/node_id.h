@@ -8,6 +8,7 @@ namespace cscript{
 		enum class id{
 			nil,
 			literal,
+			operator_,
 		};
 	}
 }

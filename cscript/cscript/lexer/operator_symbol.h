@@ -48,6 +48,7 @@ namespace cscript{
 			times,
 			divide,
 			modulus,
+			throw_,
 			new_,
 			delete_,
 			sizeof_,

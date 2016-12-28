@@ -63,9 +63,26 @@ const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_
 
 const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(temp_address_space, int_type, 1);
 
+cscript::parser::collection::literal cscript::common::env::literal_parser;
+
+cscript::parser::collection::unary_operator cscript::common::env::unary_operator_parser;
+
+cscript::parser::collection::binary_operator cscript::common::env::binary_operator_parser;
+
+cscript::parser::collection::term cscript::common::env::term_parser;
+
+cscript::parser::collection::expression cscript::common::env::expression_parser;
+
 cscript::object::generic *cscript::common::env::get_object_operand(){
 	if (object_operand != nullptr || node_operand == nullptr)
 		return object_operand;
 
-	return (object_operand = temp_storage.add(node_operand->evaluate()));
+	return (object_operand = node_operand->evaluate());
+}
+
+void cscript::common::env::initialize(){
+	static auto indeterminate = std::make_shared<object::primitive::boolean>(type::boolean_value_type::nil);
+
+	address_space.add(bool_type->get_size(), memory::virtual_address::attribute::nil,
+		memory::virtual_address::attribute::uninitialized).object = indeterminate.get();
 }

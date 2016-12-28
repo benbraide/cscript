@@ -7,10 +7,11 @@
 
 cscript::lexer::rule::rule(){
 	std::vector<std::string> reserved({
-		"class", "enum", "namespace", "using", "new", "delete", "typename", "operator", "sizeof", "typeof", "echo", "true", "false", "indeterminate", "self",
-		"__id", "__right", "auto", "any", "void", "bool", "bit", "byte", "nan", "char", "wchar", "short", "int", "long", "unsigned", "float", "double",
-		"string", "array", "__construct", "__destruct", "try", "catch", "finally", "throw", "if", "else", "unless", "while", "for", "until",
-		"do", "switch", "case", "default", "break", "continue", "return", "as", "in", "get", "set", "decltype", "undefined", "function", "nullptr"
+		"class", "enum", "namespace", "using", "new", "delete", "typename", "operator", "sizeof", "typeof", "echo", "true", "false",
+		"auto", "any", "void", "bool", "bit", "byte", "nan", "char", "wchar", "short", "int", "long", "unsigned", "float", "double",
+		"string", "array", "try", "catch", "finally", "throw", "if", "else", "unless", "while", "for", "until", "do", "switch", "case",
+		"default", "break", "continue", "return", "decltype", "function", "nullptr", "pointer_t", "thread_local", "static", "const",
+		"final", "ref", "private", "protected", "public", "type_cast", "self", "__placeholder"
 	});
 
 	std::vector<std::string> lang({
@@ -135,10 +136,6 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::echo,
 	token_id::true_,
 	token_id::false_,
-	token_id::indeterminate,
-	token_id::self,
-	token_id::id,
-	token_id::right,
 	token_id::auto_,
 	token_id::any,
 	token_id::void_,
@@ -156,8 +153,6 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::double_,
 	token_id::string,
 	token_id::array_,
-	token_id::construct,
-	token_id::destruct,
 	token_id::try_,
 	token_id::catch_,
 	token_id::finally_,
@@ -175,14 +170,21 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::break_,
 	token_id::continue_,
 	token_id::return_,
-	token_id::as,
-	token_id::in,
-	token_id::get,
-	token_id::set,
 	token_id::decltype_,
-	token_id::undefined,
 	token_id::function,
 	token_id::nullptr_,
+	token_id::pointer,
+	token_id::tls,
+	token_id::static_,
+	token_id::const_,
+	token_id::final_,
+	token_id::ref,
+	token_id::private_,
+	token_id::protected_,
+	token_id::public_,
+	token_id::type_cast,
+	token_id::self,
+	token_id::placeholder,
 	token_id::exp,
 	token_id::exp,
 	token_id::exp,

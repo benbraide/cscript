@@ -8,8 +8,6 @@
 #include "basic_node.h"
 
 #include "../type/type_id.h"
-#include "../common/env.h"
-#include "../object/numeric_object.h"
 
 namespace cscript{
 	namespace node{
@@ -22,18 +20,20 @@ namespace cscript{
 				std::string error;
 			};
 
-			literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator, generic *parent = nullptr);
+			literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator, generic *parent = nullptr);
 
 			virtual ~literal();
 
-			virtual object::generic::ptr_type evaluate() override;
+			virtual object::generic *evaluate() override;
+
+			virtual lexer::token_id get_token_id() const;
 
 		protected:
 			virtual std::string print_() const override;
 
 			info info_;
+			lexer::token_id id_;
 			std::string value_;
-			std::string suffix_;
 		};
 	}
 }

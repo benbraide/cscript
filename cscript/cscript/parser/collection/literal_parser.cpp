@@ -1,4 +1,5 @@
 #include "literal_parser.h"
+#include "../../object/numeric_object.h"
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse(){
 	auto id = common::env::source_info->rule.map_index(common::env::parser_info.token->get_match_index());
@@ -66,18 +67,23 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, lexer::token_id::dec, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ullong_type, std::stoull(value));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::llong_type, std::stoll(value));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ulong_type, std::stoul(value));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::long_type, std::stol(value));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::uint_type, static_cast<unsigned int>(std::stoul(value)));
 		default:
 			break;
 		}
@@ -95,23 +101,29 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, lexer::token_id::hex, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ullong_type, std::stoull(value.substr(2), nullptr, 16));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::llong_type, std::stoll(value.substr(2), nullptr, 16));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ulong_type, std::stoul(value.substr(2), nullptr, 16));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(2), nullptr, 16));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::long_type, std::stol(value.substr(2), nullptr, 16));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 16)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 16)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(2), nullptr, 16));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+			common::env::int_type, std::stoi(value.substr(2), nullptr, 16));
 	});
 }
 
@@ -124,18 +136,23 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, lexer::token_id::oct, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ullong_type, std::stoull(value, nullptr, 8));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::llong_type, std::stoll(value, nullptr, 8));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ulong_type, std::stoul(value, nullptr, 8));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value, nullptr, 8));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::long_type, std::stol(value, nullptr, 8));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value, nullptr, 8)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::uint_type, static_cast<unsigned int>(std::stoul(value, nullptr, 8)));
 		default:
 			break;
 		}
@@ -153,26 +170,32 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, lexer::token_id::rad, token_value + suffix_string, [suffix_value](const std::string &value){
 		std::string::size_type offset;
 		auto base = std::stoi(value, &offset);
 
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ullong_type, std::stoull(value.substr(offset + 1), nullptr, base));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::llong_type, std::stoll(value.substr(offset + 1), nullptr, base));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ulong_type, std::stoul(value.substr(offset + 1), nullptr, base));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(offset + 1), nullptr, base));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::long_type, std::stol(value.substr(offset + 1), nullptr, base));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(offset + 1), nullptr, base)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(offset + 1), nullptr, base)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(offset + 1), nullptr, base));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+			common::env::int_type, std::stoi(value.substr(offset + 1), nullptr, base));
 	});
 }
 
@@ -185,23 +208,29 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, lexer::token_id::bin, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::ullong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ullong_type, std::stoull(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ullong_type, std::stoull(value.substr(2), nullptr, 2));
 		case suffix::llong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::llong_type, std::stoll(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::llong_type, std::stoll(value.substr(2), nullptr, 2));
 		case suffix::ulong:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ulong_type, std::stoul(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ulong_type, std::stoul(value.substr(2), nullptr, 2));
 		case suffix::long_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::long_type, std::stol(value.substr(2), nullptr, 2));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::long_type, std::stol(value.substr(2), nullptr, 2));
 		case suffix::uint:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 2)));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::uint_type, static_cast<unsigned int>(std::stoul(value.substr(2), nullptr, 2)));
 		default:
 			break;
 		}
 
-		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::int_type, std::stoi(value.substr(2), nullptr, 2));
+		return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+			common::env::int_type, std::stoi(value.substr(2), nullptr, 2));
 	});
 }
 
@@ -213,13 +242,16 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
+	auto id = common::env::source_info->rule.map_index(common::env::parser_info.token->get_match_index());
 
-	return std::make_shared<node::literal>(index, token_value, suffix_string, [suffix_value](const std::string &value){
+	return std::make_shared<node::literal>(index, id, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
 		case suffix::float_:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::float_type, std::stof(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::float_type, std::stof(value));
 		case suffix::ldouble:
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space, common::env::ldouble_type, std::stold(value));
+			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
+				common::env::ldouble_type, std::stold(value));
 		default:
 			break;
 		}
@@ -244,11 +276,13 @@ cscript::parser::collection::literal::suffix cscript::parser::collection::litera
 	static boost::regex regex("^([uU][lL][lL])|([uU][lL])|([lL][lL])|([uU])|([lL])$", boost::regex_constants::optimize);
 
 	lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
-	auto next = common::env::source_info->source.peek(*common::env::source_info);
+	auto next = common::env::source_info->source.peek_after(common::env::parser_info.token, *common::env::source_info);
 	if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::identifier)
 		return suffix::nil;
 
 	value = next->get_value();
+	common::env::source_info->source.ignore_one(next);
+
 	boost::match_results<std::string::const_iterator> results;
 	if (!boost::regex_search(value.cbegin(), value.cend(), results, regex, boost::regex_constants::match_single_line)){
 		common::env::error.set("Invalid suffix", next->get_index());

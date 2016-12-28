@@ -8,9 +8,14 @@
 #include "error.h"
 
 #include "../lexer/generic_source.h"
-#include "../parser/generic_parser.h"
 #include "../type/primitive_type.h"
 #include "../storage/temp_storage.h"
+
+#include "../parser/collection/literal_parser.h"
+#include "../parser/collection/term_parser.h"
+#include "../parser/collection/unary_operator_parser.h"
+#include "../parser/collection/binary_operator_parser.h"
+#include "../parser/collection/expression_parser.h"
 
 namespace cscript{
 	namespace common{
@@ -62,7 +67,17 @@ namespace cscript{
 			static const object::generic::ptr_type zero;
 			static const object::generic::ptr_type one;
 
+			static parser::collection::literal literal_parser;
+
+			static parser::collection::unary_operator unary_operator_parser;
+			static parser::collection::binary_operator binary_operator_parser;
+
+			static parser::collection::term term_parser;
+			static parser::collection::expression expression_parser;
+
 			static object::generic *get_object_operand();
+
+			static void initialize();
 		};
 	}
 }

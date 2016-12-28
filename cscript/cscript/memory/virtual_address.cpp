@@ -127,6 +127,10 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_e
 	return none_;
 }
 
+cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_entry(value_type value){
+	return get_entry(value_info{ this, value, 0u });
+}
+
 cscript::memory::virtual_address::value_type cscript::memory::virtual_address::convert_info(const value_info &info){
 	auto list = get_list_(info.offset);
 	if (list == nullptr)

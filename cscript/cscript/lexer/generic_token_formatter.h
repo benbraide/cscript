@@ -13,7 +13,7 @@
 namespace cscript{
 	namespace lexer{
 		class generic_source;
-		struct source_info;
+		class source_info;
 		
 		class generic_token_formatter{
 		public:

@@ -17,14 +17,14 @@ bool cscript::lexer::token::is_processed() const{
 cscript::lexer::token &cscript::lexer::token::update(const index &index, const std::string &value, int match_index){
 	index_ = index;
 	value_ = value;
-	match_index = match_index_;
+	match_index_ = match_index;
 	return *this;
 }
 
 cscript::lexer::token &cscript::lexer::token::update(const index &index, std::string &&value, int match_index){
 	index_ = index;
 	value_ = static_cast<std::string &&>(value);
-	match_index = match_index_;
+	match_index_ = match_index;
 	return *this;
 }
 
@@ -44,7 +44,7 @@ cscript::lexer::token &cscript::lexer::token::update(std::string &&value){
 }
 
 cscript::lexer::token &cscript::lexer::token::update(int match_index){
-	match_index = match_index_;
+	match_index_ = match_index;
 	return *this;
 }
 

@@ -7,7 +7,10 @@
 #include <mutex>
 #include <memory>
 
+#include "../common/preprocessor.h"
+
 #include "generic_source.h"
+#include "token_id_compare.h"
 
 namespace cscript{
 	namespace lexer{
@@ -19,6 +22,7 @@ namespace cscript{
 
 				typedef list_type::size_type size_type;
 				typedef list_type::iterator iterator_type;
+				typedef list_type::const_iterator const_iterator_type;
 
 				typedef std::list<size_type> size_list_type;
 
@@ -36,6 +40,17 @@ namespace cscript{
 					branches_.push_back(offset_value_);
 					offset_value_ = list_.size();
 					offset_ = list_.end();
+				}
+
+				void branch_after(token_type token){
+					branches_.push_back(offset_value_);
+					for (; offset_ != list_.end(); ++offset_, ++offset_value_){
+						if (*offset_ == token){
+							++offset_;
+							++offset_value_;
+							break;
+						}
+					}
 				}
 
 				void unbranch(){
@@ -65,6 +80,15 @@ namespace cscript{
 						list_.push_back(entry);
 
 					offset_ = std::next(list_.begin(), offset_value_);
+				}
+
+				void ignore(token_type token){
+					for (auto iter = offset_; iter != list_.end(); ++iter){
+						if (*iter == token){
+							list_.erase(iter);
+							break;
+						}
+					}
 				}
 
 				token_type get(int &count, bool discard, source_info &info){
@@ -108,13 +132,23 @@ namespace cscript{
 					return value;
 				}
 
-				token_type get(int &count, source_info *info) const{
+				token_type get(int &count, source_info *info, bool use_after, token_type after) const{
 					if (count <= 0 || offset_ == list_.end())
 						return nullptr;
 
+					const_iterator_type iter = offset_;
+					if (use_after){
+						for (; iter != list_.end(); ++iter){
+							if (*iter == after){
+								++iter;
+								break;
+							}
+						}
+					}
+
 					token_type value;
 					if (info != nullptr && info->skipper == nullptr){
-						auto relative_size = static_cast<int>(size());
+						auto relative_size = static_cast<int>(std::distance(iter, list_.end()));
 						if (relative_size < count){
 							value = nullptr;
 							count -= relative_size;
@@ -125,7 +159,7 @@ namespace cscript{
 						}
 					}
 					else{//Check for skips
-						for (auto iter = offset_; iter != list_.end(); ++iter){
+						for (; iter != list_.end(); ++iter){
 							if (info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info->options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
@@ -158,10 +192,20 @@ namespace cscript{
 				size_type offset_value_ = 0;
 			};
 
+			enum class common_source_flag : unsigned int{
+				nil				= (0 << 0x0000),
+				cache			= (1 << 0x0000),
+				check_cache		= (1 << 0x0001),
+				after			= (1 << 0x0002),
+			};
+
+			CSCRIPT_MAKE_OPERATORS(common_source_flag)
+
 			template <class iterator_type>
 			class common : public generic_source{
 			public:
 				typedef iterator_type iterator_type;
+				typedef common_source_flag flag;
 
 				typedef std::recursive_mutex lock_type;
 				typedef std::shared_ptr<lock_type> lock_type_ptr;
@@ -205,6 +249,12 @@ namespace cscript{
 					return *this;
 				}
 
+				virtual generic_source &branch_after(token_type token) override{
+					auto_lock lock(lock_);
+					cache_.branch_after(token);
+					return *this;
+				}
+
 				virtual generic_source &unbranch() override{
 					auto_lock lock(lock_);
 					cache_.unbranch();
@@ -239,15 +289,25 @@ namespace cscript{
 				}
 
 				virtual token_type next(source_info &info, int count = 1) override{
-					return next_(info, count, false, true);
+					return next_(info, count, flag::check_cache, nullptr);
 				}
 
 				virtual token_type peek(source_info &info, int count = 1) override{
-					return next_(info, count, true, true);
+					return next_(info, count, flag::check_cache | flag::cache, nullptr);
+				}
+
+				virtual token_type peek_after(token_type token, source_info &info, int count = 1) override{
+					return next_(info, count, flag::check_cache | flag::cache | flag::after, token);
 				}
 
 				virtual generic_source &ignore(source_info &info, int count = 1) override{
-					next_(info, count, false, true);
+					next_(info, count, flag::check_cache, nullptr);
+					return *this;
+				}
+
+				virtual generic_source &ignore_one(token_type token) override{
+					auto_lock lock(lock_);
+					cache_.ignore(token);
 					return *this;
 				}
 
@@ -255,7 +315,7 @@ namespace cscript{
 					auto_lock lock(lock_);
 
 					branch();
-					next_(info, count, true, false);
+					next_(info, count, flag::cache, nullptr);
 					unbranch();
 
 					return *this;
@@ -297,12 +357,12 @@ namespace cscript{
 				virtual const token::index &get_index() const override{
 					auto_lock lock(lock_);
 					auto count = 1;
-					return cache_.is_empty() ? index_ : cache_.get(count, nullptr)->get_index();
+					return cache_.is_empty() ? index_ : cache_.get(count, nullptr, false, nullptr)->get_index();
 				}
 
 				virtual bool has_more() const override{
 					auto_lock lock(lock_);
-					return (current_ != end_ || !cache_.is_empty());
+					return (current_ != end_ || cache_.size() > 0u);
 				}
 
 				virtual bool is_branched() const override{
@@ -324,13 +384,18 @@ namespace cscript{
 					return *(current_++);
 				}
 
-				virtual token_type next_(source_info &info, int count, bool cache, bool check_cache){
+				virtual token_type next_(source_info &info, int count, flag flags, token_type after){
 					auto_lock lock(lock_);
 					if (count <= 0 || !has_more())//No more tokens
 						return nullptr;
 
 					auto cache_offset = count;
-					auto value = check_cache ? cache_.get(count, !cache, info) : nullptr;
+					token_type value;
+					if (CSCRIPT_IS(flags, flag::after))
+						value = cache_.get(count, &info, true, after);
+					else//No after
+						value = CSCRIPT_IS(flags, flag::check_cache) ? cache_.get(count, !CSCRIPT_IS(flags, flag::cache), info) : nullptr;
+
 					if (value != nullptr)//Found in cache
 						return value;
 
@@ -361,7 +426,7 @@ namespace cscript{
 								if (!expansion->empty())
 									cache_.append(*expansion);
 
-								return next_(info, cache ? cache_offset : count, cache, check_cache);
+								return next_(info, CSCRIPT_IS(flags, flag::cache) ? cache_offset : count, flags, after);
 							}
 						}
 						else if (id == token_id::new_line)
@@ -377,10 +442,16 @@ namespace cscript{
 							cache_.unbranch();
 						}
 
-						if (cache){//Cache
+						if (CSCRIPT_IS(flags, flag::cache)){//Cache
 							create_value_(info, formatted_info, creator, value);
-							if (value != nullptr)
-								cache_.insert(value, cache_offset++);
+							if (value != nullptr){
+								if (CSCRIPT_IS(flags, flag::after))
+									cache_.append(value);
+								else
+									cache_.insert(value, cache_offset);
+
+								++cache_offset;
+							}
 						}
 
 						if (formatted_info.match_index == info.rule.get_error_index()){//Error encountered

@@ -97,6 +97,8 @@ namespace cscript{
 
 			entry &get_entry(const value_info &info);
 
+			entry &get_entry(value_type value);
+
 			value_type convert_info(const value_info &info);
 
 			static bool copy(const entry &destination, const entry &source);

@@ -1,4 +1,4 @@
-#include "numeric_object.h"
+#include "pointer_object.h"
 
 cscript::object::primitive::numeric::numeric(const type::generic::ptr_type type)
 	: numeric(common::env::address_space, type){}
@@ -64,6 +64,28 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 		break;
 	}
 
+	if (type->is_pointer() && get_type()->is_integral()){
+		auto value = get_value<memory::virtual_address::value_type>();
+		switch (type->remove_pointer()->get_id()){
+		case type::id::any:
+		case type::id::byte:
+			return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
+				&common::env::address_space, value, 0 }));
+		default:
+			break;
+		}
+
+		auto &entry = common::env::address_space.get_entry(value);
+		if (common::env::address_space.is_none(entry) || entry.type == nullptr || !entry.type->is_same(type) ||
+			common::env::address_space.convert_info(pointer::value_type{ nullptr, entry.value, entry.offset }) != value){
+			return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
+				&common::env::address_space, 0, 0 }));//nullptr
+		}
+
+		return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
+			entry.address, entry.value, entry.offset }));
+	}
+
 	return memory_.type->has_conversion(type) ? clone() : basic::cast(type);
 }
 
@@ -71,6 +93,23 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	auto operand = common::env::get_object_operand();
 	if (operand == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
+
+	if (info.id == lexer::operator_id::assignment){
+		if (!is_lvalue() || is_constant())
+			return common::env::error.set("Operator does not take specified operands");
+
+		auto type = get_type();
+		auto value = operand->ref_cast(type.get());
+		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
+			return common::env::error.set("Cannot assign value into object");
+
+		if (value->query<numeric>()->is_nan())
+			CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::is_nan);
+		else//Copy value
+			memory::virtual_address::copy(memory_, value->get_memory());
+
+		return this;
+	}
 
 	auto operand_type = operand->get_type();
 	if (!operand_type->is_numeric())
@@ -481,9 +520,9 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 		right = common::env::static_block1.get_base();
 	}
 	else{//Cast this
-		left = operand.get_memory().base;
+		right = operand.get_memory().base;
 		op = cast_value_(bully->get_id(), *this);
-		right = common::env::static_block1.get_base();
+		left = common::env::static_block1.get_base();
 	}
 
 	return op;

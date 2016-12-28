@@ -96,6 +96,22 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 		if (operand_type->is_integral()){
 			auto &value = get_value_();
 			switch (info.id){
+			case lexer::operator_id::compound_plus:
+				if (!is_lvalue() || is_constant())
+					return common::env::error.set("Operator does not take specified operands");
+
+				value.value += (operand->query<primitive::numeric>()->get_value<int>() *
+					memory_.type->remove_pointer()->get_size());
+
+				return this;
+			case lexer::operator_id::compound_minus:
+				if (!is_lvalue() || is_constant())
+					return common::env::error.set("Operator does not take specified operands");
+
+				value.value -= (operand->query<primitive::numeric>()->get_value<int>() *
+					memory_.type->remove_pointer()->get_size());
+
+				return this;
 			case lexer::operator_id::plus:
 				return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
 					value_type{ value.address, value.value + (operand->query<primitive::numeric>()->get_value<int>() *
@@ -104,6 +120,14 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 				return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
 					value_type{ value.address, value.value - (operand->query<primitive::numeric>()->get_value<int>() *
 						memory_.type->remove_pointer()->get_size()), value.offset }));
+			case lexer::operator_id::member_pointer_access:
+			{
+				auto &entry = value.address->get_entry(value);
+				if (value.address->is_none(entry))
+					return common::env::error.set("Operator does not take specified operands");
+
+				return entry.object->evaluate(binary_info{ lexer::operator_id::member_access });
+			}
 			default:
 				break;
 			}

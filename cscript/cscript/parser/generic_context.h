@@ -14,9 +14,11 @@ namespace cscript{
 		public:
 			virtual ~generic_context(){}
 
+			virtual generic_context *get_parent() = 0;
+
 			virtual bool accepts(node::id id) const = 0;
 
-			virtual bool accepts(lexer::token_id id) const = 0;
+			virtual bool is_block() const = 0;
 
 			template <typename object_type>
 			object_type *query(){

@@ -1,7 +1,8 @@
 #include "literal_node.h"
+#include "../common/env.h"
 
-cscript::node::literal::literal(const lexer::token::index &index, const std::string &value, const std::string &suffix, creator creator, generic *parent)
-	: basic(id::literal, index, parent), value_(value), suffix_(suffix){
+cscript::node::literal::literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator, generic *parent)
+	: basic(id::literal, index, parent), id_(id), value_(value){
 	try{
 		info_.value = creator(value_);
 	}
@@ -15,10 +16,14 @@ cscript::node::literal::literal(const lexer::token::index &index, const std::str
 
 cscript::node::literal::~literal(){}
 
-cscript::object::generic::ptr_type cscript::node::literal::evaluate(){
-	return (info_.value == nullptr) ? common::env::error.set(info_.error, index_) : info_.value;
+cscript::object::generic *cscript::node::literal::evaluate(){
+	return (info_.value == nullptr) ? common::env::error.set(info_.error, index_) : info_.value.get();
+}
+
+cscript::lexer::token_id cscript::node::literal::get_token_id() const{
+	return id_;
 }
 
 std::string cscript::node::literal::print_() const{
-	return (value_ + suffix_);
+	return value_;
 }
