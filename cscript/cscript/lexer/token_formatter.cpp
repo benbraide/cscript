@@ -399,20 +399,12 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	if (error != nullptr)
 		return error;
 
-	info.guard.begin();
-	if (info.symbols.is_defined(target->get_value()) == is_defined){
-		info.guard.reject_next();
-		return [&info](match_info &match){ return info.source.next(info); };
-	}
+	auto states = preprocessor_token::conditional::state::nil;
+	if (info.symbols.is_defined(target->get_value()) != is_defined)
+		CSCRIPT_SET(states, preprocessor_token::conditional::state::is_rejected);
 
-	info.guard.disable_block();
-	while (info.source.has_more() && info.guard.block_is_disabled())//Skip inactive tokens
-		info.source.ignore(info);
-
-	if (info.guard.is_ended())
-		info.guard.end();
-
-	return [&info](match_info &match){ return info.source.next(info); };
+	return [states](match_info &match){ return std::make_shared<preprocessor_token::conditional>(
+		match.index, std::string(match.start, match.size), match.match_index, states); };
 }
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::preprocessor::format_else_(
@@ -425,25 +417,8 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 			return error;
 	}
 
-	if (info.guard.is_empty() || info.guard.next_is_disabled()){
-		match.match_index = info.rule.get_error_index();
-		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Invalid token"); };
-	}
-
-	info.guard.disable_next();
-	if (!info.guard.is_rejected()){
-		info.guard.enable_block();
-		return [](match_info &match){ return nullptr; };
-	}
-
-	info.guard.disable_block();
-	while (info.source.has_more() && info.guard.block_is_disabled())//Skip inactive tokens
-		info.source.ignore(info);
-
-	if (info.guard.is_ended())
-		info.guard.end();
-
-	return [&info](match_info &match){ return info.source.next(info); };
+	return [](match_info &match){ return std::make_shared<preprocessor_token::conditional>(
+		match.index, "else", match.match_index, preprocessor_token::conditional::state::is_else); };
 }
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::preprocessor::format_end_if_(
@@ -455,19 +430,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 			return error;
 	}
 
-	if (info.guard.is_empty()){
-		match.match_index = info.rule.get_error_index();
-		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Invalid token"); };
-	}
-
-	if (info.guard.block_is_disabled()){
-		info.guard.enable_block();
-		info.guard.end(false);
-		return [](match_info &match){ return nullptr; };
-	}
-
-	info.guard.end();
-	return [&info](match_info &match){ return info.source.next(info); };
+	return nullptr;
 }
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::preprocessor::format_pragma_(

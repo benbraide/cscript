@@ -26,3 +26,14 @@ cscript::lexer::preprocessor_token::define::list_type &cscript::lexer::preproces
 
 cscript::lexer::preprocessor_token::undefine::undefine(const index &index, const std::string &value, int match_index)
 	: token(index, value, match_index, {}){}
+
+cscript::lexer::preprocessor_token::conditional::conditional(const index &index, const std::string &value, int match_index, state states)
+	: token(index, value, match_index, {}), states_(states){}
+
+bool cscript::lexer::preprocessor_token::conditional::is_rejected() const{
+	return CSCRIPT_IS(states_, state::is_rejected);
+}
+
+bool cscript::lexer::preprocessor_token::conditional::is_else() const{
+	return CSCRIPT_IS(states_, state::is_else);
+}

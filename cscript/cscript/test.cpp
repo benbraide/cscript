@@ -18,13 +18,11 @@ int main(){
 	rule rule;
 	file ss("test/sample.txt");
 	defined_symbols symbols;
-	source_guard guard;
 
 	env::source_info = std::make_shared<source_info>(
 		symbols,
 		ss,
 		rule,
-		guard,
 		&token_id_compare_collection::skip,
 		&formatter::linked_collection::last
 	);
@@ -32,6 +30,7 @@ int main(){
 	while (ss.has_more()){
 		auto n = env::expression_parser.parse();
 		if (n != nullptr){
+			auto s = n->print();
 			auto o = n->evaluate();
 			auto i = o->query<object::primitive::numeric>()->get_value<int>();
 			i += 0;

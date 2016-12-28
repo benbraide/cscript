@@ -69,69 +69,19 @@ namespace cscript{
 
 		class source_guard{
 		public:
-			struct info{
-				unsigned int state;
-				const generic_token_id_compare *skipper;
-			};
+			typedef std::list<bool> list_type;
 
-			typedef std::list<info> list_type;
-
-			void begin(){
-				list_.push_back(info{});
+			void begin(bool is_rejected){
+				list_.push_back(is_rejected);
 			}
 
-			void end(bool remove = true){
-				if (!list_.empty()){
-					if (remove)
-						list_.pop_back();
-					else//Set flag
-						list_.rbegin()->state |= 8;
-				}
-			}
-
-			void set_skipper(const generic_token_id_compare *skipper){
+			void end(){
 				if (!list_.empty())
-					list_.rbegin()->skipper = skipper;
-			}
-
-			void reject_next(){
-				if (!list_.empty())
-					list_.rbegin()->state |= 1;
-			}
-
-			void disable_next(){
-				if (!list_.empty())
-					list_.rbegin()->state |= 2;
-			}
-
-			void disable_block(){
-				if (!list_.empty())
-					list_.rbegin()->state |= 4;
-			}
-
-			void enable_block(){
-				if (!list_.empty())
-					list_.rbegin()->state &= ~4;
-			}
-
-			const generic_token_id_compare *get_skipper() const{
-				return list_.empty() ? nullptr : list_.rbegin()->skipper;
-			}
-
-			bool is_ended() const{
-				return list_.empty() ? false : ((list_.rbegin()->state & 8) == 8);
+					list_.pop_back();
 			}
 
 			bool is_rejected() const{
-				return list_.empty() ? false : ((list_.rbegin()->state & 1) == 1);
-			}
-
-			bool next_is_disabled() const{
-				return list_.empty() ? false : ((list_.rbegin()->state & 2) == 2);
-			}
-
-			bool block_is_disabled() const{
-				return list_.empty() ? false : ((list_.rbegin()->state & 4) == 4);
+				return list_.empty() ? false : *list_.rbegin();
 			}
 
 			bool is_empty() const{
@@ -148,14 +98,13 @@ namespace cscript{
 
 		class source_info{
 		public:
-			source_info(defined_symbols &syms, generic_source &src, rule &rl, source_guard &gd, const generic_token_id_compare *skip,
+			source_info(defined_symbols &syms, generic_source &src, rule &rl, const generic_token_id_compare *skip,
 				const generic_token_formatter *format, generic_source::option opts = generic_source::option::nil)
-				: symbols(syms), source(src), rule(rl), guard(gd), skipper(skip), formatter(format), options(opts){}
+				: symbols(syms), source(src), rule(rl), skipper(skip), formatter(format), options(opts){}
 
 			defined_symbols &symbols;
 			generic_source &source;
 			rule &rule;
-			source_guard &guard;
 			const generic_token_id_compare *skipper;
 			const generic_token_formatter *formatter;
 			generic_source::option options;

@@ -24,6 +24,7 @@ namespace cscript{
 			static thread_local object::generic *object_operand;
 			static thread_local node::generic *node_operand;
 
+			static thread_local lexer::source_guard source_guard;
 			static thread_local std::shared_ptr<lexer::source_info> source_info;
 			static thread_local parser::parser_info parser_info;
 			static thread_local error error;

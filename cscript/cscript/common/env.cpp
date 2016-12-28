@@ -5,6 +5,8 @@ thread_local cscript::object::generic *cscript::common::env::object_operand;
 
 thread_local cscript::node::generic *cscript::common::env::node_operand;
 
+thread_local cscript::lexer::source_guard cscript::common::env::source_guard;
+
 thread_local std::shared_ptr<cscript::lexer::source_info> cscript::common::env::source_info;
 
 thread_local cscript::parser::parser_info cscript::common::env::parser_info{};

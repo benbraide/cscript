@@ -314,9 +314,9 @@ namespace cscript{
 				virtual generic_source &cache(source_info &info, int count = 1) override{
 					auto_lock lock(lock_);
 
-					branch();
+					cache_.branch();
 					next_(info, count, flag::cache, nullptr);
-					unbranch();
+					cache_.unbranch();
 
 					return *this;
 				}

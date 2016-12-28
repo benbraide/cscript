@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 
+#include "../common/preprocessor.h"
 #include "token.h"
 
 namespace cscript{
@@ -44,6 +45,26 @@ namespace cscript{
 			public:
 				undefine(const index &index, const std::string &value, int match_index);
 			};
+
+			class conditional : public token{
+			public:
+				enum class state : unsigned int{
+					nil				= (0 << 0x0000),
+					is_rejected		= (1 << 0x0000),
+					is_else			= (1 << 0x0001),
+				};
+
+				conditional(const index &index, const std::string &value, int match_index, state states);
+
+				bool is_rejected() const;
+
+				bool is_else() const;
+
+			private:
+				state states_;
+			};
+
+			CSCRIPT_MAKE_OPERATORS(conditional::state)
 		}
 	}
 }
