@@ -28,6 +28,11 @@ namespace cscript{
 			virtual std::string print() const = 0;
 
 			virtual object::generic *evaluate() = 0;
+
+			template <typename object_type>
+			object_type *query(){
+				return dynamic_cast<object_type *>(this);
+			}
 		};
 	}
 }

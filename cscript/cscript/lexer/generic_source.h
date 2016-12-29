@@ -50,6 +50,8 @@ namespace cscript{
 
 			virtual generic_source &ignore_one(token_type token) = 0;
 
+			virtual generic_source &ignore_before(token_id id, source_info &info) = 0;
+
 			virtual generic_source &cache(source_info &info, int count = 1) = 0;
 
 			virtual char get_char(int count = 1) = 0;

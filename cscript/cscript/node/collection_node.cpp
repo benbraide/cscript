@@ -15,7 +15,14 @@ cscript::node::generic::ptr_type cscript::node::collection::clone(){
 }
 
 cscript::object::generic *cscript::node::collection::evaluate(){
-	return common::env::error.set("", index_);
+	object::generic *value;
+	for (auto entry : list_){
+		value = entry->evaluate();
+		if (common::env::error.has())
+			break;
+	}
+
+	return value;
 }
 
 cscript::node::collection &cscript::node::collection::append(ptr_type value){

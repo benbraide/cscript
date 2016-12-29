@@ -37,6 +37,10 @@ namespace cscript{
 				static node_type parse_list(const halt_info &terminator, bool no_trailing_delimiter);
 
 				static node_type parse_list(const halt_info &terminator);
+
+				static node_type parse_block(const halt_info &terminator, before_callback_type before_callback, after_callback_type after_callback);
+
+				static node_type parse_block(const halt_info &terminator);
 			};
 		}
 	}

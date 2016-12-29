@@ -328,6 +328,18 @@ namespace cscript{
 					return *this;
 				}
 
+				virtual generic_source &ignore_before(token_id id, source_info &info) override{
+					token_type token;
+					while (has_more()){
+						if ((token = peek(info)) == nullptr || info.rule.map_index(token->get_match_index()) == id)
+							break;
+
+						ignore(info);
+					}
+
+					return *this;
+				}
+
 				virtual generic_source &cache(source_info &info, int count = 1) override{
 					auto_lock lock(lock_);
 

@@ -10,6 +10,8 @@ namespace cscript{
 			literal,
 			operator_,
 			collection,
+			statement,
+			block,
 		};
 	}
 }
