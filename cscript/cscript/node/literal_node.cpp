@@ -1,8 +1,8 @@
 #include "literal_node.h"
 #include "../common/env.h"
 
-cscript::node::literal::literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator, generic *parent)
-	: basic(id::literal, index, parent), id_(id), value_(value){
+cscript::node::literal::literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator)
+	: basic(id::literal, index), id_(id), value_(value), creator_(creator){
 	try{
 		info_.value = creator(value_);
 	}
@@ -15,6 +15,10 @@ cscript::node::literal::literal(const lexer::token::index &index, lexer::token_i
 }
 
 cscript::node::literal::~literal(){}
+
+cscript::node::generic::ptr_type cscript::node::literal::clone(){
+	return std::make_shared<literal>(index_, id_, value_, creator_);
+}
 
 cscript::object::generic *cscript::node::literal::evaluate(){
 	return (info_.value == nullptr) ? common::env::error.set(info_.error, index_) : info_.value.get();

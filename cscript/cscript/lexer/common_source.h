@@ -98,7 +98,7 @@ namespace cscript{
 					token_type value;
 					iterator_type end;
 
-					if (info.skipper == nullptr){
+					if (info.skipper == nullptr && info.halt.id == token_id::nil){
 						auto relative_size = static_cast<int>(size());
 						if (relative_size < count){
 							value = nullptr;
@@ -113,7 +113,13 @@ namespace cscript{
 					}
 					else{//Check for skips
 						for (auto iter = (end = offset_); iter != list_.end(); ++iter, ++end){
-							if (info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
+							if (info.rule.map_index((*iter)->get_match_index()) == info.halt.id && (info.halt.value.empty() ||
+								(*iter)->get_value() == info.halt.value)){
+								count = 0;
+								break;
+							}
+
+							if (info.skipper != nullptr && info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info.options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									++end;
@@ -147,7 +153,7 @@ namespace cscript{
 					}
 
 					token_type value;
-					if (info != nullptr && info->skipper == nullptr){
+					if (info != nullptr && info->skipper == nullptr && info->halt.id == token_id::nil){
 						auto relative_size = static_cast<int>(std::distance(iter, list_.end()));
 						if (relative_size < count){
 							value = nullptr;
@@ -160,7 +166,13 @@ namespace cscript{
 					}
 					else{//Check for skips
 						for (; iter != list_.end(); ++iter){
-							if (info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
+							if (info->rule.map_index((*iter)->get_match_index()) == info->halt.id && (info->halt.value.empty() ||
+								(*iter)->get_value() == info->halt.value)){
+								count = 0;
+								break;
+							}
+
+							if (info->skipper != nullptr && info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info->options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									value = *iter;
@@ -183,6 +195,11 @@ namespace cscript{
 
 				bool is_empty() const{
 					return list_.empty();
+				}
+
+				bool is_halted(source_info::halt_info &info, generic_rule &rule) const{
+					return (offset_ == list_.end() || (rule.map_index((*offset_)->get_match_index()) == info.id &&
+						(info.value.empty() || (*offset_)->get_value() == info.value)));
 				}
 
 			private:
@@ -396,7 +413,7 @@ namespace cscript{
 					else//No after
 						value = CSCRIPT_IS(flags, flag::check_cache) ? cache_.get(count, !CSCRIPT_IS(flags, flag::cache), info) : nullptr;
 
-					if (value != nullptr)//Found in cache
+					if (value != nullptr || count <= 0)//Found in cache | halted
 						return value;
 
 					generic_token_formatter::creator_type creator = nullptr;
@@ -440,6 +457,19 @@ namespace cscript{
 							creator = info.formatter->format(formatted_info, info);
 							id = info.rule.map_index(formatted_info.match_index);
 							cache_.unbranch();
+						}
+
+						if (info.halt.id != token_id::nil){//Check for halt
+							create_value_(info, formatted_info, creator, value);
+							if (value != nullptr && info.rule.map_index(value->get_match_index()) == info.halt.id &&
+								(info.halt.value.empty() || value->get_value() == info.halt.value)){//Halted
+								if (CSCRIPT_IS(flags, flag::after))
+									cache_.append(value);
+								else
+									cache_.insert(value, cache_offset);
+
+								return nullptr;
+							}
 						}
 
 						if (CSCRIPT_IS(flags, flag::cache)){//Cache

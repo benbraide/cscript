@@ -1,10 +1,14 @@
 #include "binary_operator_node.h"
 #include "../common/env.h"
 
-cscript::node::binary_operator::binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right, generic *parent)
-	: basic(id::operator_, index, parent), info_(info), left_(left), right_(right){}
+cscript::node::binary_operator::binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right)
+	: basic(id::operator_, index), info_(info), left_(left), right_(right){}
 
 cscript::node::binary_operator::~binary_operator(){}
+
+cscript::node::generic::ptr_type cscript::node::binary_operator::clone(){
+	return std::make_shared<binary_operator>(index_, info_, left_->clone(), right_->clone());
+}
 
 cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	auto left = left_->evaluate();

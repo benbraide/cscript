@@ -16,6 +16,7 @@
 #include "../parser/collection/unary_operator_parser.h"
 #include "../parser/collection/binary_operator_parser.h"
 #include "../parser/collection/expression_parser.h"
+#include "../parser/collection/collection_parser.h"
 
 namespace cscript{
 	namespace common{
@@ -75,6 +76,8 @@ namespace cscript{
 
 			static parser::collection::term term_parser;
 			static parser::collection::expression expression_parser;
+
+			static parser::collection::builder builder;
 
 			static object::generic *get_object_operand();
 

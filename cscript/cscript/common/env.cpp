@@ -75,6 +75,8 @@ cscript::parser::collection::term cscript::common::env::term_parser;
 
 cscript::parser::collection::expression cscript::common::env::expression_parser;
 
+cscript::parser::collection::builder cscript::common::env::builder;
+
 cscript::object::generic *cscript::common::env::get_object_operand(){
 	if (object_operand != nullptr || node_operand == nullptr)
 		return object_operand;

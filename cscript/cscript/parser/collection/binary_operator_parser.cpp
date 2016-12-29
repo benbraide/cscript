@@ -76,8 +76,21 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 				node::binary_operator::info_type{ id, token->get_value() }, left_operand, operand);
 		}
 	}
-	else if (type < 3){// () | []
+	else if (type == 1){// ()
+		auto operand = common::env::builder.parse_list(builder::halt_info{ lexer::token_id::close_par });
+		if (common::env::error.has())
+			return nullptr;
 
+		common::env::parser_info.left_operand = std::make_shared<node::binary_operator>(left_operand->get_index(),
+			node::binary_operator::info_type{ id, token->get_value() }, left_operand, operand);
+	}
+	else if (type == 2){// []
+		auto operand = common::env::builder.parse_list(builder::halt_info{ lexer::token_id::close_sq });
+		if (common::env::error.has())
+			return nullptr;
+
+		common::env::parser_info.left_operand = std::make_shared<node::binary_operator>(left_operand->get_index(),
+			node::binary_operator::info_type{ id, token->get_value() }, left_operand, operand);
 	}
 	else{//Unary right
 		common::env::parser_info.left_operand = std::make_shared<node::unary_operator>(left_operand->get_index(),

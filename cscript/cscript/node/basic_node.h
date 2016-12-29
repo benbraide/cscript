@@ -9,13 +9,9 @@ namespace cscript{
 	namespace node{
 		class basic : public generic{
 		public:
-			basic(id id, const lexer::token::index &index, generic *parent = nullptr);
+			basic(id id, const lexer::token::index &index);
 
 			virtual ~basic();
-
-			virtual const generic *get_parent() const override;
-
-			virtual generic *get_parent() override;
 
 			virtual id get_id() const override;
 
@@ -25,13 +21,10 @@ namespace cscript{
 
 			virtual std::string print() const override;
 
-			virtual int get_print_tab() const override;
-
 		protected:
 			virtual std::string print_() const;
 
 			id id_;
-			generic *parent_;
 			lexer::token::index index_;
 		};
 	}

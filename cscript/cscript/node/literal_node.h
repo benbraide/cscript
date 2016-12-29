@@ -20,9 +20,11 @@ namespace cscript{
 				std::string error;
 			};
 
-			literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator, generic *parent = nullptr);
+			literal(const lexer::token::index &index, lexer::token_id id, const std::string &value, creator creator);
 
 			virtual ~literal();
+
+			virtual ptr_type clone() override;
 
 			virtual object::generic *evaluate() override;
 
@@ -33,6 +35,7 @@ namespace cscript{
 
 			info info_;
 			lexer::token_id id_;
+			creator creator_;
 			std::string value_;
 		};
 	}

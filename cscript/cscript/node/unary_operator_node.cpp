@@ -3,10 +3,14 @@
 #include "../object/boolean_object.h"
 #include "../common/env.h"
 
-cscript::node::unary_operator::unary_operator(const lexer::token::index &index, const info_type &info, ptr_type operand, generic *parent)
-	: basic(id::operator_, index, parent), info_(info), operand_(operand){}
+cscript::node::unary_operator::unary_operator(const lexer::token::index &index, const info_type &info, ptr_type operand)
+	: basic(id::operator_, index), info_(info), operand_(operand){}
 
 cscript::node::unary_operator::~unary_operator(){}
+
+cscript::node::generic::ptr_type cscript::node::unary_operator::clone(){
+	return std::make_shared<unary_operator>(index_, info_, operand_->clone());
+}
 
 cscript::object::generic *cscript::node::unary_operator::evaluate(){
 	auto operand = operand_->evaluate();

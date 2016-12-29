@@ -11,9 +11,11 @@ namespace cscript{
 		public:
 			typedef object::generic::binary_info info_type;
 
-			binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right, generic *parent = nullptr);
+			binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right);
 
 			virtual ~binary_operator();
+
+			virtual ptr_type clone() override;
 
 			virtual object::generic *evaluate() override;
 

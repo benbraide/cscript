@@ -11,9 +11,11 @@ namespace cscript{
 		public:
 			typedef object::generic::unary_info info_type;
 
-			unary_operator(const lexer::token::index &index, const info_type &info, ptr_type operand, generic *parent = nullptr);
+			unary_operator(const lexer::token::index &index, const info_type &info, ptr_type operand);
 
 			virtual ~unary_operator();
+
+			virtual ptr_type clone() override;
 
 			virtual object::generic *evaluate() override;
 

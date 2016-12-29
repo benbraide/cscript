@@ -9,6 +9,7 @@ namespace cscript{
 			nil,
 			literal,
 			operator_,
+			collection,
 		};
 	}
 }

@@ -98,6 +98,11 @@ namespace cscript{
 
 		class source_info{
 		public:
+			struct halt_info{
+				token_id id;
+				std::string value;
+			};
+
 			source_info(defined_symbols &syms, generic_source &src, rule &rl, const generic_token_id_compare *skip,
 				const generic_token_formatter *format, generic_source::option opts = generic_source::option::nil)
 				: symbols(syms), source(src), rule(rl), skipper(skip), formatter(format), options(opts){}
@@ -107,6 +112,7 @@ namespace cscript{
 			rule &rule;
 			const generic_token_id_compare *skipper;
 			const generic_token_formatter *formatter;
+			halt_info halt;
 			generic_source::option options;
 		};
 

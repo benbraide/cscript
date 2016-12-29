@@ -17,9 +17,7 @@ namespace cscript{
 
 			virtual ~generic(){}
 
-			virtual const generic *get_parent() const = 0;
-
-			virtual generic *get_parent() = 0;
+			virtual ptr_type clone() = 0;
 
 			virtual id get_id() const = 0;
 
@@ -28,8 +26,6 @@ namespace cscript{
 			virtual bool is(id id) const = 0;
 
 			virtual std::string print() const = 0;
-
-			virtual int get_print_tab() const = 0;
 
 			virtual object::generic *evaluate() = 0;
 		};
