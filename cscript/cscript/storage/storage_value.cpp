@@ -10,8 +10,8 @@ cscript::storage::value::value(type_ptr type){
 	info_.type = type;
 }
 
-cscript::storage::value::value(object_type &object){
-	info_.object = &object;
+cscript::storage::value::value(object_ptr object){
+	info_.object = object;
 }
 
 void cscript::storage::value::set(generic &storage){
@@ -22,8 +22,8 @@ void cscript::storage::value::set(type_ptr type){
 	info_.type = type;
 }
 
-void cscript::storage::value::set(object_type &object){
-	info_.object = &object;
+void cscript::storage::value::set(object_ptr object){
+	info_.object = object;
 }
 
 cscript::storage::generic *cscript::storage::value::get_storage(){
@@ -35,7 +35,7 @@ cscript::storage::generic_value::type_ptr cscript::storage::value::get_type(){
 }
 
 cscript::storage::generic_value::object_type *cscript::storage::value::get_object(){
-	return info_.object;
+	return info_.object.get();
 }
 
 bool cscript::storage::value::is_storage() const{

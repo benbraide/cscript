@@ -42,6 +42,10 @@ namespace cscript{
 				constant		= (1 << 0x0004),
 				is_nan			= (1 << 0x0005),
 				byte_aligned	= (1 << 0x0006),
+				final_			= (1 << 0x0007),
+				static_			= (1 << 0x0008),
+				private_		= (1 << 0x0009),
+				protected_		= (1 << 0x000A),
 			};
 
 			struct entry{

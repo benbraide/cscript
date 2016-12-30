@@ -15,7 +15,7 @@ namespace cscript{
 			struct info{
 				generic *storage;
 				type_ptr type;
-				object_type *object;
+				object_ptr object;
 			};
 
 			value();
@@ -24,13 +24,13 @@ namespace cscript{
 
 			explicit value(type_ptr type);
 
-			explicit value(object_type &object);
+			explicit value(object_ptr object);
 
-			virtual void set(generic &storage);
+			virtual void set(generic &storage) override;
 
-			virtual void set(type_ptr type);
+			virtual void set(type_ptr type) override;
 
-			virtual void set(object_type &object);
+			virtual void set(object_ptr object) override;
 
 			virtual generic *get_storage() override;
 

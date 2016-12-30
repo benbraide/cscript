@@ -11,6 +11,8 @@ namespace cscript{
 		public:
 			typedef memory::virtual_address::value_info value_type;
 
+			explicit pointer(const type::generic::ptr_type type);
+
 			explicit pointer(const value_type &value);
 
 			pointer(memory::virtual_address &address_space, const value_type &value);

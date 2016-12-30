@@ -23,10 +23,11 @@ cscript::parser::generic::node_type cscript::parser::collection::unary_operator:
 	common::env::parser_info.context = &context;
 
 	auto operand = common::env::expression_parser.parse();
+	common::env::parser_info.context = context.get_parent();//Restore context
+
 	if (common::env::error.has())
 		return nullptr;
 
-	common::env::parser_info.context = context.get_parent();//Restore context
 	if (operand == nullptr){
 
 	}

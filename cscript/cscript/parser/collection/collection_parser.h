@@ -6,6 +6,7 @@
 #include <functional>
 
 #include "../generic_parser.h"
+#include "../parser_context.h"
 #include "../../node/collection_node.h"
 
 namespace cscript{
@@ -41,6 +42,8 @@ namespace cscript{
 				static node_type parse_block(const halt_info &terminator, before_callback_type before_callback, after_callback_type after_callback);
 
 				static node_type parse_block(const halt_info &terminator);
+
+				static node_type parse_type();
 			};
 		}
 	}

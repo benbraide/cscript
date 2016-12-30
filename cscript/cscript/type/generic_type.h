@@ -10,6 +10,10 @@
 #include "../memory/virtual_address.h"
 
 namespace cscript{
+	namespace object{
+		class generic;
+	}
+
 	namespace type{
 		class generic{
 		public:
@@ -25,6 +29,10 @@ namespace cscript{
 			virtual std::string name() const = 0;
 
 			virtual std::string print() const = 0;
+
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) = 0;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::entry &parent, ptr_type this_ptr) = 0;
 
 			virtual id get_id() const = 0;
 

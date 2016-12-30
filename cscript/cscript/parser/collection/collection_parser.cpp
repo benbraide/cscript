@@ -107,3 +107,20 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse_block(const halt_info &terminator){
 	return parse_block(terminator, nullptr, nullptr);
 }
+
+cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse_type(){
+	auto states = common::env::parser_info.states;
+	CSCRIPT_SET(common::env::parser_info.states, state::typename_);
+
+	context::expression context(15, common::env::parser_info.context);
+	common::env::parser_info.context = &context;
+
+	auto value = common::env::expression_parser.parse();
+	common::env::parser_info.context = context.get_parent();//Restore context
+	common::env::parser_info.states = states;//Restore states
+
+	if (common::env::error.has())
+		return nullptr;
+
+	return value;
+}

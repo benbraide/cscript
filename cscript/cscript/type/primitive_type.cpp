@@ -1,4 +1,5 @@
 #include "primitive_type.h"
+#include "../object/pointer_object.h"
 
 cscript::type::primitive::primitive(id id)
 	: id_(id){
@@ -122,6 +123,66 @@ std::string cscript::type::primitive::name() const{
 
 std::string cscript::type::primitive::print() const{
 	return name();
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_type this_ptr){
+	switch (id_){
+	case type::id::any:
+		return std::make_shared<object::primitive::numeric>(this_ptr);
+	case type::id::bool_:
+		return std::make_shared<object::primitive::boolean>();
+	case type::id::byte:
+		return std::make_shared<object::primitive::numeric>(this_ptr);
+	case type::id::char_:
+	case type::id::uchar:
+	case type::id::wchar:
+	case type::id::short_:
+	case type::id::ushort:
+	case type::id::int_:
+	case type::id::uint:
+	case type::id::long_:
+	case type::id::ulong:
+	case type::id::llong:
+	case type::id::ullong:
+	case type::id::float_:
+	case type::id::double_:
+	case type::id::ldouble:
+		return std::make_shared<object::primitive::numeric>(this_ptr);
+	default:
+		break;
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memory::virtual_address::entry &parent, ptr_type this_ptr){
+	switch (id_){
+	case type::id::any:
+		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+	case type::id::bool_:
+		return std::make_shared<object::primitive::boolean>(parent);
+	case type::id::byte:
+		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+	case type::id::char_:
+	case type::id::uchar:
+	case type::id::wchar:
+	case type::id::short_:
+	case type::id::ushort:
+	case type::id::int_:
+	case type::id::uint:
+	case type::id::long_:
+	case type::id::ulong:
+	case type::id::llong:
+	case type::id::ullong:
+	case type::id::float_:
+	case type::id::double_:
+	case type::id::ldouble:
+		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+	default:
+		break;
+	}
+
+	return nullptr;
 }
 
 cscript::type::id cscript::type::primitive::get_id() const{
@@ -308,6 +369,14 @@ std::string cscript::type::pointer::name() const{
 
 std::string cscript::type::pointer::print() const{
 	return ("pointer_t<" + value_->print() + ">");
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(ptr_type this_ptr){
+	return std::make_shared<object::pointer>(value_);
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(memory::virtual_address::entry &parent, ptr_type this_ptr){
+	return std::make_shared<object::pointer>(parent, value_);
 }
 
 const cscript::type::generic *cscript::type::pointer::get_bully(const generic *type) const{

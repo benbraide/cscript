@@ -1,5 +1,10 @@
 #include "pointer_object.h"
 
+cscript::object::pointer::pointer(const type::generic::ptr_type type)
+	: basic(common::env::address_space.add<value_type>()){
+	memory_.type = std::make_shared<type::pointer>(type);
+}
+
 cscript::object::pointer::pointer(const value_type &value)
 	: pointer(common::env::address_space, value){}
 

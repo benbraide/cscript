@@ -63,10 +63,11 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 		common::env::parser_info.context = &context;
 
 		auto operand = common::env::expression_parser.parse();
+		common::env::parser_info.context = context.get_parent();//Restore context
+
 		if (common::env::error.has())
 			return nullptr;
 
-		common::env::parser_info.context = context.get_parent();//Restore context
 		if (operand == nullptr){//Unary right
 			common::env::parser_info.left_operand = std::make_shared<node::unary_operator>(left_operand->get_index(),
 				node::unary_operator::info_type{ false, id, token->get_value() }, left_operand);

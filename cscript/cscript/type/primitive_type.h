@@ -27,6 +27,10 @@ namespace cscript{
 
 			virtual std::string print() const override;
 
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::entry &parent, ptr_type this_ptr) override;
+
 			virtual id get_id() const override;
 
 			virtual size_type get_size() const override;
@@ -79,6 +83,10 @@ namespace cscript{
 			virtual std::string name() const override;
 
 			virtual std::string print() const override;
+
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::entry &parent, ptr_type this_ptr) override;
 
 			virtual const generic *get_bully(const generic *type) const override;
 

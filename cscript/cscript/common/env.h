@@ -47,6 +47,7 @@ namespace cscript{
 
 			static const type::generic::ptr_type any_type;
 			static const type::generic::ptr_type auto_type;
+			static const type::generic::ptr_type void_type;
 
 			static const type::generic::ptr_type bool_type;
 			static const type::generic::ptr_type bit_type;

@@ -19,10 +19,17 @@ namespace cscript{
 	namespace storage{
 		class generic_value{
 		public:
-			typedef std::shared_ptr<type::generic> type_ptr;
 			typedef object::generic object_type;
+			typedef std::shared_ptr<object_type> object_ptr;
+			typedef std::shared_ptr<type::generic> type_ptr;
 
 			virtual ~generic_value(){}
+
+			virtual void set(generic &storage) = 0;
+
+			virtual void set(type_ptr type) = 0;
+
+			virtual void set(object_ptr object) = 0;
 
 			virtual generic *get_storage() = 0;
 
