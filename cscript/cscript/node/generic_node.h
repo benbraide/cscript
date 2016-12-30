@@ -8,6 +8,7 @@
 #include "node_id.h"
 #include "../lexer/token.h"
 #include "../object/generic_object.h"
+#include "../storage/generic_storage.h"
 
 namespace cscript{
 	namespace node{
@@ -28,6 +29,12 @@ namespace cscript{
 			virtual std::string print() const = 0;
 
 			virtual object::generic *evaluate() = 0;
+
+			virtual std::string get_key() = 0;
+
+			virtual storage::generic *get_storage() = 0;
+
+			virtual type::generic::ptr_type get_type() = 0;
 
 			template <typename object_type>
 			object_type *query(){

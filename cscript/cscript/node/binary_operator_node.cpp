@@ -24,6 +24,42 @@ cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	return left->evaluate(info_);
 }
 
+cscript::storage::generic *cscript::node::binary_operator::get_storage(){
+	if (info_.id == lexer::operator_id::scope_resolution){
+		auto storage = left_->get_storage();
+		if (storage == nullptr)
+			return nullptr;
+
+		auto value = storage->find(right_->get_key());
+		return (value == nullptr) ? nullptr : value->get_storage();
+	}
+
+	return nullptr;
+}
+
+cscript::type::generic::ptr_type cscript::node::binary_operator::get_type(){
+	if (info_.id == lexer::operator_id::scope_resolution){
+		auto storage = left_->get_storage();
+		if (storage == nullptr)
+			return nullptr;
+
+		auto value = storage->find(right_->get_key());
+		return (value == nullptr) ? nullptr : value->get_type();
+	}
+
+	if (info_.id == lexer::operator_id::bitwise_or){
+		auto left = left_->get_type();
+		if (left == nullptr)
+			return nullptr;
+
+		auto right = right_->get_type();
+		if (right == nullptr)
+			return nullptr;
+	}
+
+	return nullptr;
+}
+
 const cscript::node::binary_operator::info_type &cscript::node::binary_operator::get_info() const{
 	return info_;
 }

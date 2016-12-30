@@ -6,10 +6,13 @@
 #include <memory>
 
 #include "error.h"
+#include "runtime.h"
 
 #include "../lexer/generic_source.h"
 #include "../type/primitive_type.h"
+
 #include "../storage/temp_storage.h"
+#include "../storage/basic_storage.h"
 
 #include "../parser/collection/literal_parser.h"
 #include "../parser/collection/term_parser.h"
@@ -29,9 +32,12 @@ namespace cscript{
 			static thread_local lexer::source_guard source_guard;
 			static thread_local std::shared_ptr<lexer::source_info> source_info;
 			static thread_local parser::parser_info parser_info;
-			static thread_local error error;
 
 			static thread_local storage::temp temp_storage;
+			static storage::basic global_storage;
+
+			static thread_local error error;
+			static thread_local runtime runtime;
 
 			static thread_local memory::static_block static_block1;
 			static thread_local memory::static_block static_block2;

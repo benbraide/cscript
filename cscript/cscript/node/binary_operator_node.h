@@ -19,6 +19,10 @@ namespace cscript{
 
 			virtual object::generic *evaluate() override;
 
+			virtual storage::generic *get_storage() override;
+
+			virtual type::generic::ptr_type get_type() override;
+
 			const info_type &get_info() const;
 
 			ptr_type get_left() const;

@@ -21,6 +21,12 @@ namespace cscript{
 
 			virtual std::string print() const override;
 
+			virtual std::string get_key() override;
+
+			virtual storage::generic *get_storage() override;
+
+			virtual type::generic::ptr_type get_type() override;
+
 		protected:
 			virtual std::string print_() const;
 

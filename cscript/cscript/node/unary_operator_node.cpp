@@ -39,6 +39,24 @@ cscript::object::generic *cscript::node::unary_operator::evaluate(){
 	return operand->evaluate(info_);
 }
 
+cscript::storage::generic *cscript::node::unary_operator::get_storage(){
+	if (info_.left && info_.id == lexer::operator_id::scope_resolution){
+		auto value = common::env::global_storage.find(get_key());
+		return (value == nullptr) ? nullptr : value->get_storage();
+	}
+
+	return nullptr;
+}
+
+cscript::type::generic::ptr_type cscript::node::unary_operator::get_type(){
+	if (info_.left && info_.id == lexer::operator_id::scope_resolution){
+		auto value = common::env::global_storage.find(get_key());
+		return (value == nullptr) ? nullptr : value->get_type();
+	}
+
+	return nullptr;
+}
+
 const cscript::node::unary_operator::info_type &cscript::node::unary_operator::get_info() const{
 	return info_;
 }

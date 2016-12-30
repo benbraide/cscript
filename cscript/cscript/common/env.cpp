@@ -11,9 +11,13 @@ thread_local std::shared_ptr<cscript::lexer::source_info> cscript::common::env::
 
 thread_local cscript::parser::parser_info cscript::common::env::parser_info{};
 
+thread_local cscript::storage::temp cscript::common::env::temp_storage;
+
+cscript::storage::basic cscript::common::env::global_storage;
+
 thread_local cscript::common::error cscript::common::env::error;
 
-thread_local cscript::storage::temp cscript::common::env::temp_storage;
+thread_local cscript::common::runtime cscript::common::env::runtime{ &global_storage };
 
 thread_local cscript::memory::static_block cscript::common::env::static_block1;
 
