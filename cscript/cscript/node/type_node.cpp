@@ -139,15 +139,31 @@ cscript::node::generic::ptr_type cscript::node::type_with_storage_class::clone()
 	return std::make_shared<type_with_storage_class>(index_, attributes_, type_->clone(), value_);
 }
 
+bool cscript::node::type_with_storage_class::is(id id) const{
+	return (id == node::id::type || id == node::id::type_with_storage);
+}
+
 cscript::object::generic *cscript::node::type_with_storage_class::evaluate(){
 	return common::env::error.set("", index_);
+}
+
+std::string cscript::node::type_with_storage_class::get_key(){
+	return type_->get_key();
+}
+
+cscript::storage::generic *cscript::node::type_with_storage_class::get_storage(){
+	return type_->get_storage();
+}
+
+cscript::type::generic::ptr_type cscript::node::type_with_storage_class::get_type(){
+	return type_->get_type();
 }
 
 cscript::node::type_with_storage_class::attribute_type cscript::node::type_with_storage_class::get_attributes() const{
 	return attributes_;
 }
 
-cscript::node::generic::ptr_type cscript::node::type_with_storage_class::get_type() const{
+cscript::node::generic::ptr_type cscript::node::type_with_storage_class::get_value() const{
 	return type_;
 }
 

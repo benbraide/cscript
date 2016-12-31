@@ -83,6 +83,8 @@ cscript::parser::collection::expression cscript::common::env::expression_parser;
 
 cscript::parser::collection::statement cscript::common::env::statement_parser;
 
+cscript::parser::collection::declaration cscript::common::env::declaration_parser;
+
 cscript::parser::collection::builder cscript::common::env::builder;
 
 cscript::object::generic *cscript::common::env::get_object_operand(){

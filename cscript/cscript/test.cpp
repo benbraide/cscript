@@ -13,13 +13,14 @@ using namespace cscript;
 using namespace cscript::common;
 using namespace cscript::lexer;
 using namespace cscript::lexer::source;
+using namespace cscript::parser;
 
 int main(){
 	rule rule;
 	file ss("test/sample.txt");
 	defined_symbols symbols;
 
-	env::source_info = std::make_shared<source_info>(
+	cscript::common::env::source_info = std::make_shared<source_info>(
 		symbols,
 		ss,
 		rule,
@@ -27,18 +28,9 @@ int main(){
 		&formatter::linked_collection::last
 	);
 
-	while (ss.has_more()){
-		auto n = env::expression_parser.parse();
-		if (n != nullptr){
-			auto s = n->print();
-			auto o = n->evaluate();
-			auto i = o->query<object::primitive::numeric>()->get_value<int>();
-			i += 0;
-		}
-		/*if (rule.map_index(v->get_match_index()) == token_id::prep_def){
-			symbols.add(v->get_value(), std::move(v->query<preprocessor_token::define>()->get_list()));
-		}*/
-	}
+	auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
+	if (lines != nullptr)
+		lines->evaluate();
 
 	return 0;
 }

@@ -57,9 +57,13 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 
 	if ((value == nullptr || !value->is(node::id::block))){
 		auto index = token->get_index();
+		auto halt = common::env::source_info->halt;
 		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
 
+		common::env::source_info->halt = { lexer::token_id::nil };//Disable halt
 		token = common::env::source_info->source.peek(*common::env::source_info);
+		common::env::source_info->halt = halt;//Restore halt
+
 		if (token == nullptr || common::env::source_info->rule.map_index(token->get_match_index()) != lexer::token_id::semi_colon)
 			return common::env::error.set("", index);
 	}

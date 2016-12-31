@@ -109,7 +109,7 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 int cscript::parser::collection::binary_operator::get_precedence_(lexer::operator_token &token){
 	switch (token.get_id()){
 	case lexer::operator_id::comma:
-		return 0;
+		return CSCRIPT_IS(common::env::parser_info.states, state::list) ? -1 : 0;
 	case lexer::operator_id::ternary:
 	case lexer::operator_id::assignment:
 	case lexer::operator_id::compound_bitwise_or:

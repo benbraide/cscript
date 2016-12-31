@@ -29,6 +29,7 @@ namespace cscript{
 					bool no_trailing_delimiter;
 					before_callback_type before_callback;
 					after_callback_type after_callback;
+					bool require_trailing_delimiter;
 				};
 
 				static node_type parse(const options &options);
@@ -44,6 +45,8 @@ namespace cscript{
 				static node_type parse_block(const halt_info &terminator);
 
 				static node_type parse_type();
+
+				static node_type parse_expression();
 			};
 		}
 	}

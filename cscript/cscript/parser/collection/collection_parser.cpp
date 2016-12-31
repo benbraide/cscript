@@ -2,16 +2,21 @@
 #include "../../common/env.h"
 
 cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse(const options &options){
+	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+
 	auto terminated = false, has_trailing_delimiter = true;
-	auto collection = std::make_shared<node::collection>(common::env::parser_info.token->get_index());
+	auto token = common::env::source_info->source.peek(*common::env::source_info);
+	if (token == nullptr)
+		return std::make_shared<node::collection>(common::env::source_info->source.get_index());
 
 	node_type node;
-	token_type token;
 	token_id_type token_id;
+	auto collection = std::make_shared<node::collection>(token->get_index());
 
 	auto halt = common::env::source_info->halt;
+	common::env::source_info->halt = {};//Disable halt
+
 	while (common::env::source_info->source.has_more()){
-		common::env::source_info->halt = {};
 		if ((token = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
 			break;
 
@@ -38,7 +43,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 		if (options.before_callback != nullptr && (!options.before_callback() || common::env::error.has()))
 			break;
 
-		common::env::source_info->halt = options.delimiter;
+		common::env::source_info->halt = options.delimiter;//Enable halt
 		if ((node = options.parser.parse()) == nullptr || common::env::error.has())
 			break;
 
@@ -46,6 +51,8 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			break;
 
 		collection->append(node);
+		common::env::source_info->halt = {};//Disable halt
+
 		if ((token = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
 			break;
 
@@ -67,8 +74,10 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	if (common::env::error.has())
 		return nullptr;
 
-	if ((!terminated && options.terminator.id != lexer::token_id::nil) || (has_trailing_delimiter && options.no_trailing_delimiter))
+	if ((!terminated && options.terminator.id != lexer::token_id::nil) || (has_trailing_delimiter && options.no_trailing_delimiter) ||
+		(!has_trailing_delimiter && options.require_trailing_delimiter)){
 		return common::env::error.set("", collection->get_index());
+	}
 
 	return collection;
 }
@@ -100,7 +109,8 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 		halt_info{ lexer::token_id::semi_colon },
 		false,
 		before_callback,
-		after_callback
+		after_callback,
+		true,
 	});
 }
 
@@ -117,6 +127,19 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 
 	auto value = common::env::expression_parser.parse();
 	common::env::parser_info.context = context.get_parent();//Restore context
+	common::env::parser_info.states = states;//Restore states
+
+	if (common::env::error.has())
+		return nullptr;
+
+	return value;
+}
+
+cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse_expression(){
+	auto states = common::env::parser_info.states;
+	CSCRIPT_SET(common::env::parser_info.states, state::list);
+
+	auto value = common::env::expression_parser.parse();
 	common::env::parser_info.states = states;//Restore states
 
 	if (common::env::error.has())

@@ -28,6 +28,7 @@ namespace cscript{
 		enum class state : unsigned int{
 			nil				= (0 << 0x0000),
 			typename_		= (1 << 0x0000),
+			list			= (1 << 0x0001),
 		};
 
 		struct parser_info{

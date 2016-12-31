@@ -1,27 +1,55 @@
 #include "ref_object.h"
 
-cscript::object::ref::ref(value_type &value, bool is_constant)
-	: basic(value), value_(value), is_constant_(is_constant){
-	value_.address->increment_ref_count(memory_);
+cscript::object::ref::ref(const type::generic::ptr_type type)
+	: basic(common::env::address_space.add<value_type>()), is_constant_(false), value_(nullptr){
+	memory_.type = type;
+	memory::pool::convert_unchecked<value_type>(memory_.base) = 0;
+}
+
+cscript::object::ref::ref(entry_type &value, bool is_constant)
+	: basic(common::env::address_space.add<value_type>()), is_constant_(is_constant), value_(&value){
+	memory_.type = value.type;
+	value.address->increment_ref_count(value);
+
+	CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+	memory::pool::convert_unchecked<value_type>(memory_.base) = reinterpret_cast<value_type>(&value);
 }
 
 cscript::object::ref::~ref(){
-	value_.address->decrement_ref_count(memory_);
+	if (value_ != nullptr)
+		value_->address->decrement_ref_count(*value_);
 }
 
 cscript::object::generic *cscript::object::ref::clone(){
-	return value_.object->clone();
+	return value_->object->clone();
 }
 
 cscript::object::generic *cscript::object::ref::cast(const type::generic *type){
-	return value_.object->cast(type);
+	return value_->object->cast(type);
 }
 
 cscript::object::generic *cscript::object::ref::ref_cast(const type::generic *type){
-	return value_.object->ref_cast(type);
+	return value_->object->ref_cast(type);
 }
 
 cscript::object::generic *cscript::object::ref::evaluate(const binary_info &info){
+	if (info.id == lexer::operator_id::assignment && is_uninitialized()){
+		auto operand = common::env::get_object_operand();
+		if (operand == nullptr)
+			return common::env::error.set("Bad initialization expression");
+
+		auto compatible_object = operand->ref_cast(get_type().get());
+		if (compatible_object == nullptr || !compatible_object->is_lvalue())
+			return common::env::error.set("Bad initialization expression");
+
+		CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+		memory::pool::convert_unchecked<value_type>(memory_.base) =
+			reinterpret_cast<value_type>(value_ = &compatible_object->get_memory());
+		value_->address->increment_ref_count(*value_);
+
+		return this;
+	}
+
 	switch (info.id){
 	case lexer::operator_id::assignment:
 	case lexer::operator_id::compound_plus:
@@ -36,51 +64,23 @@ cscript::object::generic *cscript::object::ref::evaluate(const binary_info &info
 	case lexer::operator_id::compound_bitwise_xor:
 		break;
 	default:
-		return value_.object->evaluate(info);
+		return value_->object->evaluate(info);
 	}
 
-	if (is_constant())
+	if (is_constant_)
 		return common::env::error.set("Operator does not take specified operand");
 
-	return value_.object->evaluate(info);
+	return value_->object->evaluate(info);
 }
 
 cscript::object::generic *cscript::object::ref::evaluate(const unary_info &info){
-	return value_.object->evaluate(info);
+	return value_->object->evaluate(info);
 }
 
 bool cscript::object::ref::to_bool(){
-	return value_.object->to_bool();
+	return value_->object->to_bool();
 }
 
-cscript::memory::virtual_address::entry &cscript::object::ref::get_memory(){
-	return value_;
-}
-
-cscript::type::generic::ptr_type cscript::object::ref::get_type(){
-	return value_.object->get_type();
-}
-
-cscript::storage::generic *cscript::object::ref::get_storage(){
-	return value_.object->get_storage();
-}
-
-bool cscript::object::ref::is_lvalue() const{
-	return true;
-}
-
-bool cscript::object::ref::is_reference() const{
-	return true;
-}
-
-bool cscript::object::ref::is_indirect() const{
-	return value_.object->is_indirect();
-}
-
-bool cscript::object::ref::is_uninitialized() const{
-	return value_.object->is_uninitialized();
-}
-
-bool cscript::object::ref::is_constant() const{
-	return (is_constant_ || value_.object->is_constant());
+bool cscript::object::ref::is_constant_ref() const{
+	return is_constant_;
 }

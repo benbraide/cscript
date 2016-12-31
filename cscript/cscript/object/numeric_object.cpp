@@ -100,7 +100,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 		return common::env::error.set("Operator does not take specified operand");
 
 	if (info.id == lexer::operator_id::assignment){
-		if (!is_lvalue() || is_constant())
+		if (!is_lvalue() || (is_constant() && !is_uninitialized()))
 			return common::env::error.set("Operator does not take specified operands");
 
 		auto type = get_type();
@@ -108,6 +108,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
 			return common::env::error.set("Cannot assign value into object");
 
+		CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
 		if (value->query<numeric>()->is_nan())
 			CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::is_nan);
 		else//Copy value

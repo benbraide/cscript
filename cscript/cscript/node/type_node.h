@@ -42,11 +42,19 @@ namespace cscript{
 
 			virtual ptr_type clone() override;
 
+			virtual bool is(id id) const override;
+
 			virtual object::generic *evaluate() override;
+
+			virtual std::string get_key() override;
+
+			virtual storage::generic *get_storage() override;
+
+			virtual type::generic::ptr_type get_type() override;
 
 			virtual attribute_type get_attributes() const;
 
-			virtual ptr_type get_type() const;
+			virtual ptr_type get_value() const;
 
 		protected:
 			virtual std::string print_() const override;

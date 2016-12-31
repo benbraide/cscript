@@ -26,6 +26,18 @@ cscript::parser::generic::node_type cscript::parser::collection::expression::par
 	common::env::parser_info.token = nullptr;
 	if (expression == nullptr)
 		expression = common::env::parser_info.left_operand;
+	else
+		common::env::parser_info.left_operand = expression;
+
+	if (!CSCRIPT_IS(common::env::parser_info.states, state::typename_) &&
+		common::env::parser_info.context->query<context::expression>() == nullptr){
+		expression = common::env::declaration_parser.parse();
+		if (common::env::error.has())
+			return nullptr;
+
+		if (expression == nullptr)
+			expression = common::env::parser_info.left_operand;
+	}
 
 	return expression;
 }

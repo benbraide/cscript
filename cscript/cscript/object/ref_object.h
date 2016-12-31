@@ -9,9 +9,12 @@ namespace cscript{
 	namespace object{
 		class ref : public basic{
 		public:
-			typedef memory::virtual_address::entry value_type;
+			typedef memory::virtual_address::entry entry_type;
+			typedef memory::virtual_address::value_type value_type;
 
-			explicit ref(value_type &value, bool is_constant = false);
+			explicit ref(const type::generic::ptr_type type);
+
+			explicit ref(entry_type &value, bool is_constant = false);
 
 			virtual ~ref();
 
@@ -27,25 +30,11 @@ namespace cscript{
 
 			virtual bool to_bool() override;
 
-			virtual memory::virtual_address::entry &get_memory() override;
-
-			virtual type::generic::ptr_type get_type() override;
-
-			virtual storage::generic *get_storage() override;
-
-			virtual bool is_lvalue() const override;
-
-			virtual bool is_reference() const override;
-
-			virtual bool is_indirect() const override;
-
-			virtual bool is_uninitialized() const override;
-
-			virtual bool is_constant() const override;
+			virtual bool is_constant_ref() const;
 
 		protected:
-			value_type &value_;
 			bool is_constant_;
+			entry_type *value_;
 		};
 	}
 }

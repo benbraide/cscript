@@ -1,2 +1,4 @@
-const ref my_scope::my_type * junk i;
-4 + 5 * 9ll - 18
+int i = 27;
+const ref int j = i;
+int k = j + 9;
+4 + 5 * 9ll - 18;

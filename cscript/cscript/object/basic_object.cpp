@@ -29,7 +29,7 @@ cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *
 
 cscript::object::generic *cscript::object::basic::evaluate(const binary_info &info){
 	if (info.id == lexer::operator_id::assignment){
-		if (!is_lvalue() || is_constant())
+		if (!is_lvalue() || (is_constant() && !is_uninitialized()))
 			return common::env::error.set("Operator does not take specified operands");
 
 		auto operand = common::env::get_object_operand();
@@ -42,6 +42,8 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 			return common::env::error.set("Cannot assign value into object");
 
 		memory::virtual_address::copy(memory_, value->get_memory());
+		CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+
 		return this;
 	}
 

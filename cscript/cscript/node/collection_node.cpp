@@ -15,7 +15,7 @@ cscript::node::generic::ptr_type cscript::node::collection::clone(){
 }
 
 cscript::object::generic *cscript::node::collection::evaluate(){
-	object::generic *value;
+	object::generic *value = nullptr;
 	for (auto entry : list_){
 		value = entry->evaluate();
 		if (common::env::error.has())

@@ -36,7 +36,7 @@ namespace cscript{
 				others_.clear();
 				for (auto &entry : map_){
 					if ((max_size - compiled_value.size()) < entry.first.size()){
-						regex->assign("^" + compiled_value + "$", boost::regex_constants::optimize);
+						regex->assign(compiled_value, boost::regex_constants::optimize);
 						regex = &*others_.emplace(others_.end());
 						compiled_value.clear();
 					}
@@ -48,7 +48,7 @@ namespace cscript{
 				}
 
 				if (!compiled_value.empty())
-					regex->assign("^" + compiled_value + "$", boost::regex_constants::optimize);
+					regex->assign(compiled_value, boost::regex_constants::optimize);
 			}
 
 			iterator_type look_up_(const std::string &name) const{
@@ -69,7 +69,7 @@ namespace cscript{
 
 			iterator_type look_up_(const std::string &name, const regex_type &regex) const{
 				boost::match_results<std::string::const_iterator> results;
-				if (!boost::regex_search(name.begin(), name.end(), results, regex, boost::regex_constants::match_single_line))
+				if (!boost::regex_match(name.begin(), name.end(), results, regex, boost::regex_constants::match_single_line))
 					return map_.end();
 
 				auto index = get_match_index_(results);

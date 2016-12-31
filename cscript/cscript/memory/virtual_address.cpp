@@ -60,7 +60,7 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(s
 		value,
 		value,
 		offset,
-		set
+		set | attribute::uninitialized
 	});
 
 	return *info.list->rbegin();
@@ -85,7 +85,7 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::add(e
 		parent.value,
 		parent.value,
 		parent.offset,
-		set,
+		set | attribute::uninitialized,
 		nullptr,
 		nullptr,
 		nullptr,
@@ -121,14 +121,23 @@ bool cscript::memory::virtual_address::update_ref_count(const entry &entry, size
 	if (info.list == nullptr || info.iterator == info.list->end())
 		return false;
 
-	if ((info.iterator->ref_count == 0u || --info.iterator->ref_count == 0u) && info.iterator->value <= info.iterator->origin)
-		remove_(info);
+	if (!increment){//Decrement
+		if (info.iterator->ref_count < count)
+			info.iterator->ref_count = 0;
+		else
+			info.iterator->ref_count -= count;
+
+		if (info.iterator->ref_count == 0u && info.iterator->value <= info.iterator->origin)
+			remove_(info);
+	}
+	else//Increment
+		info.iterator->ref_count += count;
 
 	return true;
 }
 
 bool cscript::memory::virtual_address::decrement_ref_count(const entry &entry){
-	return update_ref_count(entry, -1, false);
+	return update_ref_count(entry, 1, false);
 }
 
 bool cscript::memory::virtual_address::increment_ref_count(const entry &entry){
