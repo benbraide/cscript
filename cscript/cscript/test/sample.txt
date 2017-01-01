@@ -1,4 +1,7 @@
 int i = 27;
 const ref int j = i;
 int k = j + 9;
+int l = type_cast<int>(4.5);
+typedef int my_int;
+typedef auto | float bad_boy;
 4 + 5 * 9ll - 18;

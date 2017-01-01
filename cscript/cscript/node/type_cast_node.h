@@ -3,7 +3,7 @@
 #ifndef CSCRIPT_TYPE_CAST_NODE_H
 #define CSCRIPT_TYPE_CAST_NODE_H
 
-#include "basic_node.h"
+#include "type_node.h"
 
 namespace cscript{
 	namespace node{

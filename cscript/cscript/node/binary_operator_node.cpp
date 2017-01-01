@@ -14,13 +14,16 @@ bool cscript::node::binary_operator::is(id id) const{
 	if (id == node::id::operator_)
 		return true;
 
-	if (id == node::id::identifier_compatible)
-		return (info_.id == lexer::operator_id::scope_resolution && left_->is(id) && right_->is(id));
+	if (info_.id == lexer::operator_id::bitwise_or){
+		if (id == node::id::type_compatible)
+			return (left_->is(id) && right_->is(id));
 
-	if (id == node::id::type_compatible){
-		return ((info_.id == lexer::operator_id::scope_resolution ||
-			info_.id == lexer::operator_id::bitwise_or) && left_->is(id) && right_->is(id));
+		return (id == node::id::auto_type || id == node::id::variadic_type || id == node::id::array_type || id == node::id::function_type ||
+			id == node::id::pointer_type) ? (is(node::id::type_compatible) && (left_->is(id) || right_->is(id))) : false;
 	}
+
+	if (id == node::id::identifier_compatible || id == node::id::type_compatible)
+		return (info_.id == lexer::operator_id::scope_resolution && left_->is(id) && right_->is(id));
 
 	return false;
 }

@@ -112,7 +112,7 @@ bool cscript::lexer::keyword_token_id::is(token_id value) const{
 	case token_id::using_:
 	case token_id::new_:
 	case token_id::delete_:
-	case token_id::typename_:
+	case token_id::typedef_:
 	case token_id::operator_:
 	case token_id::sizeof_:
 	case token_id::typeof:

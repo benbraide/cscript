@@ -12,7 +12,7 @@ namespace cscript{
 			using_,
 			new_,
 			delete_,
-			typename_,
+			typedef_,
 			operator_,
 			sizeof_,
 			typeof,

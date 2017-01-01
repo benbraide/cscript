@@ -1,5 +1,4 @@
 #include "type_cast_node.h"
-#include "type_node.h"
 #include "../common/env.h"
 
 cscript::node::type_cast::type_cast(const lexer::token::index &index, ptr_type type, ptr_type value)

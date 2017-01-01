@@ -128,7 +128,7 @@ int cscript::parser::collection::binary_operator::get_precedence_(lexer::operato
 	case lexer::operator_id::relational_and:
 		return 3;
 	case lexer::operator_id::bitwise_or:
-		return CSCRIPT_IS(common::env::parser_info.states, state::typename_) ? 15 : 4;
+		return CSCRIPT_IS(common::env::parser_info.states, state::typename_) ? 16 : 4;
 	case lexer::operator_id::bitwise_xor:
 		return 5;
 	case lexer::operator_id::bitwise_and:
@@ -159,7 +159,7 @@ int cscript::parser::collection::binary_operator::get_precedence_(lexer::operato
 	case lexer::operator_id::member_pointer_access:
 		return 14;
 	case lexer::operator_id::scope_resolution:
-		return 16;
+		return 17;
 	default:
 		break;
 	}

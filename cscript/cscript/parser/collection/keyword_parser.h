@@ -6,7 +6,10 @@
 #include "../generic_parser.h"
 #include "../parser_context.h"
 
+#include "../../node/identifier_node.h"
+#include "../../node/type_node.h"
 #include "../../node/type_cast_node.h"
+#include "../../node/typedef_node.h"
 
 namespace cscript{
 	namespace parser{
@@ -16,6 +19,8 @@ namespace cscript{
 				virtual node_type parse() override;
 
 			protected:
+				virtual node_type parse_typedef_();
+
 				virtual node_type parse_type_cast_();
 
 				virtual node_type parse_placeholder_();
@@ -28,7 +33,7 @@ namespace cscript{
 
 				virtual node_type parse_function_type_();
 
-				virtual node_type parse_type_(const lexer::token::index &index);
+				virtual node_type parse_type_(const lexer::token::index &index, bool allow_storage_class);
 
 				virtual node_type parse_value_(const lexer::token::index &index);
 			};

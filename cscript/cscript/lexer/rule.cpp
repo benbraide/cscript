@@ -7,7 +7,7 @@
 
 cscript::lexer::rule::rule(){
 	std::vector<std::string> reserved({
-		"class", "enum", "namespace", "using", "new", "delete", "typename", "operator", "sizeof", "typeof", "echo", "true", "false",
+		"class", "enum", "namespace", "using", "new", "delete", "typedef", "operator", "sizeof", "typeof", "echo", "true", "false",
 		"auto", "any", "void", "bool", "bit", "byte", "nan", "char", "wchar", "short", "int", "long", "unsigned", "float", "double",
 		"string", "array", "try", "catch", "finally", "throw", "if", "else", "unless", "while", "for", "until", "do", "switch", "case",
 		"default", "break", "continue", "return", "decltype", "function", "nullptr", "pointer_t", "thread_local", "static", "const",
@@ -129,7 +129,7 @@ const cscript::lexer::rule::list_type cscript::lexer::rule::map_({
 	token_id::using_,
 	token_id::new_,
 	token_id::delete_,
-	token_id::typename_,
+	token_id::typedef_,
 	token_id::operator_,
 	token_id::sizeof_,
 	token_id::typeof,

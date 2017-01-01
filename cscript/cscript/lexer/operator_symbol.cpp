@@ -39,8 +39,6 @@ cscript::lexer::operator_id cscript::lexer::operator_symbol::convert_id(const st
 		return operator_id::new_;
 	case token_id::sizeof_:
 		return operator_id::sizeof_;
-	case token_id::typename_:
-		return operator_id::typename_;
 	case token_id::typeof:
 		return operator_id::typeof_;
 	case token_id::symbol:
