@@ -3,8 +3,11 @@
 #include "../../common/env.h"
 
 cscript::parser::generic::node_type cscript::parser::collection::declaration::parse(){
+	if (common::env::error.has())
+		return nullptr;
+
 	auto operand = common::env::parser_info.left_operand;
-	if (operand == nullptr || !(operand->is(node::id::identifier) || operand->is(node::id::type)))
+	if (operand == nullptr || !operand->is(node::id::type_compatible))
 		return nullptr;
 
 	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
@@ -15,7 +18,19 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::pa
 	node::generic::ptr_type id_node;
 	auto id = common::env::source_info->rule.map_index(next->get_match_index());
 	if (id != lexer::token_id::identifier){//Check operator | placeholder
+		switch (id){
+		case lexer::token_id::operator_:
+		case lexer::token_id::placeholder:
+			break;
+		default:
+			return nullptr;
+		}
 
+		common::env::parser_info.token = next;
+		id_node = common::env::keyword_parser.parse();
+
+		if (common::env::error.has())
+			return nullptr;
 	}
 	else{//Identifier
 		common::env::source_info->source.ignore(*common::env::source_info);

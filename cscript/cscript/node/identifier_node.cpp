@@ -10,6 +10,10 @@ cscript::node::generic::ptr_type cscript::node::identifier::clone(){
 	return std::make_shared<identifier>(index_, value_);
 }
 
+bool cscript::node::identifier::is(id id) const{
+	return (id == node::id::identifier || id == node::id::identifier_compatible || id == node::id::type_compatible);
+}
+
 cscript::object::generic *cscript::node::identifier::evaluate(){
 	storage::generic_value *value = nullptr;
 	for (auto storage = common::env::runtime.storage; storage != nullptr; storage = storage->get_parent()){

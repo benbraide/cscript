@@ -12,6 +12,23 @@ cscript::node::generic::ptr_type cscript::node::unary_operator::clone(){
 	return std::make_shared<unary_operator>(index_, info_, operand_->clone());
 }
 
+bool cscript::node::unary_operator::is(id id) const{
+	if (id == node::id::operator_)
+		return true;
+
+	if (id == node::id::identifier_compatible)
+		return (info_.id == lexer::operator_id::scope_resolution && operand_->is(id));
+
+	if (id == node::id::type_compatible){
+		if (info_.left)
+			return (info_.id == lexer::operator_id::scope_resolution && operand_->is(id));
+
+		return (info_.id == lexer::operator_id::ellipsis && operand_->is(id));
+	}
+
+	return false;
+}
+
 cscript::object::generic *cscript::node::unary_operator::evaluate(){
 	auto operand = operand_->evaluate();
 	if (common::env::error.has())

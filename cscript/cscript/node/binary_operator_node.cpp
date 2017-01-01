@@ -10,6 +10,21 @@ cscript::node::generic::ptr_type cscript::node::binary_operator::clone(){
 	return std::make_shared<binary_operator>(index_, info_, left_->clone(), right_->clone());
 }
 
+bool cscript::node::binary_operator::is(id id) const{
+	if (id == node::id::operator_)
+		return true;
+
+	if (id == node::id::identifier_compatible)
+		return (info_.id == lexer::operator_id::scope_resolution && left_->is(id) && right_->is(id));
+
+	if (id == node::id::type_compatible){
+		return ((info_.id == lexer::operator_id::scope_resolution ||
+			info_.id == lexer::operator_id::bitwise_or) && left_->is(id) && right_->is(id));
+	}
+
+	return false;
+}
+
 cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	auto left = left_->evaluate();
 	if (common::env::error.has())

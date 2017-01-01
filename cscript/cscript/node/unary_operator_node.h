@@ -17,6 +17,8 @@ namespace cscript{
 
 			virtual ptr_type clone() override;
 
+			virtual bool is(id id) const override;
+
 			virtual object::generic *evaluate() override;
 
 			virtual storage::generic *get_storage() override;

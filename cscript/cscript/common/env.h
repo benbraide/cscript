@@ -21,6 +21,7 @@
 #include "../parser/collection/expression_parser.h"
 #include "../parser/collection/statement_parser.h"
 #include "../parser/collection/declaration_parser.h"
+#include "../parser/collection/keyword_parser.h"
 #include "../parser/collection/collection_parser.h"
 
 namespace cscript{
@@ -88,6 +89,8 @@ namespace cscript{
 			static parser::collection::statement statement_parser;
 
 			static parser::collection::declaration declaration_parser;
+			static parser::collection::keyword keyword_parser;
+
 			static parser::collection::builder builder;
 
 			static object::generic *get_object_operand();

@@ -10,6 +10,10 @@ cscript::node::generic::ptr_type cscript::node::primitive_type::clone(){
 	return std::make_shared<primitive_type>(index_, value_);
 }
 
+bool cscript::node::primitive_type::is(id id) const{
+	return (id == node::id::type || id == node::id::type_compatible);
+}
+
 cscript::object::generic *cscript::node::primitive_type::evaluate(){
 	return nullptr;
 }
@@ -140,7 +144,7 @@ cscript::node::generic::ptr_type cscript::node::type_with_storage_class::clone()
 }
 
 bool cscript::node::type_with_storage_class::is(id id) const{
-	return (id == node::id::type || id == node::id::type_with_storage);
+	return (id == node::id::type_with_storage || id == node::id::type_compatible);
 }
 
 cscript::object::generic *cscript::node::type_with_storage_class::evaluate(){

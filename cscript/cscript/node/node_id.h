@@ -13,9 +13,17 @@ namespace cscript{
 			type,
 			type_with_storage,
 			declaration,
+			type_cast,
+			placeholder,
+			operator_value_,
+			array_type,
+			pointer_type,
+			function_type,
 			collection,
 			statement,
 			block,
+			identifier_compatible,
+			type_compatible,
 		};
 	}
 }

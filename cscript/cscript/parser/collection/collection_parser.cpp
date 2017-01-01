@@ -2,8 +2,10 @@
 #include "../../common/env.h"
 
 cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse(const options &options){
-	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+	if (common::env::error.has())
+		return nullptr;
 
+	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
 	auto terminated = false, has_trailing_delimiter = true;
 	auto token = common::env::source_info->source.peek(*common::env::source_info);
 	if (token == nullptr){

@@ -2,6 +2,9 @@
 #include "../../object/numeric_object.h"
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse(){
+	if (common::env::parser_info.token == nullptr || common::env::error.has())
+		return nullptr;
+
 	auto id = common::env::source_info->rule.map_index(common::env::parser_info.token->get_match_index());
 	if (id == lexer::token_id::operator_symbol){
 		switch (common::env::parser_info.token->query<lexer::operator_token>()->get_id()){

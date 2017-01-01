@@ -7,7 +7,10 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 	if (common::env::error.has())
 		return nullptr;
 
-	node_type value;
+	auto value = common::env::keyword_parser.parse();
+	if (value != nullptr || common::env::error.has())
+		return value;
+
 	auto token = common::env::parser_info.token;
 	auto id = common::env::source_info->rule.map_index(token->get_match_index());
 
