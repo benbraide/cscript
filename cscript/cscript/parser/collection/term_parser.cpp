@@ -101,11 +101,11 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 		switch (id){
 		case lexer::token_id::open_par:
 		{
-			auto operand = common::env::builder.parse_list(builder::halt_info{ lexer::token_id::close_par });
+			auto operand = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_par });
 			if (common::env::error.has())
 				return nullptr;
 
-			if (operand->query<node::collection>()->get_list().empty())
+			if (operand = nullptr)
 				return common::env::error.set("", token->get_index());
 
 			return common::env::parser_info.left_operand = std::make_shared<node::unary_operator>(token->get_index(),

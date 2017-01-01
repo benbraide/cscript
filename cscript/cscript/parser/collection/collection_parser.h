@@ -19,17 +19,17 @@ namespace cscript{
 				typedef lexer::generic_source::token_type token_type;
 				typedef lexer::source_info::halt_info halt_info;
 
-				typedef std::function<bool()> before_callback_type;
-				typedef std::function<bool(node_type &)> after_callback_type;
+				typedef std::function<bool(node_type &)> callback_type;
 
 				struct options{
 					generic &parser;
 					halt_info terminator;
 					halt_info delimiter;
 					bool no_trailing_delimiter;
-					before_callback_type before_callback;
-					after_callback_type after_callback;
+					callback_type before_callback;
+					callback_type after_callback;
 					bool require_trailing_delimiter;
+					node::id alternate_delimiter;
 				};
 
 				static node_type parse(const options &options);
@@ -40,9 +40,11 @@ namespace cscript{
 
 				static node_type parse_list(const halt_info &terminator);
 
-				static node_type parse_block(const halt_info &terminator, before_callback_type before_callback, after_callback_type after_callback);
+				static node_type parse_block(const halt_info &terminator, callback_type before_callback, callback_type after_callback);
 
 				static node_type parse_block(const halt_info &terminator);
+
+				static node_type parse_single(const halt_info &terminator);
 
 				static node_type parse_type();
 
