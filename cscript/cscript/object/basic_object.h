@@ -15,6 +15,8 @@ namespace cscript{
 
 			virtual ~basic();
 
+			virtual generic *remove_reference() override;
+
 			virtual generic *clone() override;
 
 			virtual generic *cast(const type::generic *type) override;
@@ -26,6 +28,10 @@ namespace cscript{
 			virtual generic *evaluate(const unary_info &info) override;
 
 			virtual bool to_bool() override;
+
+			virtual std::string to_string() override;
+
+			virtual std::string echo() override;
 
 			virtual memory::virtual_address::entry &get_memory() override;
 

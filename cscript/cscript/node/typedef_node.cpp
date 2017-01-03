@@ -23,6 +23,10 @@ cscript::object::generic *cscript::node::type_definition::evaluate(){
 
 		if (value == nullptr)
 			return common::env::error.set("", index_);
+
+		name = value->to_string();
+		if (common::env::error.has())
+			return nullptr;
 	}
 	else//Identifier
 		name = name_->print();

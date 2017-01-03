@@ -42,6 +42,10 @@ namespace cscript{
 
 				virtual generic *evaluate(const unary_info &info) override;
 
+				virtual std::string to_string() override;
+
+				virtual std::string echo() override;
+
 				virtual bool is_nan();
 
 				template <typename value_type>
@@ -160,6 +164,8 @@ namespace cscript{
 					generic *&destination, memory::pool::base_type &left, memory::pool::base_type &right);
 
 				block_operator_type get_op_();
+
+				virtual std::string to_string_(bool echo);
 
 				static block_operator_type cast_value_(type::id id, numeric &source);
 			};

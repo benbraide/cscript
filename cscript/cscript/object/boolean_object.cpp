@@ -35,7 +35,7 @@ cscript::object::generic *cscript::object::primitive::boolean::clone(){
 
 cscript::object::generic *cscript::object::primitive::boolean::evaluate(const binary_info &info){
 	auto operand = common::env::get_object_operand();
-	if (operand == nullptr)
+	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
 	if (operand->get_type()->get_id() != type::id::bool_)

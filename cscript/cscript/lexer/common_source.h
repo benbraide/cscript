@@ -119,7 +119,7 @@ namespace cscript{
 								break;
 							}
 
-							if (info.skipper != nullptr && info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
+							if (info.skipper == nullptr || info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info.options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									++end;
@@ -172,7 +172,7 @@ namespace cscript{
 								break;
 							}
 
-							if (info->skipper != nullptr && info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
+							if (info->skipper == nullptr || info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info->options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									value = *iter;

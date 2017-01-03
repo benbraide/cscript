@@ -65,7 +65,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_type_cast_(){
-	//type_cast<type>(value)
+	//type_cast< <type> >(<value>)
 	auto index = common::env::parser_info.token->get_index();
 
 	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
@@ -83,8 +83,17 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_placeholder_(){
-	//__placeholder<value>
-	return nullptr;
+	//__placeholder(<value>)
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info->source.ignore(*common::env::source_info);
+
+	auto value = parse_value_(index);
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::placeholder>(index, value);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_operator_(){
@@ -93,17 +102,17 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_array_type_(){
-	//array<type>
+	//array< <type> >
 	return nullptr;
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_pointer_type_(){
-	//pointer_t<type>
+	//pointer_t< <type> >
 	return nullptr;
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_function_type_(){
-	//function<return_type(parameter_types)>
+	//function< <return_type>(<parameter_types>) >
 	return nullptr;
 }
 

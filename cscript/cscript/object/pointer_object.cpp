@@ -95,7 +95,7 @@ cscript::object::generic *cscript::object::pointer::cast(const type::generic *ty
 
 cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &info){
 	auto operand = common::env::get_object_operand();
-	if (operand == nullptr)
+	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
 	auto operand_type = operand->get_type();

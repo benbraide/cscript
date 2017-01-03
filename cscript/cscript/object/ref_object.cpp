@@ -20,6 +20,10 @@ cscript::object::ref::~ref(){
 		value_->address->decrement_ref_count(*value_);
 }
 
+cscript::object::generic *cscript::object::ref::remove_reference(){
+	return value_->object->remove_reference();
+}
+
 cscript::object::generic *cscript::object::ref::clone(){
 	return value_->object->clone();
 }
@@ -36,6 +40,9 @@ cscript::object::generic *cscript::object::ref::evaluate(const binary_info &info
 	if (info.id == lexer::operator_id::assignment && is_uninitialized()){
 		auto operand = common::env::get_object_operand();
 		if (operand == nullptr)
+			return common::env::error.set("Bad initialization expression");
+
+		if (operand->is_constant() && !is_constant())
 			return common::env::error.set("Bad initialization expression");
 
 		auto compatible_object = operand->ref_cast(get_type().get());
@@ -79,6 +86,14 @@ cscript::object::generic *cscript::object::ref::evaluate(const unary_info &info)
 
 bool cscript::object::ref::to_bool(){
 	return value_->object->to_bool();
+}
+
+std::string cscript::object::ref::to_string(){
+	return value_->object->to_string();
+}
+
+std::string cscript::object::ref::echo(){
+	return value_->object->echo();
 }
 
 bool cscript::object::ref::is_constant_ref() const{

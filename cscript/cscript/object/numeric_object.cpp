@@ -96,7 +96,7 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 
 cscript::object::generic *cscript::object::primitive::numeric::evaluate(const binary_info &info){
 	auto operand = common::env::get_object_operand();
-	if (operand == nullptr)
+	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
 	if (info.id == lexer::operator_id::assignment){
@@ -237,6 +237,14 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 	}
 
 	return basic::evaluate(info);
+}
+
+std::string cscript::object::primitive::numeric::to_string(){
+	return to_string_(false);
+}
+
+std::string cscript::object::primitive::numeric::echo(){
+	return to_string_(true);
 }
 
 bool cscript::object::primitive::numeric::is_nan(){
@@ -567,6 +575,41 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 	}
 
 	return nullptr;
+}
+
+std::string cscript::object::primitive::numeric::to_string_(bool echo){
+	switch (get_memory().type->get_id()){
+	case type::id::char_:
+		return echo ? ("'" + std::string(1, get_value<char>()) + "'") : std::string(1, get_value<char>());
+	case type::id::uchar:
+		return echo ? ("'" + std::string(1, get_value<char>()) + "'u") : std::string(1, get_value<char>());
+	case type::id::short_:
+		return std::to_string(get_value<short>());
+	case type::id::ushort:
+		return echo ? (std::to_string(get_value<short>()) + "u") : std::to_string(get_value<short>());
+	case type::id::int_:
+		return std::to_string(get_value<int>());
+	case type::id::uint:
+		return echo ? (std::to_string(get_value<unsigned int>()) + "u") : std::to_string(get_value<unsigned int>());
+	case type::id::long_:
+		return echo ? (std::to_string(get_value<long>()) + "l") : std::to_string(get_value<long>());
+	case type::id::ulong:
+		return echo ? (std::to_string(get_value<unsigned long>()) + "ul") : std::to_string(get_value<unsigned long>());
+	case type::id::llong:
+		return echo ? (std::to_string(get_value<long long>()) + "ll") : std::to_string(get_value<long long>());
+	case type::id::ullong:
+		return echo ? (std::to_string(get_value<unsigned long long>()) + "ull") : std::to_string(get_value<unsigned long long>());
+	case type::id::float_:
+		return echo ? (std::to_string(get_value<float>()) + "f") : std::to_string(get_value<float>());
+	case type::id::double_:
+		return std::to_string(get_value<double>());
+	case type::id::ldouble:
+		return echo ? (std::to_string(get_value<long double>()) + "l") : std::to_string(get_value<long double>());
+	default:
+		break;
+	}
+
+	return basic::to_string();
 }
 
 cscript::object::primitive::numeric::block_operator_type cscript::object::primitive::numeric::cast_value_(type::id id, numeric &source){

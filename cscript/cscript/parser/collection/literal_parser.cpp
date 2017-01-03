@@ -310,11 +310,13 @@ cscript::parser::collection::literal::suffix cscript::parser::collection::litera
 
 cscript::parser::collection::literal::suffix cscript::parser::collection::literal::get_real_suffix_(std::string &value){
 	lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
-	auto next = common::env::source_info->source.peek(*common::env::source_info);
+	auto next = common::env::source_info->source.peek_after(common::env::parser_info.token, *common::env::source_info);
 	if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::identifier)
 		return suffix::nil;
 
 	value = next->get_value();
+	common::env::source_info->source.ignore_one(next);
+
 	if (value.size() != 1u){
 		common::env::error.set("Invalid suffix", next->get_index());
 		return suffix::nil;

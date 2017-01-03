@@ -9,6 +9,10 @@ cscript::object::basic::~basic(){
 	memory_.address->decrement_ref_count(memory_);
 }
 
+cscript::object::generic *cscript::object::basic::remove_reference(){
+	return this;
+}
+
 cscript::object::generic *cscript::object::basic::clone(){
 	return common::env::error.set("Object cannot be cloned");
 }
@@ -76,6 +80,16 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 bool cscript::object::basic::to_bool(){
 	common::env::error.set("Cannot convert object to boolean value");
 	return false;
+}
+
+std::string cscript::object::basic::to_string(){
+	common::env::error.set("Cannot convert object to string value");
+	return "";
+}
+
+std::string cscript::object::basic::echo(){
+	common::env::error.set("Cannot echo object");
+	return "";
 }
 
 cscript::memory::virtual_address::entry &cscript::object::basic::get_memory(){
