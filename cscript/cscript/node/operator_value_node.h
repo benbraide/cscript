@@ -8,8 +8,7 @@
 namespace cscript{
 	namespace storage{
 		enum class operator_value_type{
-			binary,
-			left,
+			nil,
 			right,
 		};
 
@@ -18,6 +17,7 @@ namespace cscript{
 			lexer::operator_id id;
 			std::string value;
 			type::generic::ptr_type type;
+			node::generic::ptr_type type_node;
 		};
 
 		bool operator <(const operator_key &left, const operator_key &right);

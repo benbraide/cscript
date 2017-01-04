@@ -10,6 +10,8 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse(
 		return parse_typedef_();
 	case lexer::token_id::type_cast:
 		return parse_type_cast_();
+	case lexer::token_id::decltype_:
+		return parse_decl_type_();
 	case lexer::token_id::placeholder:
 		return parse_placeholder_();
 	case lexer::token_id::operator_:
@@ -82,6 +84,20 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	return std::make_shared<node::type_cast>(index, type, value);
 }
 
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_decl_type_(){
+	//decltype(<value>)
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info->source.ignore(*common::env::source_info);
+
+	auto value = parse_value_(index);
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::decl_type>(index, value);
+}
+
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_placeholder_(){
 	//__placeholder(<value>)
 	auto index = common::env::parser_info.token->get_index();
@@ -98,7 +114,117 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_operator_(){
 	//operator [\left|\right] <symbol>|<type>
-	return nullptr;
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info->source.ignore(*common::env::source_info);
+
+	auto next = common::env::source_info->source.peek(*common::env::source_info);
+	if (next == nullptr)
+		return common::env::error.set("", index);
+
+	std::string string_value;
+	storage::operator_key value{};
+
+	auto id = common::env::source_info->rule.map_index(next->get_match_index());
+	if (id == lexer::token_id::backslash){// \right
+		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
+
+		if ((next = common::env::source_info->source.next(*common::env::source_info)) == nullptr)
+			return common::env::error.set("", index);
+
+		id = common::env::source_info->rule.map_index(next->get_match_index());
+		if (id == lexer::token_id::identifier && next->get_value() == "right")
+			value.value_type = storage::operator_value_type::right;
+		else//Error
+			return common::env::error.set("", index);
+
+		common::env::source_info->source.ignore(*common::env::source_info);
+		if ((next = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
+			return common::env::error.set("", index);
+
+		id = common::env::source_info->rule.map_index(next->get_match_index());
+		string_value = " \\right";
+	}
+
+	if (id == lexer::token_id::operator_symbol){
+		auto operator_token = next->query<lexer::operator_token>();
+		if (operator_token == nullptr)
+			return parse_symbol_operator_(index, value, next->get_value(), string_value);
+
+		if (operator_token->get_id() == lexer::operator_id::scope_resolution)
+			return parse_type_operator_(index, value);
+
+		return parse_symbol_operator_(index, value, operator_token->get_id(), next->get_value(), string_value);
+	}
+	
+	if (id == lexer::token_id::open_par)
+		return parse_symbol_operator_(index, value, lexer::operator_id::call, next->get_value(), string_value);
+
+	if (id == lexer::token_id::open_sq)
+		return parse_symbol_operator_(index, value, lexer::operator_id::index, next->get_value(), string_value);
+	
+	return parse_type_operator_(index, value);
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_symbol_operator_(
+	const lexer::token::index &index, storage::operator_key &value, const std::string &operator_value, std::string &string_value){
+	common::env::source_info->source.ignore(*common::env::source_info);
+
+	value.id = lexer::operator_id::unknown;
+	value.value = operator_value;
+	string_value += (" " + operator_value);
+
+	return std::make_shared<node::operator_value>(index, value, string_value);
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_symbol_operator_(const lexer::token::index &index,
+	storage::operator_key &value, lexer::operator_id id, const std::string &operator_value, std::string &string_value){
+	common::env::source_info->source.ignore(*common::env::source_info);
+
+	value.id = id;
+	string_value += (" " + operator_value);
+
+	switch (id){
+	case lexer::operator_id::call:// ()
+	{
+		auto next = common::env::source_info->source.next(*common::env::source_info);
+		if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::close_par)
+			return common::env::error.set("", index);
+
+		string_value += ")";
+		break;
+	}
+	case lexer::operator_id::index:// []
+	{
+		auto next = common::env::source_info->source.next(*common::env::source_info);
+		if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::close_sq)
+			return common::env::error.set("", index);
+
+		string_value += "]";
+		break;
+	}
+	default:
+		break;
+	}
+
+	return std::make_shared<node::operator_value>(index, value, string_value);
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_type_operator_(
+	const lexer::token::index &index, storage::operator_key &value){
+	if (value.value_type == storage::operator_value_type::right)
+		return common::env::error.set("", index);
+
+	value.type_node = common::env::builder.parse_type();
+	if (common::env::error.has())
+		return nullptr;
+
+	if (value.type_node == nullptr || value.type_node->is(node::id::auto_type))
+		return common::env::error.set("", index);
+
+	return std::make_shared<node::operator_value>(index, value, (" " + value.type_node->print()));
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_array_type_(){
@@ -128,7 +254,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	if (common::env::error.has())
 		return nullptr;
 
-	if (type == nullptr || !type->is(node::id::type_compatible))
+	if (type == nullptr || type->is(node::id::auto_type) || !type->is(node::id::type_compatible))
 		return common::env::error.set("", index);
 
 	if (type->is(node::id::type_with_storage)){

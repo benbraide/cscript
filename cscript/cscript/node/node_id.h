@@ -16,6 +16,7 @@ namespace cscript{
 			declaration,
 			type_cast,
 			placeholder,
+			decl_type,
 			operator_value_,
 			array_type,
 			pointer_type,

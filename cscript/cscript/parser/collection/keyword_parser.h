@@ -7,7 +7,9 @@
 #include "../parser_context.h"
 
 #include "../../node/identifier_node.h"
+#include "../../node/decl_type_node.h"
 #include "../../node/placeholder_node.h"
+#include "../../node/operator_value_node.h"
 #include "../../node/type_node.h"
 #include "../../node/type_cast_node.h"
 #include "../../node/typedef_node.h"
@@ -24,9 +26,20 @@ namespace cscript{
 
 				virtual node_type parse_type_cast_();
 
+				virtual node_type parse_decl_type_();
+
 				virtual node_type parse_placeholder_();
 
 				virtual node_type parse_operator_();
+
+				virtual node_type parse_symbol_operator_(const lexer::token::index &index,
+					storage::operator_key &value, const std::string &operator_value, std::string &string_value);
+
+				virtual node_type parse_symbol_operator_(const lexer::token::index &index, storage::operator_key &value,
+					lexer::operator_id id, const std::string &operator_value, std::string &string_value);
+
+				virtual node_type parse_type_operator_(const lexer::token::index &index,
+					storage::operator_key &value);
 
 				virtual node_type parse_array_type_();
 

@@ -7,3 +7,8 @@ typedef int my_int;
 4 + 5 * 9ll - 18;
 float __placeholder(4.5) = 4.5f;
 float mf = __placeholder(4.5);
+operator +;
+operator [];
+operator float;
+operator ::my_type;
+operator \right ++;

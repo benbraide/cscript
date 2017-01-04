@@ -40,5 +40,5 @@ const std::string &cscript::node::operator_value::get_value() const{
 }
 
 std::string cscript::node::operator_value::print_() const{
-	return ("operator " + value_);
+	return ("operator" + value_);
 }
