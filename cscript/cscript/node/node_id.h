@@ -18,6 +18,7 @@ namespace cscript{
 			placeholder,
 			decl_type,
 			operator_value_,
+			echo,
 			array_type,
 			pointer_type,
 			function_type,

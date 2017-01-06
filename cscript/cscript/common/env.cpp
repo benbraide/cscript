@@ -7,7 +7,7 @@ thread_local cscript::node::generic *cscript::common::env::node_operand;
 
 thread_local cscript::lexer::source_guard cscript::common::env::source_guard;
 
-thread_local std::shared_ptr<cscript::lexer::source_info> cscript::common::env::source_info;
+thread_local cscript::lexer::source_info cscript::common::env::source_info{};
 
 thread_local cscript::parser::parser_info cscript::common::env::parser_info{};
 
@@ -96,4 +96,8 @@ cscript::object::generic *cscript::common::env::get_object_operand(){
 
 void cscript::common::env::initialize(){
 	static auto indeterminate = std::make_shared<object::primitive::boolean>(type::boolean_value_type::nil);
+}
+
+void cscript::common::env::echo(const std::string &value){
+	std::cout << value << "\n";
 }

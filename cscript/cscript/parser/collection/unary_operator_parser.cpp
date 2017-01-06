@@ -15,8 +15,8 @@ cscript::parser::generic::node_type cscript::parser::collection::unary_operator:
 		return nullptr;
 
 	{//Ignore token
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::source_info.source->ignore(common::env::source_info);
 	}
 
 	context::expression context(precedence, common::env::parser_info.context);

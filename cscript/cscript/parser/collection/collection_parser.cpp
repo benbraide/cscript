@@ -5,29 +5,29 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	if (common::env::error.has())
 		return nullptr;
 
-	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	auto terminated = false, has_trailing_delimiter = true;
-	auto token = common::env::source_info->source.peek(*common::env::source_info);
+	auto token = common::env::source_info.source->peek(common::env::source_info);
 	if (token == nullptr){
 		if (options.terminator.id != lexer::token_id::nil)
-			return common::env::error.set("", common::env::source_info->source.get_index());
-		return std::make_shared<node::collection>(common::env::source_info->source.get_index());
+			return common::env::error.set("", common::env::source_info.source->get_index());
+		return std::make_shared<node::collection>(common::env::source_info.source->get_index());
 	}
 
 	node_type node;
 	token_id_type token_id;
 	auto collection = std::make_shared<node::collection>(token->get_index());
 
-	auto halt = common::env::source_info->halt;
-	common::env::source_info->halt = {};//Disable halt
+	auto halt = common::env::source_info.halt;
+	common::env::source_info.halt = {};//Disable halt
 
-	while (common::env::source_info->source.has_more()){
-		if ((token = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
+	while (common::env::source_info.source->has_more()){
+		if ((token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
 			break;
 
-		token_id = common::env::source_info->rule.map_index(token->get_match_index());
+		token_id = common::env::source_info.rule->map_index(token->get_match_index());
 		if (token_id == options.terminator.id && (options.terminator.value.empty() || token->get_value() == options.terminator.value)){
-			common::env::source_info->source.ignore(*common::env::source_info);
+			common::env::source_info.source->ignore(common::env::source_info);
 			terminated = true;
 			break;
 		}
@@ -36,7 +36,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			if (token_id != token_id_type::semi_colon)
 				return common::env::error.set("", collection->get_index());
 
-			common::env::source_info->source.ignore(*common::env::source_info);
+			common::env::source_info.source->ignore(common::env::source_info);
 			has_trailing_delimiter = true;
 
 			continue;
@@ -46,7 +46,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			break;
 
 		node = nullptr;
-		common::env::source_info->halt = options.delimiter;//Enable halt
+		common::env::source_info.halt = options.delimiter;//Enable halt
 
 		if (options.before_callback != nullptr && (!options.before_callback(node) || common::env::error.has()))
 			break;
@@ -58,19 +58,19 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			break;
 
 		collection->append(node);
-		common::env::source_info->halt = {};//Disable halt
+		common::env::source_info.halt = {};//Disable halt
 
-		if ((token = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
+		if ((token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
 			break;
 
-		token_id = common::env::source_info->rule.map_index(token->get_match_index());
+		token_id = common::env::source_info.rule->map_index(token->get_match_index());
 		if (token_id == options.terminator.id && (options.terminator.value.empty() || token->get_value() == options.terminator.value)){
-			common::env::source_info->source.ignore(*common::env::source_info);
+			common::env::source_info.source->ignore(common::env::source_info);
 			terminated = true;
 			break;
 		}
 		else if (token_id == options.delimiter.id && (options.delimiter.value.empty() || token->get_value() == options.delimiter.value)){
-			common::env::source_info->source.ignore(*common::env::source_info);
+			common::env::source_info.source->ignore(common::env::source_info);
 			has_trailing_delimiter = true;
 		}
 		else if (node->is(options.alternate_delimiter))
@@ -79,7 +79,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			return common::env::error.set("", collection->get_index());
 	}
 
-	common::env::source_info->halt = halt;//Restore halt info
+	common::env::source_info.halt = halt;//Restore halt info
 	if (common::env::error.has())
 		return nullptr;
 
@@ -129,39 +129,39 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 }
 
 cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse_single(const halt_info &terminator){
-	lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-	auto token = common::env::source_info->source.peek(*common::env::source_info);
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	auto token = common::env::source_info.source->peek(common::env::source_info);
 	if (token == nullptr){
 		if (terminator.id != lexer::token_id::nil)
-			return common::env::error.set("", common::env::source_info->source.get_index());
+			return common::env::error.set("", common::env::source_info.source->get_index());
 		return nullptr;
 	}
 
-	auto token_id = common::env::source_info->rule.map_index(token->get_match_index());
+	auto token_id = common::env::source_info.rule->map_index(token->get_match_index());
 	if (token_id == terminator.id && (terminator.value.empty() || token->get_value() == terminator.value)){
-		common::env::source_info->source.ignore(*common::env::source_info);
+		common::env::source_info.source->ignore(common::env::source_info);
 		return nullptr;
 	}
 
-	auto halt = common::env::source_info->halt;
-	common::env::source_info->halt = terminator;//Enable halt
+	auto halt = common::env::source_info.halt;
+	common::env::source_info.halt = terminator;//Enable halt
 
 	auto node = common::env::expression_parser.parse();
-	common::env::source_info->halt = halt;//Restore halt info
+	common::env::source_info.halt = halt;//Restore halt info
 
 	if (common::env::error.has())
 		return nullptr;
 
 	if (terminator.id != lexer::token_id::nil){//Ensure next token is terminator
-		token = common::env::source_info->source.peek(*common::env::source_info);
+		token = common::env::source_info.source->peek(common::env::source_info);
 		if (token == nullptr)
-			return common::env::error.set("", common::env::source_info->source.get_index());
+			return common::env::error.set("", common::env::source_info.source->get_index());
 
-		token_id = common::env::source_info->rule.map_index(token->get_match_index());
+		token_id = common::env::source_info.rule->map_index(token->get_match_index());
 		if (token_id != terminator.id || (!terminator.value.empty() && token->get_value() != terminator.value))
-			return common::env::error.set("", common::env::source_info->source.get_index());
+			return common::env::error.set("", common::env::source_info.source->get_index());
 
-		common::env::source_info->source.ignore(*common::env::source_info);
+		common::env::source_info.source->ignore(common::env::source_info);
 	}
 
 	return node;

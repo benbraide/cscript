@@ -113,13 +113,13 @@ namespace cscript{
 					}
 					else{//Check for skips
 						for (auto iter = (end = offset_); iter != list_.end(); ++iter, ++end){
-							if (info.rule.map_index((*iter)->get_match_index()) == info.halt.id && (info.halt.value.empty() ||
+							if (info.rule->map_index((*iter)->get_match_index()) == info.halt.id && (info.halt.value.empty() ||
 								(*iter)->get_value() == info.halt.value)){
 								count = 0;
 								break;
 							}
 
-							if (info.skipper == nullptr || info.skipper->is(info.rule.map_index((*iter)->get_match_index())) ==
+							if (info.skipper == nullptr || info.skipper->is(info.rule->map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info.options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									++end;
@@ -166,13 +166,13 @@ namespace cscript{
 					}
 					else{//Check for skips
 						for (; iter != list_.end(); ++iter){
-							if (info->rule.map_index((*iter)->get_match_index()) == info->halt.id && (info->halt.value.empty() ||
+							if (info->rule->map_index((*iter)->get_match_index()) == info->halt.id && (info->halt.value.empty() ||
 								(*iter)->get_value() == info->halt.value)){
 								count = 0;
 								break;
 							}
 
-							if (info->skipper == nullptr || info->skipper->is(info->rule.map_index((*iter)->get_match_index())) ==
+							if (info->skipper == nullptr || info->skipper->is(info->rule->map_index((*iter)->get_match_index())) ==
 								CSCRIPT_IS(info->options, generic_source::option::invert_skipper)){
 								if (--count <= 0){
 									value = *iter;
@@ -331,7 +331,7 @@ namespace cscript{
 				virtual generic_source &ignore_before(token_id id, source_info &info) override{
 					token_type token;
 					while (has_more()){
-						if ((token = peek(info)) == nullptr || info.rule.map_index(token->get_match_index()) == id)
+						if ((token = peek(info)) == nullptr || info.rule->map_index(token->get_match_index()) == id)
 							break;
 
 						ignore(info);
@@ -436,10 +436,10 @@ namespace cscript{
 					const defined_symbols::value_type *expansion;
 					
 					while (count > 0){
-						if (!info.rule.match(current_, end_, match_info))
+						if (!info.rule->match(current_, end_, match_info))
 							return std::make_shared<error_token>(index_, "Unrecognized character encountered!");
 
-						id = info.rule.map_index(match_info.index);
+						id = info.rule->map_index(match_info.index);
 						formatted_info = generic_token_formatter::match_info{
 							index_,
 							&*current_,
@@ -449,7 +449,7 @@ namespace cscript{
 
 						if (!CSCRIPT_IS(info.options, generic_source::option::no_expansion) && id == token_id::identifier){
 							index_.column += static_cast<int>(match_info.size);
-							expansion = info.symbols.get_expansion(std::string(formatted_info.start, formatted_info.size));
+							expansion = info.symbols->get_expansion(std::string(formatted_info.start, formatted_info.size));
 							if (expansion != nullptr){//Token expanded
 								current_ += match_info.size;
 								if (!expansion->empty())
@@ -467,13 +467,13 @@ namespace cscript{
 						if (info.formatter != nullptr){//Pass to formatter
 							cache_.branch();
 							creator = info.formatter->format(formatted_info, info);
-							id = info.rule.map_index(formatted_info.match_index);
+							id = info.rule->map_index(formatted_info.match_index);
 							cache_.unbranch();
 						}
 
 						if (info.halt.id != token_id::nil){//Check for halt
 							create_value_(info, formatted_info, creator, value);
-							if (value != nullptr && info.rule.map_index(value->get_match_index()) == info.halt.id &&
+							if (value != nullptr && info.rule->map_index(value->get_match_index()) == info.halt.id &&
 								(info.halt.value.empty() || value->get_value() == info.halt.value)){//Halted
 								if (CSCRIPT_IS(flags, flag::after))
 									cache_.append(value);
@@ -496,7 +496,7 @@ namespace cscript{
 							}
 						}
 
-						if (formatted_info.match_index == info.rule.get_error_index()){//Error encountered
+						if (formatted_info.match_index == info.rule->get_error_index()){//Error encountered
 							if (value == nullptr)
 								create_value_(info, formatted_info, creator, value);
 							return value;

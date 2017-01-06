@@ -13,7 +13,7 @@ cscript::lexer::formatter::comment::comment(const generic_token_formatter *next)
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::comment::format(
 	match_info &match, source_info &info) const{
-	switch (info.rule.map_index(match.match_index)){
+	switch (info.rule->map_index(match.match_index)){
 	case token_id::comment_sng:
 		return format_single_line_(match, info);
 	case token_id::comment_mult:
@@ -29,8 +29,8 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	match_info &match, source_info &info) const{
 	match.adjustment.left = 2;
 
-	while (info.source.has_more()){//Skip to end of line
-		if (info.source.get_char() == '\n'){
+	while (info.source->has_more()){//Skip to end of line
+		if (info.source->get_char() == '\n'){
 			if (*(match.start + (match.size - 1)) != '\\')//Not extended
 				break;
 		}
@@ -47,10 +47,10 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	match.adjustment.right = 2;
 
 	auto terminated = false;
-	while (info.source.has_more()){//Skip to end of comment --> */
-		if (info.source.get_char() == '*'){//Check next
+	while (info.source->has_more()){//Skip to end of comment --> */
+		if (info.source->get_char() == '*'){//Check next
 			++match.size;
-			if (info.source.has_more() && info.source.get_char() == '/'){
+			if (info.source->has_more() && info.source->get_char() == '/'){
 				++match.size;
 				terminated = true;
 				break;
@@ -63,7 +63,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	}
 
 	if (!terminated){//Not terminated
-		match.match_index = info.rule.get_error_index();
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Comment is not terminated"); };
 	}
 
@@ -75,7 +75,7 @@ cscript::lexer::formatter::string::string(const generic_token_formatter *next)
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::string::format(
 	match_info &match, source_info &info) const{
-	switch (info.rule.map_index(match.match_index)){
+	switch (info.rule->map_index(match.match_index)){
 	case token_id::quote_dbl:
 	case token_id::quote_sng:
 	case token_id::quote_back:
@@ -99,15 +99,15 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	match.adjustment.left = escaped ? 1 : 2;
 	match.adjustment.right = 1;
 	
-	while (info.source.has_more()){
-		if ((c = info.source.get_char()) == quote){
+	while (info.source->has_more()){
+		if ((c = info.source->get_char()) == quote){
 			terminated = true;
 			++match.size;
 			break;
 		}
 
-		if (escaped && c == '\\' && info.source.has_more()){//Escaped
-			info.source.get_char();
+		if (escaped && c == '\\' && info.source->has_more()){//Escaped
+			info.source->get_char();
 			++match.size;
 		}
 
@@ -115,7 +115,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	}
 
 	if (!terminated){//Not terminated
-		match.match_index = info.rule.get_error_index();
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "String is not terminated"); };
 	}
 
@@ -127,7 +127,7 @@ cscript::lexer::formatter::type::type(const generic_token_formatter *next)
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::type::format(
 	match_info &match, source_info &info) const{
-	switch (info.rule.map_index(match.match_index)){
+	switch (info.rule->map_index(match.match_index)){
 	case token_id::unsigned_:
 		return format_unsigned_(match, info);
 	case token_id::long_:
@@ -151,7 +151,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 		return nullptr;
 
 	auto is_long = false;
-	switch (info.rule.map_index(next->get_match_index())){
+	switch (info.rule->map_index(next->get_match_index())){
 	case token_id::char_://uchar
 		match.match_index = static_cast<int>(token_id::uchar);
 		break;
@@ -166,12 +166,12 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 		match.match_index = static_cast<int>(token_id::ulong);
 		break;
 	default:
-		match.match_index = info.rule.get_error_index();
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "'unsigned' without target type"); };
 	}
 
 	match.size += (blanks + next->get_value().size());
-	info.source.ignore(info, source_index);
+	info.source->ignore(info, source_index);
 
 	if (is_long)//Try ullong
 		return format_unsigned_long_(match, info);
@@ -188,10 +188,10 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	if (next == nullptr)
 		return nullptr;
 
-	if (info.rule.map_index(next->get_match_index()) == token_id::long_){
+	if (info.rule->map_index(next->get_match_index()) == token_id::long_){
 		match.match_index = static_cast<int>(token_id::ullong);
 		match.size += (blanks + next->get_value().size());
-		info.source.ignore(info, source_index);
+		info.source->ignore(info, source_index);
 	}
 
 	return nullptr;//Default creation
@@ -208,7 +208,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	if (next == nullptr)
 		return nullptr;
 
-	switch (info.rule.map_index(next->get_match_index())){
+	switch (info.rule->map_index(next->get_match_index())){
 	case token_id::long_://llong
 		match.match_index = static_cast<int>(token_id::llong);
 		break;
@@ -220,7 +220,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	}
 
 	match.size += (blanks + next->get_value().size());
-	info.source.ignore(info, source_index);
+	info.source->ignore(info, source_index);
 
 	return nullptr;//Default creation
 }
@@ -228,11 +228,11 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 cscript::lexer::generic_token_formatter::token_type cscript::lexer::formatter::type::next_(
 	match_info &match, source_info &info, int &count, size_type &blanks) const{
 	token_type next = nullptr;
-	while (info.source.has_more()){
-		if ((next = info.source.peek(info, count)) == nullptr)
+	while (info.source->has_more()){
+		if ((next = info.source->peek(info, count)) == nullptr)
 			return nullptr;
 
-		if (token_id_compare_collection::skip.is(info.rule.map_index(next->get_match_index()))){
+		if (token_id_compare_collection::skip.is(info.rule->map_index(next->get_match_index()))){
 			blanks += next->get_value().size();
 			next = nullptr;
 			++count;
@@ -250,7 +250,7 @@ cscript::lexer::formatter::operator_symbol::operator_symbol(const generic_token_
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::operator_symbol::format(
 	match_info &match, source_info &info) const{
 	operator_id id;
-	auto tid = info.rule.map_index(match.match_index);
+	auto tid = info.rule->map_index(match.match_index);
 	if (tid == token_id::symbol)
 		id = symbols.convert_id(std::string(match.start, match.size), token_id::symbol);
 	else//Not a symbol
@@ -266,7 +266,7 @@ cscript::lexer::formatter::preprocessor::preprocessor(const generic_token_format
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::preprocessor::format(
 	match_info &match, source_info &info) const{
-	switch (info.rule.map_index(match.match_index)){
+	switch (info.rule->map_index(match.match_index)){
 	case token_id::prep_incl:
 		return format_include_(match, info);
 	case token_id::prep_def:
@@ -292,32 +292,32 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	match_info &match, source_info &info) const{
 	auto_info enable_skip_restrict_format(info, &token_id_compare_collection::single_line_skip, &collection::comment);
 
-	auto next = info.source.next(info);
+	auto next = info.source->next(info);
 	if (next == nullptr){
-		match.match_index = info.rule.get_error_index();
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target file path"); };
 	}
 
 	bool is_absolute;
-	switch (info.rule.map_index(next->get_match_index())){
+	switch (info.rule->map_index(next->get_match_index())){
 	case token_id::esc_quote_dbl:
 		is_absolute = false;
 		break;
 	case token_id::symbol:
 		if (next->get_value().size() == 1u || next->get_value()[0] != '<'){
-			match.match_index = info.rule.get_error_index();
+			match.match_index = info.rule->get_error_index();
 			return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target file path"); };
 		}
 		break;
 	default:
-		match.match_index = info.rule.get_error_index();
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target file path"); };
 	}
 
 	std::string path;
 	char close = is_absolute ? '<' : '"', c;
 
-	while (info.source.has_more() && (c = info.source.get_char()) != close)
+	while (info.source->has_more() && (c = info.source->get_char()) != close)
 		path.append(1, c);
 
 	auto error = check_for_new_line_(match, info);
@@ -333,14 +333,14 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	token_type next, token;
 	{//Scope
 		auto_info enable_skip_restrict_format(info, &token_id_compare_collection::single_line_skip, &collection::comment, generic_source::option::no_expansion);
-		next = info.source.next(info);
+		next = info.source->next(info);
 		if (next == nullptr){
-			match.match_index = info.rule.get_error_index();
+			match.match_index = info.rule->get_error_index();
 			return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target name"); };
 		}
 
-		if (info.rule.map_index(next->get_match_index()) != token_id::identifier){
-			match.match_index = info.rule.get_error_index();
+		if (info.rule->map_index(next->get_match_index()) != token_id::identifier){
+			match.match_index = info.rule->get_error_index();
 			return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target name"); };
 		}
 	}
@@ -349,16 +349,16 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	auto_skip disable_skip(info, nullptr);
 	auto token_list = std::make_shared<preprocessor_token::define::list_type>();
 
-	while (info.source.has_more()){
-		if ((token = info.source.next(info)) != nullptr){
-			id = info.rule.map_index(token->get_match_index());
+	while (info.source->has_more()){
+		if ((token = info.source->next(info)) != nullptr){
+			id = info.rule->map_index(token->get_match_index());
 			if (token_id_compare_collection::preprocessor.is(id)){
-				match.match_index = info.rule.get_error_index();
+				match.match_index = info.rule->get_error_index();
 				return [token](match_info &match){ return std::make_shared<error_token>(token->get_index(), "Invalid token"); };
 			}
 
 			if (id == token_id::new_line){
-				if (!token_list->empty() && info.rule.map_index((*token_list->rbegin())->get_match_index()) == token_id::backslash)
+				if (!token_list->empty() && info.rule->map_index((*token_list->rbegin())->get_match_index()) == token_id::backslash)
 					token_list->pop_back();//Extended
 				else//End of definition
 					break;
@@ -370,8 +370,8 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 			break;
 	}
 
-	if (!token_list->empty() && info.rule.map_index((*token_list->rbegin())->get_match_index()) == token_id::backslash){
-		match.match_index = info.rule.get_error_index();
+	if (!token_list->empty() && info.rule->map_index((*token_list->rbegin())->get_match_index()) == token_id::backslash){
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Expected more tokens after '\\'"); };
 	}
 
@@ -400,7 +400,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 		return error;
 
 	auto states = preprocessor_token::conditional::state::nil;
-	if (info.symbols.is_defined(target->get_value()) != is_defined)
+	if (info.symbols->is_defined(target->get_value()) != is_defined)
 		CSCRIPT_SET(states, preprocessor_token::conditional::state::is_rejected);
 
 	return [states](match_info &match){ return std::make_shared<preprocessor_token::conditional>(
@@ -444,13 +444,13 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	token_type next;
 
 	info.skipper = nullptr;//Disable skip
-	while (info.source.has_more()){//Check for end of line
-		next = info.source.next(info);
+	while (info.source->has_more()){//Check for end of line
+		next = info.source->next(info);
 		if (next == nullptr)
 			break;
 
-		if (!token_id_compare_collection::skip.is(id = info.rule.map_index(next->get_match_index()))){
-			match.match_index = info.rule.get_error_index();
+		if (!token_id_compare_collection::skip.is(id = info.rule->map_index(next->get_match_index()))){
+			match.match_index = info.rule->get_error_index();
 			return [next](match_info &match){ return std::make_shared<error_token>(next->get_index(), "Invalid token"); };
 		}
 
@@ -464,13 +464,13 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::preprocessor::get_target_(
 	match_info &match, source_info &info, token_type &target) const{
 	auto_info enable_skip_restrict_format(info, &token_id_compare_collection::single_line_skip, &collection::comment, generic_source::option::no_expansion);
-	if ((target = info.source.next(info)) == nullptr){
-		match.match_index = info.rule.get_error_index();
+	if ((target = info.source->next(info)) == nullptr){
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target name"); };
 	}
 
-	if (info.rule.map_index(target->get_match_index()) != token_id::identifier){
-		match.match_index = info.rule.get_error_index();
+	if (info.rule->map_index(target->get_match_index()) != token_id::identifier){
+		match.match_index = info.rule->get_error_index();
 		return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target name"); };
 	}
 

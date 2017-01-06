@@ -20,13 +20,13 @@ int main(){
 	file ss("test/sample.txt");
 	defined_symbols symbols;
 
-	cscript::common::env::source_info = std::make_shared<source_info>(
-		symbols,
-		ss,
-		rule,
+	cscript::common::env::source_info = source_info{
+		&symbols,
+		&ss,
+		&rule,
 		&token_id_compare_collection::skip,
 		&formatter::linked_collection::last
-	);
+	};
 
 	auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
 	if (lines != nullptr)

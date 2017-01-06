@@ -6,8 +6,8 @@ cscript::parser::generic::node_type cscript::parser::collection::expression::par
 		return nullptr;
 
 	{//Peek next
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::parser_info.token = common::env::source_info->source.peek(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::parser_info.token = common::env::source_info.source->peek(common::env::source_info);
 	}
 
 	save_left_operand save_left_operand(common::env::parser_info);
@@ -15,8 +15,8 @@ cscript::parser::generic::node_type cscript::parser::collection::expression::par
 		return nullptr;
 
 	{//Peek next
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::parser_info.token = common::env::source_info->source.peek(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::parser_info.token = common::env::source_info.source->peek(common::env::source_info);
 	}
 
 	auto expression = common::env::binary_operator_parser.parse();

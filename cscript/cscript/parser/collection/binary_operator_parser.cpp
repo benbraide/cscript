@@ -12,7 +12,7 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 	auto operator_token = token->query<lexer::operator_token>();
 
 	if (operator_token == nullptr){
-		switch (common::env::source_info->rule.map_index(token->get_match_index())){
+		switch (common::env::source_info.rule->map_index(token->get_match_index())){
 		case lexer::token_id::open_par:
 			type = 1;
 			precedence = 14;
@@ -29,9 +29,9 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 	}
 
 	if (precedence < 0){
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		auto next = common::env::source_info->source.peek_after(token, *common::env::source_info);
-		if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) == lexer::token_id::semi_colon){
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		auto next = common::env::source_info.source->peek_after(token, common::env::source_info);
+		if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) == lexer::token_id::semi_colon){
 			precedence = get_unary_precedence_(*operator_token);
 			type = 3;
 		}
@@ -53,8 +53,8 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 		return nullptr;
 
 	{//Ignore token
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::source_info.source->ignore(common::env::source_info);
 	}
 
 	auto left_operand = common::env::parser_info.left_operand;
@@ -99,8 +99,8 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 	}
 
 	{//Peek next
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::parser_info.token = common::env::source_info->source.peek(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::parser_info.token = common::env::source_info.source->peek(common::env::source_info);
 	}
 
 	return parse();

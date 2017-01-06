@@ -5,7 +5,7 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse(
 	if (common::env::parser_info.token == nullptr || common::env::error.has())
 		return nullptr;
 
-	auto id = common::env::source_info->rule.map_index(common::env::parser_info.token->get_match_index());
+	auto id = common::env::source_info.rule->map_index(common::env::parser_info.token->get_match_index());
 	if (id == lexer::token_id::operator_symbol){
 		switch (common::env::parser_info.token->query<lexer::operator_token>()->get_id()){
 		case lexer::operator_id::plus:
@@ -15,17 +15,17 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse(
 			return nullptr;
 		}
 
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		auto next = common::env::source_info->source.peek(*common::env::source_info);
-		if (next != nullptr && lexer::token_id_compare_collection::numeric.is(common::env::source_info->rule.map_index(next->get_match_index()))){
-			common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		auto next = common::env::source_info.source->peek(common::env::source_info);
+		if (next != nullptr && lexer::token_id_compare_collection::numeric.is(common::env::source_info.rule->map_index(next->get_match_index()))){
+			common::env::source_info.source->ignore(common::env::source_info);
 			next->update(common::env::parser_info.token->get_value() + next->get_value());
 		}
 		else//Operator
 			return nullptr;
 
 		common::env::parser_info.token = next;//Signed number
-		id = common::env::source_info->rule.map_index(next->get_match_index());
+		id = common::env::source_info.rule->map_index(next->get_match_index());
 	}
 
 	switch (id){
@@ -240,7 +240,7 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 
 	auto &token_value = common::env::parser_info.token->get_value();
 	auto &index = common::env::parser_info.token->get_index();
-	auto id = common::env::source_info->rule.map_index(common::env::parser_info.token->get_match_index());
+	auto id = common::env::source_info.rule->map_index(common::env::parser_info.token->get_match_index());
 
 	return std::make_shared<node::literal>(index, id, token_value + suffix_string, [suffix_value](const std::string &value){
 		switch (suffix_value){
@@ -271,13 +271,13 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 cscript::parser::collection::literal::suffix cscript::parser::collection::literal::get_integral_suffix_(std::string &value){
 	static boost::regex regex("^([uU][lL][lL])|([uU][lL])|([lL][lL])|([uU])|([lL])$", boost::regex_constants::optimize);
 
-	lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
-	auto next = common::env::source_info->source.peek_after(common::env::parser_info.token, *common::env::source_info);
-	if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::identifier)
+	lexer::auto_skip disable_skip(common::env::source_info, nullptr);
+	auto next = common::env::source_info.source->peek_after(common::env::parser_info.token, common::env::source_info);
+	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::identifier)
 		return suffix::nil;
 
 	value = next->get_value();
-	common::env::source_info->source.ignore_one(next);
+	common::env::source_info.source->ignore_one(next);
 
 	boost::match_results<std::string::const_iterator> results;
 	if (!boost::regex_search(value.cbegin(), value.cend(), results, regex, boost::regex_constants::match_single_line)){
@@ -302,13 +302,13 @@ cscript::parser::collection::literal::suffix cscript::parser::collection::litera
 }
 
 cscript::parser::collection::literal::suffix cscript::parser::collection::literal::get_real_suffix_(std::string &value){
-	lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
-	auto next = common::env::source_info->source.peek_after(common::env::parser_info.token, *common::env::source_info);
-	if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::identifier)
+	lexer::auto_skip disable_skip(common::env::source_info, nullptr);
+	auto next = common::env::source_info.source->peek_after(common::env::parser_info.token, common::env::source_info);
+	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::identifier)
 		return suffix::nil;
 
 	value = next->get_value();
-	common::env::source_info->source.ignore_one(next);
+	common::env::source_info.source->ignore_one(next);
 
 	if (value.size() != 1u){
 		common::env::error.set("Invalid suffix", next->get_index());
@@ -324,14 +324,14 @@ cscript::parser::collection::literal::suffix cscript::parser::collection::litera
 		break;
 	}
 
-	common::env::parser_info.token->update(next->get_index(), "Invalid suffix", common::env::source_info->rule.get_error_index());
+	common::env::parser_info.token->update(next->get_index(), "Invalid suffix", common::env::source_info.rule->get_error_index());
 	return suffix::nil;
 }
 
 cscript::parser::collection::literal::suffix cscript::parser::collection::literal::get_string_suffix_(std::string &value){
-	lexer::auto_skip disable_skip(*common::env::source_info, nullptr);
-	auto next = common::env::source_info->source.peek(*common::env::source_info);
-	if (next == nullptr || common::env::source_info->rule.map_index(next->get_match_index()) != lexer::token_id::identifier)
+	lexer::auto_skip disable_skip(common::env::source_info, nullptr);
+	auto next = common::env::source_info.source->peek(common::env::source_info);
+	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::identifier)
 		return suffix::nil;
 
 	value = next->get_value();

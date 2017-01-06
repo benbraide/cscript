@@ -12,28 +12,28 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 		return value;
 
 	auto token = common::env::parser_info.token;
-	auto id = common::env::source_info->rule.map_index(token->get_match_index());
+	auto id = common::env::source_info.rule->map_index(token->get_match_index());
 
 	if (lexer::token_id_compare_collection::type.is(id)){
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::source_info.source->ignore(common::env::source_info);
 		return std::make_shared<node::primitive_type>(token->get_index(), id);
 	}
 
 	if (is_storage_class_(id)){
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::source_info.source->ignore(common::env::source_info);
 
 		auto index = token->get_index();
 		auto attributes = convert_storage_class_(id);
 		auto attribute = memory::virtual_address::attribute::nil;
 
 		auto string_value = token->get_value();
-		while (common::env::source_info->source.has_more()){
-			if ((token = common::env::source_info->source.peek(*common::env::source_info)) == nullptr)
+		while (common::env::source_info.source->has_more()){
+			if ((token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
 				break;
 
-			id = common::env::source_info->rule.map_index(token->get_match_index());
+			id = common::env::source_info.rule->map_index(token->get_match_index());
 			if (!is_storage_class_(id))
 				break;
 
@@ -44,7 +44,7 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 				return common::env::error.set("", index);
 
 			CSCRIPT_SET(attributes, attribute);
-			common::env::source_info->source.ignore(*common::env::source_info);
+			common::env::source_info.source->ignore(common::env::source_info);
 		}
 
 		auto type = common::env::builder.parse_type();
@@ -90,8 +90,8 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 	}
 
 	if (value != nullptr || (value = common::env::literal_parser.parse()) != nullptr){//Literal value parsed
-		lexer::auto_skip enable_skip(*common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::source_info->source.ignore(*common::env::source_info);
+		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+		common::env::source_info.source->ignore(common::env::source_info);
 		return value;
 	}
 
