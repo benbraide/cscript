@@ -45,7 +45,6 @@ namespace cscript{
 			static thread_local memory::static_block static_block2;
 
 			static memory::virtual_address address_space;
-			static memory::temp_virtual_address temp_address_space;
 
 			static const type::generic::ptr_type any_type;
 			static const type::generic::ptr_type auto_type;

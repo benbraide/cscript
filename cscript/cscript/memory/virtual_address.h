@@ -3,11 +3,11 @@
 #ifndef CSCRIPT_VIRTUAL_ADDRESS_H
 #define CSCRIPT_VIRTUAL_ADDRESS_H
 
-#include <list>
-#include <mutex>
+#include <shared_mutex>
 #include <memory>
 
 #include "../common/preprocessor.h"
+#include "../common/table.h"
 #include "../storage/generic_storage.h"
 
 #include "memory_pool.h"
@@ -22,184 +22,127 @@ namespace cscript{
 	}
 
 	namespace memory{
-		class virtual_address{
+		typedef unsigned __int64 address_value_type;
+		typedef std::shared_ptr<type::generic> address_generic_type;
+
+		enum class address_attribute : unsigned int{
+			nil				= (0 << 0x0000),
+			temp			= (1 << 0x0000),
+			ref				= (1 << 0x0001),
+			indirect		= (1 << 0x0002),
+			uninitialized	= (1 << 0x0003),
+			constant		= (1 << 0x0004),
+			is_nan			= (1 << 0x0005),
+			byte_aligned	= (1 << 0x0006),
+			final_			= (1 << 0x0007),
+			static_			= (1 << 0x0008),
+			private_		= (1 << 0x0009),
+			protected_		= (1 << 0x000A),
+			no_dealloc		= (1 << 0x000B),
+			is_child		= (1 << 0x000C),
+			const_target	= (1 << 0x000D),
+		};
+
+		struct address_entry_info{
+			object::generic *object;
+			address_generic_type type;
+			storage::generic *storage;
+		};
+
+		struct address_entry{
+			pool::base_type base;
+			pool::size_type size;
+			address_value_type value;
+			address_attribute attributes;
+			address_entry_info info;
+		};
+
+		class virtual_address : public common::table<address_entry, address_value_type>{
 		public:
-			typedef unsigned __int64 value_type;
+			typedef address_value_type value_type;
+			typedef address_attribute attribute;
+			typedef address_entry_info entry_info;
+			typedef address_entry entry;
+			typedef address_generic_type generic_type;
 
 			typedef pool::base_type base_type;
 			typedef pool::size_type size_type;
 
-			typedef std::mutex lock_type;
+			typedef std::shared_mutex lock_type;
+			typedef std::shared_lock<lock_type> shared_lock_type;
 			typedef std::lock_guard<lock_type> guard_type;
-			typedef std::shared_ptr<type::generic> generic_type;
-
-			enum class attribute : unsigned int{
-				nil				= (0 << 0x0000),
-				temp			= (1 << 0x0000),
-				ref				= (1 << 0x0001),
-				indirect		= (1 << 0x0002),
-				uninitialized	= (1 << 0x0003),
-				constant		= (1 << 0x0004),
-				is_nan			= (1 << 0x0005),
-				byte_aligned	= (1 << 0x0006),
-				final_			= (1 << 0x0007),
-				static_			= (1 << 0x0008),
-				private_		= (1 << 0x0009),
-				protected_		= (1 << 0x000A),
-			};
-
-			struct entry{
-				virtual_address *address;
-				base_type base;
-				size_type size;
-				size_type ref_count;
-				value_type origin;
-				value_type value;
-				size_type offset;
-				attribute attributes;
-				object::generic *object;
-				generic_type type;
-				storage::generic *storage;
-				entry *parent;
-			};
-
-			struct value_info{
-				virtual_address *address;
-				value_type value;
-				size_type offset;
-			};
-
-			typedef std::list<entry> list_type;
-			typedef std::list<list_type> multi_list_type;
-
-			typedef list_type::iterator iterator_type;
-			typedef list_type::const_iterator const_iterator_type;
-
-			struct find_info{
-				iterator_type iterator;
-				list_type *list;
-			};
+			typedef std::map<value_type, size_type> available_list_type;
 
 			virtual_address();
 
 			virtual ~virtual_address();
 
-			entry &add(size_type size, attribute set = attribute::nil, attribute remove = attribute::nil);
+			value_type add(size_type size, bool allocate = true);
 
 			template <typename type>
-			entry &add(attribute set = attribute::nil, attribute remove = attribute::nil){
-				return add(static_cast<size_type>(sizeof(type)), set, remove);
+			value_type add(bool allocate = true){
+				return add(static_cast<size_type>(sizeof(type)), allocate);
 			}
 
-			entry &add(entry &parent, size_type size, attribute set = attribute::nil, attribute remove = attribute::nil);
-
-			template <typename type>
-			entry &add(entry &parent, attribute set = attribute::nil, attribute remove = attribute::nil){
-				return add(parent, static_cast<size_type>(sizeof(type)), set, remove);
-			}
-
-			bool remove(const entry &entry);
-
-			bool update_ref_count(const entry &entry, size_type count, bool increment);
-
-			bool decrement_ref_count(const entry &entry);
-
-			bool increment_ref_count(const entry &entry);
-
-			bool is_none(const entry &entry) const;
-
-			entry &get_entry(const value_info &info);
+			bool remove(value_type value);
 
 			entry &get_entry(value_type value);
 
-			value_type convert_info(const value_info &info);
+			entry get_bound_entry(value_type value);
 
-			static bool copy(const entry &destination, const entry &source);
+			bool copy(value_type destination, value_type source);
 
-			static void copy_unchecked(const entry &destination, const entry &source);
+			void copy_unchecked(value_type destination, value_type source, size_type size);
 
 			template <typename value_type>
-			static bool write(virtual_address::value_type address, const entry &entry, value_type value){
-				if (is_none(entry) || entry.base == nullptr)
+			bool write(value_type destination, value_type value){
+				auto entry = get_entry(destination);
+				if (entry.base == nullptr)
 					return false;
 
-				auto offset = entry.value - address;
-				if ((entry.size - offset) < static_cast<virtual_address::value_type>(sizeof(value_type)))
+				if (entry.size < static_cast<address_value_type>(sizeof(value_type)))
 					return false;
 
-				pool::write_unchecked(entry.base + offset, value);
+				pool::write_unchecked(entry.base, value);
 				return true;
 			}
 
 			template <typename value_type>
-			static void write_unchecked(virtual_address::value_type address, const entry &entry, value_type value){
-				if (is_none(entry) || entry.base == nullptr)
-					return;
-
-				auto offset = entry.value - address, end = entry.value + entry.size;
-				auto size = static_cast<virtual_address::value_type>(sizeof(value_type));
-				auto value_base = reinterpret_cast<const char *>(&value);
-
-				for (auto base = entry.base + offset; base != nullptr && size > 0u; --size, ++value_base){
-					*base = *value_base;
-					if (end <= ++offset){//Passed address boundary
-						auto &next = entry.address->get_entry(offset);
-						if (is_none(next))
-							break;
-
-						offset = 0;
-						end = next.value + next.size;
-						base = next.base;
-					}
-					else//Advance pointer
-						++base;
+			void write_unchecked(value_type destination, value_type value){
+				auto size = sizeof(value_type);
+				for (auto source = reinterpret_cast<base_type>(&value); size > 0u; --size, ++source, ++destination){
+					auto destination_entry = get_bound_entry(destination);
+					*destination_entry.base = *source;
 				}
 			}
 
 			template <typename value_type>
-			static bool write_ref(virtual_address::value_type address, const entry &entry, const value_type &value){
-				if (is_none(entry) || entry.base == nullptr)
+			static bool write_ref(value_type destination, const value_type &value){
+				auto entry = get_entry(destination);
+				if (entry.base == nullptr)
 					return false;
 
-				auto offset = entry.value - address;
-				if ((entry.size - offset) < static_cast<virtual_address::value_type>(sizeof(value_type)))
+				if (entry.size < static_cast<address_value_type>(sizeof(value_type)))
 					return false;
 
-				pool::write_ref_unchecked(entry.base + offset, value);
+				pool::write_ref_unchecked(entry.base, value);
 				return true;
 			}
 
-			static int compare(const value_info &left, const value_info &right);
-
 			static const size_type value_type_size = static_cast<size_type>(sizeof(value_type));
 
-		private:
-			void remove_(find_info &info);
-
-			void find_(const entry &entry, find_info &info);
-
-			virtual void find_available_(size_type size, find_info &info);
-
-			list_type *get_list_(size_type offset);
-
-			multi_list_type::iterator get_list_iterator_(size_type offset);
-
-			list_type *get_next_list_(size_type &offset);
-
-			multi_list_type list_;
-			entry none_{};
-			mutable lock_type lock_;
-		};
-
-		class temp_virtual_address : public virtual_address{
-		public:
-			virtual ~temp_virtual_address();
-
 		protected:
-			virtual void find_available_(size_type size, find_info &info) override;
+			value_type find_available_(size_type size);
+
+			void merge_available_(value_type value, size_type size);
+
+			entry none_{};
+			lock_type lock_;
+			available_list_type available_list_;
+			value_type next_ = 1u;
 		};
 
-		CSCRIPT_MAKE_OPERATORS(virtual_address::attribute)
+		CSCRIPT_MAKE_OPERATORS(address_attribute)
 	}
 }
 

@@ -14,13 +14,11 @@ namespace cscript{
 
 				boolean();
 
+				explicit boolean(bool);
+
 				explicit boolean(value_type value);
 
-				explicit boolean(memory::virtual_address &address_space);
-
-				boolean(memory::virtual_address &address_space, value_type value);
-
-				explicit boolean(memory::virtual_address::entry &parent);
+				explicit boolean(memory::virtual_address::base_type base);
 
 				virtual ~boolean();
 
@@ -32,6 +30,22 @@ namespace cscript{
 
 			protected:
 				virtual value_type get_value_();
+
+				virtual value_type compare_(generic &operand, bool equality);
+			};
+
+			class boolean_ref : public boolean{
+			public:
+				boolean_ref(memory::virtual_address::value_type memory_value, bool is_constant);
+
+				virtual ~boolean_ref();
+
+				virtual memory::virtual_address::entry &get_memory() override;
+
+				virtual bool is_lvalue() override;
+
+			protected:
+				memory::virtual_address::entry memory_;
 			};
 		}
 	}

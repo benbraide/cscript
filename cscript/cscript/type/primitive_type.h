@@ -29,7 +29,10 @@ namespace cscript{
 
 			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
 
-			virtual std::shared_ptr<object::generic> create(memory::virtual_address::entry &parent, ptr_type this_ptr) override;
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::base_type base, ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create_ref(memory::virtual_address::value_type memory_value,
+				bool is_constant, ptr_type this_ptr) override;
 
 			virtual id get_id() const override;
 
@@ -86,7 +89,10 @@ namespace cscript{
 
 			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
 
-			virtual std::shared_ptr<object::generic> create(memory::virtual_address::entry &parent, ptr_type this_ptr) override;
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::base_type base, ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create_ref(memory::virtual_address::value_type memory_value,
+				bool is_constant, ptr_type this_ptr) override;
 
 			virtual const generic *get_bully(const generic *type) const override;
 
@@ -95,6 +101,8 @@ namespace cscript{
 			virtual bool has_conversion(const generic *type) const override;
 
 			virtual bool is_same(const generic *type) const override;
+
+			virtual ptr_type get_value();
 
 		protected:
 			ptr_type value_;

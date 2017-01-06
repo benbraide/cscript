@@ -12,25 +12,20 @@ namespace cscript{
 			public:
 				typedef std::shared_ptr<memory::block_operator> block_operator_type;
 
+				explicit numeric(bool);
+
 				explicit numeric(const type::generic::ptr_type type);
 
 				template <typename value_type>
 				numeric(const type::generic::ptr_type type, value_type value)
-					: numeric(common::env::address_space, type, value){
-					CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+					: basic(common::env::address_space.add(type->get_size())){
+					auto &memory_entry = get_memory();
+					memory_entry.info.type = type;
+					memory::pool::write_unchecked(memory_entry.base, value);
+					CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 				}
 
-				numeric(memory::virtual_address &address_space, const type::generic::ptr_type type);
-
-				template <typename value_type>
-				numeric(memory::virtual_address &address_space, const type::generic::ptr_type type, value_type value)
-					: basic(address_space.add<value_type>()){
-					memory_.type = type;
-					memory::pool::write_unchecked(memory_.base, value);
-					CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
-				}
-
-				numeric(memory::virtual_address::entry &parent, const type::generic::ptr_type type);
+				numeric(memory::virtual_address::base_type base, const type::generic::ptr_type type);
 
 				virtual ~numeric();
 
@@ -50,58 +45,59 @@ namespace cscript{
 
 				template <typename value_type>
 				void cast_value(){
-					switch (memory_.type->get_id()){
+					auto &memory_entry = get_memory();
+					switch (memory_entry.info.type->get_id()){
 					case type::id::char_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<char>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<char>(memory_entry.base));
 						break;
 					case type::id::uchar:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<unsigned char>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<unsigned char>(memory_entry.base));
 						break;
 					case type::id::short_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<short>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<short>(memory_entry.base));
 						break;
 					case type::id::ushort:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<unsigned short>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<unsigned short>(memory_entry.base));
 						break;
 					case type::id::int_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<int>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<int>(memory_entry.base));
 						break;
 					case type::id::uint:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<unsigned int>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<unsigned int>(memory_entry.base));
 						break;
 					case type::id::long_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<long>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<long>(memory_entry.base));
 						break;
 					case type::id::ulong:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<unsigned long>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<unsigned long>(memory_entry.base));
 						break;
 					case type::id::llong:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<long long>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<long long>(memory_entry.base));
 						break;
 					case type::id::ullong:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<unsigned long long>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<unsigned long long>(memory_entry.base));
 						break;
 					case type::id::float_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<float>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<float>(memory_entry.base));
 						break;
 					case type::id::double_:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<double>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<double>(memory_entry.base));
 						break;
 					case type::id::ldouble:
 						common::env::static_block1.get<value_type>() =
-							static_cast<value_type>(memory::pool::convert_unchecked<long double>(memory_.base));
+							static_cast<value_type>(memory::pool::convert_unchecked<long double>(memory_entry.base));
 						break;
 					default:
 						break;
@@ -124,7 +120,7 @@ namespace cscript{
 					auto op = get_op_();
 					memory::pool::convert_unchecked<value_type>(common::env::static_block1.get_base()) = value;
 
-					return (op->compare(memory_.base, common::env::static_block1.get_base()) != 0);
+					return (op->compare(get_memory().base, common::env::static_block1.get_base()) != 0);
 				}
 
 			protected:
@@ -168,6 +164,20 @@ namespace cscript{
 				virtual std::string to_string_(bool echo);
 
 				static block_operator_type cast_value_(type::id id, numeric &source);
+			};
+
+			class numeric_ref : public numeric{
+			public:
+				numeric_ref(memory::virtual_address::value_type memory_value, const type::generic::ptr_type type, bool is_constant);
+
+				virtual ~numeric_ref();
+
+				virtual memory::virtual_address::entry &get_memory() override;
+
+				virtual bool is_lvalue() override;
+
+			protected:
+				memory::virtual_address::entry memory_;
 			};
 		}
 	}

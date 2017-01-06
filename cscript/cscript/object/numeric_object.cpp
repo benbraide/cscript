@@ -1,25 +1,26 @@
 #include "pointer_object.h"
 
-cscript::object::primitive::numeric::numeric(const type::generic::ptr_type type)
-	: numeric(common::env::address_space, type){}
+cscript::object::primitive::numeric::numeric(bool){}
 
-cscript::object::primitive::numeric::numeric(memory::virtual_address &address_space, const type::generic::ptr_type type)
-	: basic(address_space.add(type->get_size())){
-	memory_.type = type;
+cscript::object::primitive::numeric::numeric(const type::generic::ptr_type type)
+	: basic(common::env::address_space.add(type->get_size())){
+	get_memory().info.type = type;
 }
 
-cscript::object::primitive::numeric::numeric(memory::virtual_address::entry &parent, const type::generic::ptr_type type)
-	: basic(parent.address->add(parent, type->get_size())){
-	memory_.type = type;
+cscript::object::primitive::numeric::numeric(memory::virtual_address::base_type base, const type::generic::ptr_type type)
+	: basic(common::env::address_space.add(type->get_size(), false)){
+	auto &memory = get_memory();
+	memory.info.type = type;
+	memory.base = base;
 }
 
 cscript::object::primitive::numeric::~numeric(){}
 
 cscript::object::generic *cscript::object::primitive::numeric::clone(){
-	auto value = std::make_shared<numeric>(common::env::temp_address_space, memory_.type);
+	auto value = std::make_shared<numeric>(get_memory().info.type);
 
 	common::env::temp_storage.add(value);
-	memory::virtual_address::copy(memory_, value->get_memory());
+	common::env::address_space.copy(value->get_memory_value(), memory_value_);
 
 	return value.get();
 }
@@ -27,44 +28,31 @@ cscript::object::generic *cscript::object::primitive::numeric::clone(){
 cscript::object::generic *cscript::object::primitive::numeric::cast(const type::generic *type){
 	switch (type->get_id()){
 	case type::id::char_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::char_type, get_value<char>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::char_type, get_value<char>()));
 	case type::id::uchar:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::uchar_type, get_value<unsigned char>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::uchar_type, get_value<unsigned char>()));
 	case type::id::short_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::short_type, get_value<short>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::short_type, get_value<short>()));
 	case type::id::ushort:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::ushort_type, get_value<unsigned short>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::ushort_type, get_value<unsigned short>()));
 	case type::id::int_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::int_type, get_value<int>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::int_type, get_value<int>()));
 	case type::id::uint:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::uint_type, get_value<unsigned int>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::uint_type, get_value<unsigned int>()));
 	case type::id::long_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::long_type, get_value<long>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::long_type, get_value<long>()));
 	case type::id::ulong:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::ulong_type, get_value<unsigned long>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::ulong_type, get_value<unsigned long>()));
 	case type::id::llong:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::llong_type, get_value<long long>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::llong_type, get_value<long long>()));
 	case type::id::ullong:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::ullong_type, get_value<unsigned long long>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::ullong_type, get_value<unsigned long long>()));
 	case type::id::float_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::float_type, get_value<float>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::float_type, get_value<float>()));
 	case type::id::double_:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::double_type, get_value<double>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::double_type, get_value<double>()));
 	case type::id::ldouble:
-		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::temp_address_space,
-			common::env::ldouble_type, get_value<long double>()));
+		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::ldouble_type, get_value<long double>()));
 	default:
 		break;
 	}
@@ -74,24 +62,19 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 		switch (type->remove_pointer()->get_id()){
 		case type::id::any:
 		case type::id::byte:
-			return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
-				&common::env::address_space, value, 0 }));
+			return common::env::temp_storage.add(std::make_shared<pointer>(value));
 		default:
 			break;
 		}
 
 		auto &entry = common::env::address_space.get_entry(value);
-		if (common::env::address_space.is_none(entry) || entry.type == nullptr || !entry.type->is_same(type) ||
-			common::env::address_space.convert_info(pointer::value_type{ nullptr, entry.value, entry.offset }) != value){
-			return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
-				&common::env::address_space, 0, 0 }));//nullptr
-		}
+		if (entry.info.type == nullptr || !entry.info.type->is_same(type))
+			return common::env::temp_storage.add(std::make_shared<pointer>(0ull));//nullptr
 
-		return common::env::temp_storage.add(std::make_shared<pointer>(pointer::value_type{
-			entry.address, entry.value, entry.offset }));
+		return common::env::temp_storage.add(std::make_shared<pointer>(value));
 	}
 
-	return memory_.type->has_conversion(type) ? clone() : basic::cast(type);
+	return get_type()->has_conversion(type) ? clone() : basic::cast(type);
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::evaluate(const binary_info &info){
@@ -99,20 +82,22 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
+	auto &memory_entry = get_memory();
+	auto type = get_type();
+
 	if (info.id == lexer::operator_id::assignment){
 		if (!is_lvalue() || (is_constant() && !is_uninitialized()))
 			return common::env::error.set("Operator does not take specified operands");
 
-		auto type = get_type();
 		auto value = operand->ref_cast(type.get());
 		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
 			return common::env::error.set("Cannot assign value into object");
 
-		CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+		CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 		if (value->query<numeric>()->is_nan())
-			CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::is_nan);
+			CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::is_nan);
 		else//Copy value
-			memory::virtual_address::copy(memory_, value->get_memory());
+			common::env::address_space.copy(memory_value_, value->get_memory_value());
 
 		return this;
 	}
@@ -121,7 +106,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	if (!operand_type->is_numeric())
 		return basic::evaluate(info);
 
-	auto bully = (memory_.type->get_bully(operand_type.get()) == memory_.type.get()) ? memory_.type : operand_type;
+	auto bully = (type->get_bully(operand_type.get()) == type.get()) ? type : operand_type;
 	auto numeric_operand = operand->query<numeric>();
 
 	switch (info.id){
@@ -248,11 +233,11 @@ std::string cscript::object::primitive::numeric::echo(){
 }
 
 bool cscript::object::primitive::numeric::is_nan(){
-	return CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::is_nan);
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::is_nan);
 }
 
 cscript::object::generic::ptr_type cscript::object::primitive::numeric::clone_(const type::generic::ptr_type type, bool is_nan){
-	auto value = std::make_shared<numeric>(common::env::temp_address_space, type);
+	auto value = std::make_shared<numeric>(type);
 	if (is_nan)
 		CSCRIPT_SET(value->get_memory().attributes, memory::virtual_address::attribute::is_nan);
 
@@ -263,7 +248,7 @@ cscript::object::generic *cscript::object::primitive::numeric::create_boolean_(b
 	if (common::env::error.has())
 		return nullptr;
 
-	return common::env::temp_storage.add(std::make_shared<boolean>(common::env::temp_address_space, value));
+	return common::env::temp_storage.add(std::make_shared<boolean>(value));
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::plus_(){
@@ -271,45 +256,48 @@ cscript::object::generic *cscript::object::primitive::numeric::plus_(){
 		return common::env::error.set("Uninitialized object in expression");
 
 	auto op = get_op_();
-	auto destination = common::env::temp_storage.add(clone_(memory_.type, is_nan()));
+	auto &memory_entry = get_memory();
+	auto destination = common::env::temp_storage.add(clone_(memory_entry.info.type, is_nan()));
 
 	CSCRIPT_REMOVE(destination->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 	if (!is_nan())
-		op->plus(destination->get_memory().base, memory_.base);
+		op->plus(destination->get_memory().base, memory_entry.base);
 
 	return destination;
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::minus_(){
-	if (memory_.type->is_unsigned_integral())
+	auto &memory_entry = get_memory();
+	if (memory_entry.info.type->is_unsigned_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	if (is_uninitialized())
 		return common::env::error.set("Uninitialized object in expression");
 
 	auto op = get_op_();
-	auto destination = common::env::temp_storage.add(clone_(memory_.type, is_nan()));
+	auto destination = common::env::temp_storage.add(clone_(memory_entry.info.type, is_nan()));
 
 	CSCRIPT_REMOVE(destination->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 	if (!is_nan())
-		op->minus(destination->get_memory().base, memory_.base);
+		op->minus(destination->get_memory().base, memory_entry.base);
 
 	return destination;
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::bitwise_inverse_(){
-	if (!memory_.type->is_integral())
+	auto &memory_entry = get_memory();
+	if (!memory_entry.info.type->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	if (is_uninitialized())
 		return common::env::error.set("Uninitialized object in expression");
 
 	auto op = get_op_();
-	auto destination = common::env::temp_storage.add(clone_(memory_.type, is_nan()));
+	auto destination = common::env::temp_storage.add(clone_(memory_entry.info.type, is_nan()));
 
 	CSCRIPT_REMOVE(destination->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 	if (!is_nan())
-		op->bitwise_inverse(destination->get_memory().base, memory_.base);
+		op->bitwise_inverse(destination->get_memory().base, memory_entry.base);
 
 	return destination;
 }
@@ -375,7 +363,7 @@ cscript::object::generic *cscript::object::primitive::numeric::divide_(type::gen
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::modulus_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -396,7 +384,7 @@ cscript::object::generic *cscript::object::primitive::numeric::modulus_(type::ge
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::left_shift_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -413,7 +401,7 @@ cscript::object::generic *cscript::object::primitive::numeric::left_shift_(type:
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::right_shift_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -430,7 +418,7 @@ cscript::object::generic *cscript::object::primitive::numeric::right_shift_(type
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::bitwise_and_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -447,7 +435,7 @@ cscript::object::generic *cscript::object::primitive::numeric::bitwise_and_(type
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::bitwise_or_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -464,7 +452,7 @@ cscript::object::generic *cscript::object::primitive::numeric::bitwise_or_(type:
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::bitwise_xor_(type::generic::ptr_type bully, numeric &operand, bool assign){
-	if (!memory_.type->is_integral() || !operand.get_memory().type->is_integral())
+	if (!get_type()->is_integral() || !operand.get_type()->is_integral())
 		return common::env::error.set("Operator does not take specified operand");
 
 	object::generic *destination;
@@ -494,8 +482,8 @@ int cscript::object::primitive::numeric::compare_(type::generic::ptr_type bully,
 
 	memory::pool::base_type left, right;
 	block_operator_type op;
-	if (bully.get() == memory_.type.get()){
-		left = memory_.base;
+	if (bully.get() == get_type().get()){
+		left = get_memory().base;
 		op = cast_value_(bully->get_id(), operand);
 		right = common::env::static_block1.get_base();
 	}
@@ -521,15 +509,15 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 			return nullptr;
 		}
 
-		bully = memory_.type;
+		bully = get_type();
 		destination = this;
 	}
 	else//Create temp
 		destination = common::env::temp_storage.add(clone_(bully, is_nan() || operand.is_nan()));
 
 	block_operator_type op;
-	if (bully.get() == memory_.type.get()){
-		left = memory_.base;
+	if (bully.get() == get_type().get()){
+		left = get_memory().base;
 		op = cast_value_(bully->get_id(), operand);
 		right = common::env::static_block1.get_base();
 	}
@@ -543,7 +531,7 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 }
 
 cscript::object::primitive::numeric::block_operator_type cscript::object::primitive::numeric::get_op_(){
-	switch (memory_.type->get_id()){
+	switch (get_memory().info.type->get_id()){
 	case type::id::char_:
 		return std::make_shared<cscript::memory::typed_block_operator<char> >();
 	case type::id::uchar:
@@ -578,7 +566,7 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 }
 
 std::string cscript::object::primitive::numeric::to_string_(bool echo){
-	switch (get_memory().type->get_id()){
+	switch (get_memory().info.type->get_id()){
 	case type::id::char_:
 		return echo ? ("'" + std::string(1, get_value<char>()) + "'") : std::string(1, get_value<char>());
 	case type::id::uchar:
@@ -658,4 +646,23 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 	}
 
 	return nullptr;
+}
+
+cscript::object::primitive::numeric_ref::numeric_ref(memory::virtual_address::value_type memory_value,
+	const type::generic::ptr_type type, bool is_constant)
+	: numeric(false), memory_(common::env::address_space.get_bound_entry(memory_value)){
+	memory_value_ = memory_value;
+	memory_.info.type = type;
+	if (is_constant)
+		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::constant);
+}
+
+cscript::object::primitive::numeric_ref::~numeric_ref(){}
+
+cscript::memory::virtual_address::entry &cscript::object::primitive::numeric_ref::get_memory(){
+	return memory_;
+}
+
+bool cscript::object::primitive::numeric_ref::is_lvalue(){
+	return true;
 }

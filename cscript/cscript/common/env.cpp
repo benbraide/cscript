@@ -25,8 +25,6 @@ thread_local cscript::memory::static_block cscript::common::env::static_block2;
 
 cscript::memory::virtual_address cscript::common::env::address_space;
 
-cscript::memory::temp_virtual_address cscript::common::env::temp_address_space;
-
 const cscript::type::generic::ptr_type cscript::common::env::any_type = std::make_shared<type::primitive>(type::id::any);
 
 const cscript::type::generic::ptr_type cscript::common::env::auto_type = std::make_shared<type::primitive>(type::id::auto_);
@@ -67,9 +65,9 @@ const cscript::type::generic::ptr_type cscript::common::env::double_type = std::
 
 const cscript::type::generic::ptr_type cscript::common::env::ldouble_type = std::make_shared<type::primitive>(type::id::ldouble);
 
-const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_shared<object::primitive::numeric>(temp_address_space, int_type, 0);
+const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_shared<object::primitive::numeric>(int_type, 0);
 
-const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(temp_address_space, int_type, 1);
+const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(int_type, 1);
 
 cscript::parser::collection::literal cscript::common::env::literal_parser;
 
@@ -98,7 +96,4 @@ cscript::object::generic *cscript::common::env::get_object_operand(){
 
 void cscript::common::env::initialize(){
 	static auto indeterminate = std::make_shared<object::primitive::boolean>(type::boolean_value_type::nil);
-
-	address_space.add(bool_type->get_size(), memory::virtual_address::attribute::nil,
-		memory::virtual_address::attribute::uninitialized).object = indeterminate.get();
 }

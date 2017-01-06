@@ -11,7 +11,11 @@ namespace cscript{
 	namespace object{
 		class basic : public generic{
 		public:
-			explicit basic(memory::virtual_address::entry &memory);
+			typedef memory::virtual_address::entry address_entry;
+			typedef memory::virtual_address::value_type address_value_type;
+			typedef memory::virtual_address::size_type address_size_type;
+
+			explicit basic(memory::virtual_address::value_type memory_value = 0u);
 
 			virtual ~basic();
 
@@ -33,24 +37,30 @@ namespace cscript{
 
 			virtual std::string echo() override;
 
+			virtual generic &set_memory_value(memory::virtual_address::value_type value) override;
+
+			virtual memory::virtual_address::value_type get_memory_value() override;
+
 			virtual memory::virtual_address::entry &get_memory() override;
 
 			virtual type::generic::ptr_type get_type() override;
 
 			virtual storage::generic *get_storage() override;
 
-			virtual bool is_lvalue() const override;
+			virtual bool is_lvalue() override;
 
-			virtual bool is_reference() const override;
+			virtual bool is_reference() override;
 
-			virtual bool is_indirect() const override;
+			virtual bool is_indirect() override;
 
-			virtual bool is_uninitialized() const override;
+			virtual bool is_uninitialized() override;
 
-			virtual bool is_constant() const override;
+			virtual bool is_temp() override;
+
+			virtual bool is_constant() override;
 
 		protected:
-			memory::virtual_address::entry &memory_;
+			memory::virtual_address::value_type memory_value_;
 		};
 	}
 }

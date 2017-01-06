@@ -2,83 +2,83 @@
 
 cscript::object::pointer::pointer(const type::generic::ptr_type type)
 	: basic(common::env::address_space.add<value_type>()){
-	memory_.type = std::make_shared<type::pointer>(type);
+	get_memory().info.type = std::make_shared<type::pointer>(type);
 }
 
-cscript::object::pointer::pointer(const value_type &value)
-	: pointer(common::env::address_space, value){}
+cscript::object::pointer::pointer(bool){}
 
-cscript::object::pointer::pointer(memory::virtual_address &address_space, const value_type &value)
-	: basic(address_space.add<value_type>()){
-	auto &entry = value.address->get_entry(value);
-	if (value.offset != entry.offset || value.value != entry.value){
-		memory_.type = std::make_shared<type::pointer>(common::env::byte_type);
-		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::byte_aligned);
-	}
-	else//No offset
-		memory_.type = std::make_shared<type::pointer>(entry.type);
+cscript::object::pointer::pointer(value_type value)
+	: basic(common::env::address_space.add<value_type>()){
+	auto &memory_entry = get_memory();
+	auto &entry = common::env::address_space.get_entry(value);
+	if (entry.value == 0ull)
+		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
 
-	memory::pool::write_ref_unchecked(memory_.base, value);
-	CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+	memory_entry.info.type = std::make_shared<type::pointer>(entry.info.type);
+	memory::pool::write_unchecked(memory_entry.base, value);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 }
 
-cscript::object::pointer::pointer(memory::virtual_address &address_space, const value_type &value, type::generic::ptr_type type)
-	: basic(address_space.add<value_type>()){
-	memory_.type = std::make_shared<type::pointer>(type);
-	memory::pool::write_ref_unchecked(memory_.base, value);
+cscript::object::pointer::pointer(value_type value, type::generic::ptr_type type)
+	: basic(common::env::address_space.add<value_type>()){
+	auto &memory_entry = get_memory();
+	memory_entry.info.type = std::make_shared<type::pointer>(type);
+	memory::pool::write_unchecked(memory_entry.base, value);
 
-	CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
-	CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::byte_aligned);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+	CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
 }
 
-cscript::object::pointer::pointer(memory::virtual_address::entry &parent, const type::generic::ptr_type type)
-	: basic(parent.address->add<value_type>(parent)){
-	memory_.type = type;
+cscript::object::pointer::pointer(memory::virtual_address::base_type base, const type::generic::ptr_type type)
+	: basic(common::env::address_space.add<value_type>(false)){
+	auto &memory_entry = get_memory();
+	memory_entry.info.type = type;
+	memory_entry.base = base;
 }
 
 cscript::object::pointer::~pointer(){}
 
 cscript::object::generic *cscript::object::pointer::clone(){
-	return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space, get_value_()));
+	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::pointer::cast(const type::generic *type){
 	switch (type->get_id()){
 	case type::id::char_:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::char_type, get_value<char>()));
 	case type::id::uchar:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::uchar_type, get_value<unsigned char>()));
 	case type::id::short_:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::short_type, get_value<short>()));
 	case type::id::ushort:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::ushort_type, get_value<unsigned short>()));
 	case type::id::int_:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::int_type, get_value<int>()));
 	case type::id::uint:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::uint_type, get_value<unsigned int>()));
 	case type::id::long_:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::long_type, get_value<long>()));
 	case type::id::ulong:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::ulong_type, get_value<unsigned long>()));
 	case type::id::llong:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::llong_type, get_value<long long>()));
 	case type::id::ullong:
-		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::temp_address_space,
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::ullong_type, get_value<unsigned long long>()));
 	default:
 		break;
 	}
 
-	if (memory_.type->has_conversion(type))
+	if (get_memory().info.type->has_conversion(type))
 		return clone();
 
 	if (type->is_pointer()){
@@ -87,7 +87,7 @@ cscript::object::generic *cscript::object::pointer::cast(const type::generic *ty
 			return clone();
 
 		if (non_pointer->is_same(common::env::byte_type.get()))
-			return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space, get_value_(), common::env::byte_type));
+			return common::env::temp_storage.add(std::make_shared<pointer>(get_value_(), common::env::byte_type));
 	}
 
 	return nullptr;
@@ -102,7 +102,8 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 	if (operand_type == nullptr)
 		return basic::evaluate(info);
 
-	if (!operand_type->is_same(memory_.type.get())){
+	auto &memory_entry = get_memory();
+	if (!operand_type->is_same(memory_entry.info.type.get())){
 		if (operand_type->is_integral()){
 			auto &value = get_value_();
 			switch (info.id){
@@ -110,33 +111,33 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 				if (!is_lvalue() || is_constant())
 					return common::env::error.set("Operator does not take specified operands");
 
-				value.value += (operand->query<primitive::numeric>()->get_value<int>() *
-					memory_.type->remove_pointer()->get_size());
+				value += (operand->query<primitive::numeric>()->get_value<int>() *
+					memory_entry.info.type->remove_pointer()->get_size());
 
 				return this;
 			case lexer::operator_id::compound_minus:
 				if (!is_lvalue() || is_constant())
 					return common::env::error.set("Operator does not take specified operands");
 
-				value.value -= (operand->query<primitive::numeric>()->get_value<int>() *
-					memory_.type->remove_pointer()->get_size());
+				value -= (operand->query<primitive::numeric>()->get_value<int>() *
+					memory_entry.info.type->remove_pointer()->get_size());
 
 				return this;
 			case lexer::operator_id::plus:
-				return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
-					value_type{ value.address, value.value + (operand->query<primitive::numeric>()->get_value<int>() *
-						memory_.type->remove_pointer()->get_size()), value.offset }));
+				return common::env::temp_storage.add(std::make_shared<pointer>(
+					value + (operand->query<primitive::numeric>()->get_value<int>() *
+						memory_entry.info.type->remove_pointer()->get_size())));
 			case lexer::operator_id::minus:
-				return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
-					value_type{ value.address, value.value - (operand->query<primitive::numeric>()->get_value<int>() *
-						memory_.type->remove_pointer()->get_size()), value.offset }));
+				return common::env::temp_storage.add(std::make_shared<pointer>(
+					value - (operand->query<primitive::numeric>()->get_value<int>() *
+						memory_entry.info.type->remove_pointer()->get_size())));
 			case lexer::operator_id::member_pointer_access:
 			{
-				auto &entry = value.address->get_entry(value);
-				if (value.address->is_none(entry))
+				auto &entry = common::env::address_space.get_entry(value);
+				if (entry.info.object == nullptr)
 					return common::env::error.set("Operator does not take specified operands");
 
-				return entry.object->evaluate(binary_info{ lexer::operator_id::member_access });
+				return entry.info.object->evaluate(binary_info{ lexer::operator_id::member_access });
 			}
 			default:
 				break;
@@ -148,28 +149,28 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 
 	switch (info.id){
 	case lexer::operator_id::less:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) < 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() < operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::less_or_equal:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) <= 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() <= operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::equality:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) == 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() == operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::inverse_equality:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) != 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() != operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::more_or_equal:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) >= 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() >= operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::more:
-		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(common::env::temp_address_space,
-			(memory::virtual_address::compare(get_value_(), operand->query<pointer>()->get_value_()) > 0) ?
+		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
+			(get_value_() > operand->query<pointer>()->get_value_()) ?
 			type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	default:
 		break;
@@ -182,7 +183,13 @@ cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &i
 	if (info.left){
 		switch (info.id){
 		case lexer::operator_id::times://Dereference
-			break;
+		{
+			if (is_null())
+				return common::env::error.set("Operator does not take specified operand");
+
+			auto base_type = get_type()->query<type::pointer>()->get_value();
+			return common::env::temp_storage.add(base_type->create_ref(get_value_(), is_constant_target(), base_type));
+		}
 		case lexer::operator_id::decrement:
 			if (is_constant() || !is_lvalue())
 				return common::env::error.set("Operator does not take specified operand");
@@ -229,20 +236,46 @@ bool cscript::object::pointer::to_bool(){
 	return false;
 }
 
+bool cscript::object::pointer::is_constant_target(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::const_target);
+}
+
+bool cscript::object::pointer::is_null(){
+	return (get_memory().value == 0u);
+}
+
 cscript::object::generic *cscript::object::pointer::offset_(bool increment){
 	if (is_uninitialized())
 		return common::env::error.set("Uninitialized object in expression");
 
 	auto &value = get_value_();
-	if (increment){
-		return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
-			value_type{ value.address, value.value + memory_.type->remove_pointer()->get_size(), value.offset }));
-	}
+	if (increment)
+		get_value_() += get_memory().info.type->remove_pointer()->get_size();
+	else//Decrement
+		get_value_() -= get_memory().info.type->remove_pointer()->get_size();
 	
-	return common::env::temp_storage.add(std::make_shared<pointer>(common::env::temp_address_space,
-		value_type{ value.address, value.value - memory_.type->remove_pointer()->get_size(), value.offset }));
+	return this;
 }
 
 cscript::object::pointer::value_type &cscript::object::pointer::get_value_(){
-	return memory::pool::convert_unchecked<value_type>(memory_.base);
+	return memory::pool::convert_unchecked<value_type>(get_memory().base);
+}
+
+cscript::object::pointer_ref::pointer_ref(memory::virtual_address::value_type memory_value,
+	const type::generic::ptr_type type, bool is_constant)
+	: pointer(false), memory_(common::env::address_space.get_bound_entry(memory_value)){
+	memory_value_ = memory_value;
+	memory_.info.type = type;
+	if (is_constant)
+		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::constant);
+}
+
+cscript::object::pointer_ref::~pointer_ref(){}
+
+cscript::memory::virtual_address::entry &cscript::object::pointer_ref::get_memory(){
+	return memory_;
+}
+
+bool cscript::object::pointer_ref::is_lvalue(){
+	return true;
 }

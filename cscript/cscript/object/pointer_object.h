@@ -9,17 +9,17 @@ namespace cscript{
 	namespace object{
 		class pointer : public basic{
 		public:
-			typedef memory::virtual_address::value_info value_type;
+			typedef memory::virtual_address::value_type value_type;
+
+			explicit pointer(bool);
 
 			explicit pointer(const type::generic::ptr_type type);
 
-			explicit pointer(const value_type &value);
+			explicit pointer(value_type value);
 
-			pointer(memory::virtual_address &address_space, const value_type &value);
+			pointer(value_type value, type::generic::ptr_type type);
 
-			pointer(memory::virtual_address &address_space, const value_type &value, type::generic::ptr_type type);
-
-			pointer(memory::virtual_address::entry &parent, const type::generic::ptr_type type);
+			pointer(memory::virtual_address::base_type base, const type::generic::ptr_type type);
 
 			virtual ~pointer();
 
@@ -33,16 +33,33 @@ namespace cscript{
 
 			virtual bool to_bool() override;
 
+			virtual bool is_constant_target();
+
+			virtual bool is_null();
+
 			template <typename value_type>
 			value_type get_value(){
-				auto &value = get_value_();
-				return static_cast<value_type>(value.address->convert_info(value));
+				return static_cast<value_type>(get_value_());
 			}
 
 		protected:
 			virtual generic *offset_(bool increment);
 
 			virtual value_type &get_value_();
+		};
+
+		class pointer_ref : public pointer{
+		public:
+			pointer_ref(memory::virtual_address::value_type memory_value, const type::generic::ptr_type type, bool is_constant);
+
+			virtual ~pointer_ref();
+
+			virtual memory::virtual_address::entry &get_memory() override;
+
+			virtual bool is_lvalue() override;
+
+		protected:
+			memory::virtual_address::entry memory_;
 		};
 	}
 }

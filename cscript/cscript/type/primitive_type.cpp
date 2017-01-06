@@ -155,14 +155,14 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_t
 	return nullptr;
 }
 
-std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memory::virtual_address::entry &parent, ptr_type this_ptr){
+std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memory::virtual_address::base_type base, ptr_type this_ptr){
 	switch (id_){
 	case type::id::any:
-		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+		return std::make_shared<object::primitive::numeric>(base, this_ptr);
 	case type::id::bool_:
-		return std::make_shared<object::primitive::boolean>(parent);
+		return std::make_shared<object::primitive::boolean>(base);
 	case type::id::byte:
-		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+		return std::make_shared<object::primitive::numeric>(base, this_ptr);
 	case type::id::char_:
 	case type::id::uchar:
 	case type::id::wchar:
@@ -177,7 +177,38 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memor
 	case type::id::float_:
 	case type::id::double_:
 	case type::id::ldouble:
-		return std::make_shared<object::primitive::numeric>(parent, this_ptr);
+		return std::make_shared<object::primitive::numeric>(base, this_ptr);
+	default:
+		break;
+	}
+
+	return nullptr;
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::primitive::create_ref(memory::virtual_address::value_type memory_value,
+	bool is_constant, ptr_type this_ptr){
+	switch (id_){
+	case type::id::any:
+		return std::make_shared<object::primitive::numeric>(this_ptr);
+	case type::id::bool_:
+		return std::make_shared<object::primitive::boolean_ref>(memory_value, is_constant);
+	case type::id::byte:
+		return std::make_shared<object::primitive::numeric>(this_ptr);
+	case type::id::char_:
+	case type::id::uchar:
+	case type::id::wchar:
+	case type::id::short_:
+	case type::id::ushort:
+	case type::id::int_:
+	case type::id::uint:
+	case type::id::long_:
+	case type::id::ulong:
+	case type::id::llong:
+	case type::id::ullong:
+	case type::id::float_:
+	case type::id::double_:
+	case type::id::ldouble:
+		return std::make_shared<object::primitive::numeric_ref>(memory_value, this_ptr, is_constant);
 	default:
 		break;
 	}
@@ -375,8 +406,13 @@ std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(ptr_typ
 	return std::make_shared<object::pointer>(value_);
 }
 
-std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(memory::virtual_address::entry &parent, ptr_type this_ptr){
-	return std::make_shared<object::pointer>(parent, value_);
+std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(memory::virtual_address::base_type base, ptr_type this_ptr){
+	return std::make_shared<object::pointer>(base, value_);
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::pointer::create_ref(memory::virtual_address::value_type memory_value,
+	bool is_constant, ptr_type this_ptr){
+	return std::make_shared<object::pointer_ref>(memory_value, this_ptr, is_constant);
 }
 
 const cscript::type::generic *cscript::type::pointer::get_bully(const generic *type) const{
@@ -408,4 +444,8 @@ bool cscript::type::pointer::has_conversion(const generic *type) const{
 
 bool cscript::type::pointer::is_same(const generic *type) const{
 	return (type->get_id() == id::pointer && type->query<pointer>()->value_->is_same(value_.get()));
+}
+
+cscript::type::generic::ptr_type cscript::type::pointer::get_value(){
+	return value_;
 }

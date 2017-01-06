@@ -1,12 +1,14 @@
 #include "pointer_object.h"
 
-cscript::object::basic::basic(memory::virtual_address::entry &memory)
-	: memory_(memory){
-	memory_.object = this;
+cscript::object::basic::basic(memory::virtual_address::value_type memory_value)
+	: memory_value_(memory_value){
+	if (memory_value_ != 0u)
+		common::env::address_space.get_entry(memory_value_).info.object = this;
 }
 
 cscript::object::basic::~basic(){
-	memory_.address->decrement_ref_count(memory_);
+	if (common::env::address_space.get_entry(memory_value_).info.object == this)
+		common::env::address_space.remove(memory_value_);
 }
 
 cscript::object::generic *cscript::object::basic::remove_reference(){
@@ -18,14 +20,14 @@ cscript::object::generic *cscript::object::basic::clone(){
 }
 
 cscript::object::generic *cscript::object::basic::cast(const type::generic *type){
-	if (type->is_same(memory_.type.get()) || type->is_any() || type->is_auto())
+	if (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto())
 		return clone();
 
 	return nullptr;
 }
 
 cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *type){
-	if (type->is_same(memory_.type.get()) || type->is_any() || type->is_auto())
+	if (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto())
 		return this;
 
 	return nullptr;
@@ -40,13 +42,14 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 		if (operand == nullptr)
 			return common::env::error.set("Operator does not take specified operand");
 
-		auto type = get_type();
-		auto value = operand->ref_cast(type.get());
-		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
+		auto &memory = get_memory();
+		auto value = operand->ref_cast(memory.info.type.get());
+
+		if (value == nullptr && (value = operand->cast(memory.info.type.get())) == nullptr)
 			return common::env::error.set("Cannot assign value into object");
 
-		memory::virtual_address::copy(memory_, value->get_memory());
-		CSCRIPT_REMOVE(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+		common::env::address_space.copy(memory_value_, value->get_memory_value());
+		CSCRIPT_REMOVE(memory.attributes, memory::virtual_address::attribute::uninitialized);
 
 		return this;
 	}
@@ -58,17 +61,12 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 	if (info.left){
 		switch (info.id){
 		case lexer::operator_id::bitwise_and:
-			if (is_lvalue()){
-				return common::env::temp_storage.add(std::make_shared<pointer>(
-					pointer::value_type{ memory_.address, memory_.value, memory_.offset }));
-			}
+			if (is_lvalue())
+				return common::env::temp_storage.add(std::make_shared<pointer>(memory_value_));
 			break;
 		case lexer::operator_id::relational_not:
-		{
-			auto value = to_bool();
 			return common::env::error.has() ? nullptr : common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-				common::env::temp_address_space, value ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
-		}
+				to_bool() ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 		default:
 			break;
 		}
@@ -92,34 +90,49 @@ std::string cscript::object::basic::echo(){
 	return "";
 }
 
+cscript::object::generic &cscript::object::basic::set_memory_value(memory::virtual_address::value_type value){
+	if ((memory_value_ = value) != 0u)
+		common::env::address_space.get_entry(memory_value_).info.object = this;
+	return *this;
+}
+
+cscript::memory::virtual_address::value_type cscript::object::basic::get_memory_value(){
+	return memory_value_;
+}
+
 cscript::memory::virtual_address::entry &cscript::object::basic::get_memory(){
-	return memory_;
+	return common::env::address_space.get_entry(memory_value_);
 }
 
 cscript::type::generic::ptr_type cscript::object::basic::get_type(){
-	return memory_.type;
+	return get_memory().info.type;
 }
 
 cscript::storage::generic *cscript::object::basic::get_storage(){
-	return memory_.storage;
+	return get_memory().info.storage;
 }
 
-bool cscript::object::basic::is_lvalue() const{
-	return (memory_.storage != nullptr && !CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::temp));
+bool cscript::object::basic::is_lvalue(){
+	auto &memory = get_memory();
+	return (memory.info.storage != nullptr && !CSCRIPT_IS(memory.attributes, memory::virtual_address::attribute::temp));
 }
 
-bool cscript::object::basic::is_reference() const{
-	return CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::ref);
+bool cscript::object::basic::is_reference(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::ref);
 }
 
-bool cscript::object::basic::is_indirect() const{
-	return CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::indirect);
+bool cscript::object::basic::is_indirect(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::indirect);
 }
 
-bool cscript::object::basic::is_uninitialized() const{
-	return CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::uninitialized);
+bool cscript::object::basic::is_uninitialized(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 }
 
-bool cscript::object::basic::is_constant() const{
-	return CSCRIPT_IS(memory_.attributes, memory::virtual_address::attribute::constant);
+bool cscript::object::basic::is_temp(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::temp);
+}
+
+bool cscript::object::basic::is_constant(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant);
 }

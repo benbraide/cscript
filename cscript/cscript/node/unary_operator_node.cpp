@@ -45,7 +45,7 @@ cscript::object::generic *cscript::node::unary_operator::evaluate(){
 			if (common::env::error.has())
 				return nullptr;
 
-			return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(common::env::temp_address_space,
+			return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(
 				value ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 		}
 		default:

@@ -9,12 +9,13 @@ namespace cscript{
 	namespace object{
 		class ref : public basic{
 		public:
-			typedef memory::virtual_address::entry entry_type;
 			typedef memory::virtual_address::value_type value_type;
 
 			explicit ref(const type::generic::ptr_type type);
 
-			explicit ref(entry_type &value, bool is_constant = false);
+			explicit ref(value_type value, const type::generic::ptr_type type, bool is_constant = false);
+
+			ref(memory::virtual_address::base_type base, const type::generic::ptr_type type);
 
 			virtual ~ref();
 
@@ -40,7 +41,6 @@ namespace cscript{
 
 		protected:
 			bool is_constant_;
-			entry_type *value_;
 		};
 	}
 }

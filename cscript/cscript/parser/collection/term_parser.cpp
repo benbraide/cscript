@@ -61,27 +61,25 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 	case lexer::token_id::false_:
 		value = std::make_shared<node::literal>(token->get_index(), lexer::token_id::false_,
 			token->get_value(), [](const std::string &value){
-			return std::make_shared<object::primitive::boolean>(common::env::temp_address_space, type::boolean_value_type::false_);
+			return std::make_shared<object::primitive::boolean>(type::boolean_value_type::false_);
 		});
 		break;
 	case lexer::token_id::true_:
 		value = std::make_shared<node::literal>(token->get_index(), lexer::token_id::true_,
 			token->get_value(), [](const std::string &value){
-			return std::make_shared<object::primitive::boolean>(common::env::temp_address_space, type::boolean_value_type::true_);
+			return std::make_shared<object::primitive::boolean>(type::boolean_value_type::true_);
 		});
 		break;
 	case lexer::token_id::nan:
 		value = std::make_shared<node::literal>(token->get_index(), lexer::token_id::true_,
 			token->get_value(), [](const std::string &value){
-			return std::make_shared<object::primitive::numeric>(common::env::temp_address_space,
-				common::env::ullong_type, std::stoull(value));
+			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value));
 		});
 		break;
 	case lexer::token_id::nullptr_:
 		value = std::make_shared<node::literal>(token->get_index(), lexer::token_id::true_,
 			token->get_value(), [](const std::string &value){
-			return std::make_shared<object::pointer>(common::env::temp_address_space,
-				memory::virtual_address::value_info{ &common::env::address_space, 0, 0 });
+			return std::make_shared<object::pointer>(0ull);
 		});
 		break;
 	case lexer::token_id::identifier:

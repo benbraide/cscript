@@ -47,21 +47,27 @@ namespace cscript{
 
 			virtual std::string echo() = 0;
 
+			virtual generic &set_memory_value(memory::virtual_address::value_type value) = 0;
+
+			virtual memory::virtual_address::value_type get_memory_value() = 0;
+
 			virtual memory::virtual_address::entry &get_memory() = 0;
 
 			virtual type::generic::ptr_type get_type() = 0;
 
 			virtual storage::generic *get_storage() = 0;
 
-			virtual bool is_lvalue() const = 0;
+			virtual bool is_lvalue() = 0;
 
-			virtual bool is_reference() const = 0;
+			virtual bool is_reference() = 0;
 
-			virtual bool is_indirect() const = 0;
+			virtual bool is_indirect() = 0;
 
-			virtual bool is_uninitialized() const = 0;
+			virtual bool is_uninitialized() = 0;
 
-			virtual bool is_constant() const = 0;
+			virtual bool is_temp() = 0;
+
+			virtual bool is_constant() = 0;
 
 			template <typename object_type>
 			object_type *query(){

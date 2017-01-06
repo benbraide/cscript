@@ -32,7 +32,7 @@ cscript::type::generic::ptr_type cscript::node::decl_type::get_type(){
 	if (value == nullptr)
 		return common::env::error.set("", index_);
 
-	return value->get_memory().type;
+	return value->get_type();
 }
 
 cscript::node::generic::ptr_type cscript::node::decl_type::get_value() const{
