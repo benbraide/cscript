@@ -17,7 +17,7 @@ using namespace cscript::parser;
 
 int main(){
 	rule rule;
-	file ss("test/sample.txt");
+	source::string ss("");
 	defined_symbols symbols;
 
 	cscript::common::env::source_info = source_info{
@@ -28,9 +28,20 @@ int main(){
 		&formatter::linked_collection::last
 	};
 
-	auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
-	if (lines != nullptr)
-		lines->evaluate();
+	std::string buffer;
+	while (true){
+		std::cout << "> ";
+		std::getline(std::cin, buffer);
+		if (buffer.empty())
+			continue;
+
+		ss.reset(buffer);
+		auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
+		if (lines != nullptr)
+			lines->evaluate();
+
+		env::temp_storage.clear();
+	}
 
 	return 0;
 }

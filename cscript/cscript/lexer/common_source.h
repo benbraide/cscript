@@ -29,6 +29,13 @@ namespace cscript{
 				source_cache()
 					: offset_(list_.begin()){}
 
+				void reset(){
+					list_.clear();
+					branches_.clear();
+					offset_ = list_.begin();
+					offset_value_ = 0;
+				}
+
 				void clear(){
 					if (offset_ != list_.end()){
 						list_.erase(offset_, list_.end());
@@ -166,7 +173,7 @@ namespace cscript{
 					}
 					else{//Check for skips
 						for (; iter != list_.end(); ++iter){
-							if (info->rule->map_index((*iter)->get_match_index()) == info->halt.id && (info->halt.value.empty() ||
+							if (info != nullptr && info->rule->map_index((*iter)->get_match_index()) == info->halt.id && (info->halt.value.empty() ||
 								(*iter)->get_value() == info->halt.value)){
 								count = 0;
 								break;
@@ -203,6 +210,9 @@ namespace cscript{
 				}
 
 			private:
+				template <class>
+				friend class common;
+
 				list_type list_;
 				size_list_type branches_;
 				iterator_type offset_;
@@ -385,8 +395,7 @@ namespace cscript{
 
 				virtual const token::index &get_index() const override{
 					auto_lock lock(lock_);
-					auto count = 1;
-					return cache_.is_empty() ? index_ : cache_.get(count, nullptr, false, nullptr)->get_index();
+					return cache_.list_.empty() ? index_ : (*cache_.list_.begin())->get_index();
 				}
 
 				virtual bool has_more() const override{

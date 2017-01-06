@@ -566,6 +566,9 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 }
 
 std::string cscript::object::primitive::numeric::to_string_(bool echo){
+	if (is_nan())
+		return "nan";
+
 	switch (get_memory().info.type->get_id()){
 	case type::id::char_:
 		return echo ? ("'" + std::string(1, get_value<char>()) + "'") : std::string(1, get_value<char>());

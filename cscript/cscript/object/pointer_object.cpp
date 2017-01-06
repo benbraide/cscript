@@ -236,12 +236,32 @@ bool cscript::object::pointer::to_bool(){
 	return false;
 }
 
+std::string cscript::object::pointer::echo(){
+	if (is_null())
+		return "nullptr";
+
+	auto target = evaluate(unary_info{ true, lexer::operator_id::times });
+	if (common::env::error.has())
+		return "";
+
+	if (target == nullptr){
+		common::env::error.set("Cannot echo object");
+		return "";
+	}
+
+	auto echo_value = target->echo();
+	if (common::env::error.has())
+		return "";
+
+	return ("<" + std::to_string(get_value_()) + ": " + echo_value + ">");
+}
+
 bool cscript::object::pointer::is_constant_target(){
 	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::const_target);
 }
 
 bool cscript::object::pointer::is_null(){
-	return (get_memory().value == 0u);
+	return (get_value_() == 0u || common::env::address_space.get_entry(get_value_()).value == 0u);
 }
 
 cscript::object::generic *cscript::object::pointer::offset_(bool increment){

@@ -52,6 +52,19 @@ bool cscript::object::primitive::boolean::to_bool(){
 	return (get_value_() == value_type::true_);
 }
 
+std::string cscript::object::primitive::boolean::echo(){
+	switch (get_value_()){
+	case value_type::true_:
+		return "true";
+	case value_type::false_:
+		return "false";
+	default:
+		break;
+	}
+
+	return "indeterminate";
+}
+
 cscript::object::primitive::boolean::value_type cscript::object::primitive::boolean::get_value_(){
 	return memory::pool::convert_unchecked<value_type>(get_memory().base);
 }

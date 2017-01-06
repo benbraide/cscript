@@ -33,6 +33,8 @@ namespace cscript{
 
 			virtual bool to_bool() override;
 
+			virtual std::string echo() override;
+
 			virtual bool is_constant_target();
 
 			virtual bool is_null();

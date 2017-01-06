@@ -13,6 +13,7 @@
 #include "../../node/type_node.h"
 #include "../../node/type_cast_node.h"
 #include "../../node/typedef_node.h"
+#include "../../node/echo_node.h"
 
 namespace cscript{
 	namespace parser{
@@ -46,6 +47,8 @@ namespace cscript{
 				virtual node_type parse_pointer_type_();
 
 				virtual node_type parse_function_type_();
+
+				virtual node_type parse_echo_();
 
 				virtual node_type parse_type_(const lexer::token::index &index, bool allow_storage_class);
 

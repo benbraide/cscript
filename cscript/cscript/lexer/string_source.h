@@ -14,6 +14,8 @@ namespace cscript{
 
 				explicit string(std::string &&buffer);
 
+				virtual void reset(const std::string &buffer);
+
 			protected:
 				std::string buffer_;
 			};

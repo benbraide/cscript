@@ -28,6 +28,8 @@ cscript::memory::virtual_address::value_type cscript::memory::virtual_address::a
 		available = next_;
 		next_ += size;
 	}
+	else//Remove from list
+		available_list_.erase(available);
 	
 	table::map_[available] = address_entry{
 		base,
@@ -49,10 +51,10 @@ bool cscript::memory::virtual_address::remove(value_type value){
 	if (entry->second.base != nullptr && !CSCRIPT_IS(entry->second.attributes, attribute::no_dealloc))
 		delete[] entry->second.base;
 
-	table::map_.erase(entry);
 	if (!CSCRIPT_IS(entry->second.attributes, attribute::is_child))
 		merge_available_(value, entry->second.size);
 
+	table::map_.erase(entry);
 	return true;
 }
 

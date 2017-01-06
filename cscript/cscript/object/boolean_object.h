@@ -28,6 +28,8 @@ namespace cscript{
 
 				virtual bool to_bool() override;
 
+				virtual std::string echo() override;
+
 			protected:
 				virtual value_type get_value_();
 

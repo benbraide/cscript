@@ -22,6 +22,8 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse(
 		return parse_pointer_type_();
 	case lexer::token_id::function:
 		return parse_function_type_();
+	case lexer::token_id::echo:
+		return parse_echo_();
 	default:
 		break;
 	}
@@ -234,12 +236,29 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_pointer_type_(){
 	//pointer_t< <type> >
-	return nullptr;
+	return nullptr;//echo type_cast<pointer_t<byte>>(0);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_function_type_(){
 	//function< <return_type>(<parameter_types>) >
 	return nullptr;
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_echo_(){
+	//echo <expression>
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto value = common::env::expression_parser.parse();
+	if (common::env::error.has())
+		return nullptr;
+
+	if (value == nullptr)
+		return common::env::error.set("", index);
+
+	return std::make_shared<node::echo>(index, value);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_type_(
