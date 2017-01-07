@@ -83,7 +83,7 @@ cscript::object::primitive::boolean::value_type cscript::object::primitive::byte
 cscript::object::primitive::byte_ref::byte_ref(memory::virtual_address::value_type memory_value, bool is_constant)
 	: byte(false), memory_(common::env::address_space.get_bound_entry(memory_value)){
 	memory_value_ = memory_value;
-	memory_.info.type = common::env::bool_type;
+	memory_.info.type = common::env::byte_type;
 	if (is_constant)
 		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::constant);
 }

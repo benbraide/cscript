@@ -115,6 +115,16 @@ std::string cscript::type::primitive::name() const{
 		return "double";
 	case type::id::ldouble:
 		return "long double";
+	case type::id::string:
+		return "string";
+	case type::id::nullptr_:
+		return "nullptr_t";
+	case type::id::type_:
+		return "type";
+	case type::id::node_:
+		return "node_t";
+	case type::id::storage_:
+		return "storage_t";
 	default:
 		break;
 	}

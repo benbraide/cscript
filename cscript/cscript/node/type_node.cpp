@@ -1,6 +1,8 @@
 #include "type_node.h"
 #include "collection_node.h"
+
 #include "../common/env.h"
+#include "../object/type_object.h"
 
 cscript::node::primitive_type::primitive_type(const lexer::token::index &index, lexer::token_id value)
 	: basic(id::type, index), value_(value){}
@@ -19,7 +21,11 @@ bool cscript::node::primitive_type::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::primitive_type::evaluate(){
-	return nullptr;
+	auto type_value = get_type();
+	if (type_value == nullptr)
+		return common::env::error.set("", index_);
+
+	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
 
 std::string cscript::node::primitive_type::get_key(){
@@ -197,7 +203,11 @@ bool cscript::node::pointer_type::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::pointer_type::evaluate(){
-	return nullptr;
+	auto type_value = get_type();
+	if (type_value == nullptr)
+		return common::env::error.set("", index_);
+
+	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
 
 cscript::type::generic::ptr_type cscript::node::pointer_type::get_type(){
@@ -271,7 +281,11 @@ bool cscript::node::function_type::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::function_type::evaluate(){
-	return nullptr;
+	auto type_value = get_type();
+	if (type_value == nullptr)
+		return common::env::error.set("", index_);
+
+	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
 
 cscript::type::generic::ptr_type cscript::node::function_type::get_type(){

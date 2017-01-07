@@ -1,5 +1,7 @@
 #include "identifier_node.h"
+
 #include "../common/env.h"
+#include "../object/type_object.h"
 
 cscript::node::identifier::identifier(const lexer::token::index &index, const std::string &value)
 	: basic(id::identifier, index), value_(value){}
@@ -28,9 +30,9 @@ cscript::object::generic *cscript::node::identifier::evaluate(){
 
 	}
 
-	if (value->is_type()){
-
-	}
+	auto type_value = value->get_type();
+	if (type_value != nullptr)
+		return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 
 	return value->get_object();
 }

@@ -67,6 +67,12 @@ const cscript::type::generic::ptr_type cscript::common::env::double_type = std::
 
 const cscript::type::generic::ptr_type cscript::common::env::ldouble_type = std::make_shared<type::primitive>(type::id::ldouble);
 
+const cscript::type::generic::ptr_type cscript::common::env::type_object_type = std::make_shared<type::primitive>(type::id::type_);
+
+const cscript::type::generic::ptr_type cscript::common::env::node_object_type = std::make_shared<type::primitive>(type::id::node_);
+
+const cscript::type::generic::ptr_type cscript::common::env::storage_object_type = std::make_shared<type::primitive>(type::id::storage_);
+
 const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_shared<object::primitive::numeric>(int_type, 0);
 
 const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(int_type, 1);

@@ -1,7 +1,7 @@
 #include "unary_operator_node.h"
 
-#include "../object/boolean_object.h"
 #include "../common/env.h"
+#include "../object/type_object.h"
 
 cscript::node::unary_operator::unary_operator(const lexer::token::index &index, const info_type &info, ptr_type operand)
 	: basic(id::operator_, index), info_(info), operand_(operand){}
@@ -30,6 +30,18 @@ bool cscript::node::unary_operator::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::unary_operator::evaluate(){
+	if (info_.id == lexer::operator_id::scope_resolution){
+		auto value = common::env::global_storage.find(operand_->get_key());
+		if (value == nullptr)
+			return common::env::error.set("", index_);
+
+		auto type_value = value->get_type();
+		if (type_value != nullptr)
+			return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
+
+		return value->get_object();
+	}
+
 	auto operand = operand_->evaluate();
 	if (common::env::error.has())
 		return nullptr;

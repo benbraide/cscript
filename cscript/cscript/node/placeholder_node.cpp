@@ -1,5 +1,7 @@
 #include "placeholder_node.h"
+
 #include "../common/env.h"
+#include "../object/type_object.h"
 
 cscript::node::placeholder::placeholder(const lexer::token::index &index, ptr_type value)
 	: basic(id::placeholder, index), value_(value){}
@@ -35,9 +37,9 @@ cscript::object::generic *cscript::node::placeholder::evaluate(){
 
 	}
 
-	if (value->is_type()){
-
-	}
+	auto type_value = value->get_type();
+	if (type_value != nullptr)
+		return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 
 	return value->get_object();
 }

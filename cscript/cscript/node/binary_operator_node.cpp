@@ -1,6 +1,7 @@
 #include "binary_operator_node.h"
 
 #include "../common/env.h"
+#include "../object/type_object.h"
 #include "../type/choice_type.h"
 
 cscript::node::binary_operator::binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right)
@@ -31,6 +32,22 @@ bool cscript::node::binary_operator::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::binary_operator::evaluate(){
+	if (info_.id == lexer::operator_id::scope_resolution){
+		auto storage = left_->get_storage();
+		if (storage == nullptr)
+			return common::env::error.set("", index_);
+
+		auto value = storage->find(right_->get_key());
+		if (value == nullptr)
+			return common::env::error.set("", index_);
+
+		auto type_value = value->get_type();
+		if (type_value != nullptr)
+			return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
+
+		return value->get_object();
+	}
+
 	auto left = left_->evaluate();
 	if (common::env::error.has())
 		return nullptr;
