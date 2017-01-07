@@ -102,23 +102,29 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 		switch (id){
 		case lexer::token_id::open_par:
 		{
+			lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+			common::env::source_info.source->ignore(common::env::source_info);
+
 			auto operand = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_par });
 			if (common::env::error.has())
 				return nullptr;
 
-			if (operand = nullptr)
+			if (operand == nullptr)
 				return common::env::error.set("", token->get_index());
 
-			return common::env::parser_info.left_operand = std::make_shared<node::unary_operator>(token->get_index(),
+			return std::make_shared<node::unary_operator>(token->get_index(),
 				node::unary_operator::info_type{ true, lexer::operator_id::call, token->get_value() }, operand);
 		}
 		case lexer::token_id::open_sq:
 		{
+			lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+			common::env::source_info.source->ignore(common::env::source_info);
+
 			auto operand = common::env::builder.parse_list(builder::halt_info{ lexer::token_id::close_sq });
 			if (common::env::error.has())
 				return nullptr;
 
-			return common::env::parser_info.left_operand = std::make_shared<node::unary_operator>(token->get_index(),
+			return std::make_shared<node::unary_operator>(token->get_index(),
 				node::unary_operator::info_type{ true, lexer::operator_id::index, token->get_value() }, operand);
 		}
 		default:

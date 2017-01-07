@@ -53,7 +53,7 @@ cscript::object::generic *cscript::object::primitive::byte::evaluate(const binar
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
-	if (operand->get_type()->get_id() != type::id::bool_)
+	if (operand->get_type()->get_id() != type::id::byte)
 		return basic::evaluate(info);
 
 	switch (info.id){

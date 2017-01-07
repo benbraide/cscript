@@ -67,6 +67,8 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 		case lexer::operator_id::relational_not:
 			return common::env::error.has() ? nullptr : common::env::temp_storage.add(std::make_shared<primitive::boolean>(
 				to_bool() ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
+		case lexer::operator_id::call:
+			return this;
 		default:
 			break;
 		}

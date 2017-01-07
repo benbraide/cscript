@@ -152,6 +152,19 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 
 				return entry.info.object->evaluate(binary_info{ lexer::operator_id::member_access });
 			}
+			case lexer::operator_id::index:
+			{
+				if (is_null())
+					return common::env::error.set("Operator does not take specified operand");
+
+				if (value < 0)
+					return common::env::error.set("Operator does not take specified operand");
+
+				auto base_type = get_type()->query<type::pointer>()->get_value();
+				auto address = (common::env::address_space.convert<value_type>(memory_value_, get_type()) + (value * type_size));
+
+				return common::env::temp_storage.add(base_type->create_ref(address, is_constant_target(), base_type));
+			}
 			default:
 				break;
 			}

@@ -86,7 +86,7 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 			node::binary_operator::info_type{ id, token->get_value() }, left_operand, operand);
 	}
 	else if (type == 2){// []
-		auto operand = common::env::builder.parse_list(builder::halt_info{ lexer::token_id::close_sq });
+		auto operand = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_sq });
 		if (common::env::error.has())
 			return nullptr;
 
