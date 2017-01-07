@@ -98,6 +98,31 @@ namespace cscript{
 			static void initialize();
 
 			static void echo(const std::string &value);
+
+			template <typename value_type>
+			static std::string to_hex(value_type value, std::size_t width = sizeof(value_type) << 1) {
+				static const char *digits = "0123456789abcdef";
+				std::string rc(width, '0');
+				for (size_t i = 0, j = (width - 1) * 4; i < width; ++i, j -= 4)
+					rc[i] = digits[(value >> j) & 0x0f];
+
+				return ("0x" + rc);
+			}
+
+			template <typename value_type>
+			static std::string real_to_string(value_type value){
+				auto string_value = std::to_string(value);
+				auto index = string_value.size();
+				for (; index > 0u; --index){
+					if (string_value[index - 1] != '0')
+						break;
+				}
+
+				if (index < string_value.size())
+					string_value.erase(index);
+
+				return string_value;
+			}
 		};
 	}
 }

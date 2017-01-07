@@ -181,3 +181,40 @@ cscript::node::generic::ptr_type cscript::node::type_with_storage_class::get_val
 std::string cscript::node::type_with_storage_class::print_() const{
 	return (value_ + type_->print());
 }
+
+cscript::node::pointer_type::pointer_type(const lexer::token::index &index, ptr_type base_type)
+	: basic(id::pointer_type, index), base_type_(base_type){}
+
+cscript::node::pointer_type::~pointer_type(){}
+
+cscript::node::generic::ptr_type cscript::node::pointer_type::clone(){
+	return std::make_shared<pointer_type>(index_, base_type_->clone());
+}
+
+bool cscript::node::pointer_type::is(id id) const{
+	return (id == id_ || id == node::id::type_compatible || id == node::id::pointer_type);
+}
+
+cscript::object::generic *cscript::node::pointer_type::evaluate(){
+	return nullptr;
+}
+
+cscript::type::generic::ptr_type cscript::node::pointer_type::get_type(){
+	if (type_value_ == nullptr){
+		auto base_type_value = base_type_->get_type();
+		if (common::env::error.has() || base_type_value == nullptr)
+			return nullptr;
+
+		type_value_ = std::make_shared<type::pointer>(base_type_value);
+	}
+
+	return type_value_;
+}
+
+cscript::node::generic::ptr_type cscript::node::pointer_type::get_base_type() const{
+	return base_type_;
+}
+
+std::string cscript::node::pointer_type::print_() const{
+	return ("pointer_t<" + base_type_->print() + ">");
+}

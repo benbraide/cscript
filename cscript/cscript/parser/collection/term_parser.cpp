@@ -73,7 +73,7 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 	case lexer::token_id::nan:
 		value = std::make_shared<node::literal>(token->get_index(), lexer::token_id::true_,
 			token->get_value(), [](const std::string &value){
-			return std::make_shared<object::primitive::numeric>(common::env::ullong_type, std::stoull(value));
+			return std::make_shared<object::primitive::numeric>();
 		});
 		break;
 	case lexer::token_id::nullptr_:

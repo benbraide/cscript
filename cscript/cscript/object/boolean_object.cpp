@@ -66,7 +66,7 @@ std::string cscript::object::primitive::boolean::echo(){
 }
 
 cscript::object::primitive::boolean::value_type cscript::object::primitive::boolean::get_value_(){
-	return memory::pool::convert_unchecked<value_type>(get_memory().base);
+	return common::env::address_space.convert<value_type>(memory_value_, get_type());
 }
 
 cscript::object::primitive::boolean::value_type cscript::object::primitive::boolean::compare_(generic &operand, bool equality){

@@ -232,13 +232,19 @@ bool cscript::lexer::type_token_id::is(token_id value) const{
 	case token_id::bit:
 	case token_id::byte:
 	case token_id::char_:
+	case token_id::uchar:
 	case token_id::wchar:
 	case token_id::short_:
+	case token_id::ushort:
 	case token_id::int_:
+	case token_id::uint:
 	case token_id::long_:
-	case token_id::unsigned_:
+	case token_id::ulong:
+	case token_id::llong:
+	case token_id::ullong:
 	case token_id::float_:
 	case token_id::double_:
+	case token_id::ldouble:
 	case token_id::string:
 	case token_id::array_:
 		return true;

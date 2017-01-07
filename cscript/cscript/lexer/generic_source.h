@@ -184,6 +184,14 @@ namespace cscript{
 			generic_source::option options_;
 		};
 
+		inline bool operator ==(const source_info::halt_info &left, const source_info::halt_info &right){
+			return (left.id == right.id && left.value == right.value);
+		}
+
+		inline bool operator !=(const source_info::halt_info &left, const source_info::halt_info &right){
+			return !(left == right);
+		}
+
 		CSCRIPT_MAKE_OPERATORS(generic_source::option)
 	}
 }

@@ -1,5 +1,13 @@
 #include "pointer_object.h"
 
+cscript::object::primitive::numeric::numeric()
+	: basic(common::env::address_space.add<char>()){
+	auto &memory_entry = get_memory();
+	memory_entry.info.type = common::env::char_type;
+	CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::is_nan);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
+
 cscript::object::primitive::numeric::numeric(bool){}
 
 cscript::object::primitive::numeric::numeric(const type::generic::ptr_type type)
@@ -9,9 +17,9 @@ cscript::object::primitive::numeric::numeric(const type::generic::ptr_type type)
 
 cscript::object::primitive::numeric::numeric(memory::virtual_address::base_type base, const type::generic::ptr_type type)
 	: basic(common::env::address_space.add(type->get_size(), false)){
-	auto &memory = get_memory();
-	memory.info.type = type;
-	memory.base = base;
+	auto &memory_entry = get_memory();
+	memory_entry.info.type = type;
+	memory_entry.base = base;
 }
 
 cscript::object::primitive::numeric::~numeric(){}
@@ -59,19 +67,8 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 
 	if (type->is_pointer() && get_type()->is_integral()){
 		auto value = get_value<memory::virtual_address::value_type>();
-		switch (type->remove_pointer()->get_id()){
-		case type::id::any:
-		case type::id::byte:
-			return common::env::temp_storage.add(std::make_shared<pointer>(value));
-		default:
-			break;
-		}
-
-		auto &entry = common::env::address_space.get_entry(value);
-		if (entry.info.type == nullptr || !entry.info.type->is_same(type))
-			return common::env::temp_storage.add(std::make_shared<pointer>(0ull));//nullptr
-
-		return common::env::temp_storage.add(std::make_shared<pointer>(value));
+		auto base_type = type->query<cscript::type::pointer>()->get_value();
+		return common::env::temp_storage.add(std::make_shared<pointer>(value, base_type));
 	}
 
 	return get_type()->has_conversion(type) ? clone() : basic::cast(type);
@@ -82,30 +79,11 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
 
-	auto &memory_entry = get_memory();
-	auto type = get_type();
-
-	if (info.id == lexer::operator_id::assignment){
-		if (!is_lvalue() || (is_constant() && !is_uninitialized()))
-			return common::env::error.set("Operator does not take specified operands");
-
-		auto value = operand->ref_cast(type.get());
-		if (value == nullptr && (value = operand->cast(type.get())) == nullptr)
-			return common::env::error.set("Cannot assign value into object");
-
-		CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
-		if (value->query<numeric>()->is_nan())
-			CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::is_nan);
-		else//Copy value
-			common::env::address_space.copy(memory_value_, value->get_memory_value());
-
-		return this;
-	}
-
 	auto operand_type = operand->get_type();
 	if (!operand_type->is_numeric())
 		return basic::evaluate(info);
 
+	auto type = get_type();
 	auto bully = (type->get_bully(operand_type.get()) == type.get()) ? type : operand_type;
 	auto numeric_operand = operand->query<numeric>();
 
@@ -151,21 +129,17 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	case lexer::operator_id::bitwise_xor:
 		return bitwise_xor_(bully, *numeric_operand, false);
 	case lexer::operator_id::less:
-		return create_boolean_((!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) < 0) ?
-			boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) < 0));
 	case lexer::operator_id::less_or_equal:
-		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) <= 0) ?
-			boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) <= 0));
 	case lexer::operator_id::equality:
-		return create_boolean_((compare_(bully, *numeric_operand) == 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(is_nan() == numeric_operand->is_nan() || compare_(bully, *numeric_operand) == 0));
 	case lexer::operator_id::inverse_equality:
-		return create_boolean_((compare_(bully, *numeric_operand) != 0) ? boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(is_nan() != numeric_operand->is_nan() || compare_(bully, *numeric_operand) != 0));
 	case lexer::operator_id::more_or_equal:
-		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) >= 0) ?
-			boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) >= 0));
 	case lexer::operator_id::more:
-		return create_boolean_(!is_nan() && !numeric_operand->is_nan() && (compare_(bully, *numeric_operand) > 0) ?
-			boolean::value_type::true_ : boolean::value_type::false_);
+		return create_boolean_(boolean_value(!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) > 0));
 	default:
 		break;
 	}
@@ -234,6 +208,19 @@ std::string cscript::object::primitive::numeric::echo(){
 
 bool cscript::object::primitive::numeric::is_nan(){
 	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::is_nan);
+}
+
+cscript::object::primitive::boolean::value_type cscript::object::primitive::numeric::boolean_value(bool value){
+	return value ? boolean::value_type::true_ : boolean::value_type::false_;
+}
+
+cscript::object::generic *cscript::object::primitive::numeric::post_assignment_(generic &operand){
+	if (CSCRIPT_IS(operand.get_memory().attributes, memory::virtual_address::attribute::is_nan))
+		CSCRIPT_SET(get_memory().attributes, memory::virtual_address::attribute::is_nan);
+	else
+		CSCRIPT_REMOVE(get_memory().attributes, memory::virtual_address::attribute::is_nan);
+
+	return this;
 }
 
 cscript::object::generic::ptr_type cscript::object::primitive::numeric::clone_(const type::generic::ptr_type type, bool is_nan){
@@ -352,7 +339,7 @@ cscript::object::generic *cscript::object::primitive::numeric::divide_(type::gen
 	if (destination != nullptr){
 		CSCRIPT_REMOVE(destination->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 		if (!is_nan() && !operand.is_nan()){
-			if (compare(0) == 0)//Division by zero
+			if (operand.compare(0) == 0)//Division by zero
 				CSCRIPT_SET(destination->get_memory().attributes, memory::virtual_address::attribute::is_nan);
 			else
 				op->divide(destination->get_memory().base, left, right);
@@ -373,7 +360,7 @@ cscript::object::generic *cscript::object::primitive::numeric::modulus_(type::ge
 	if (destination != nullptr){
 		CSCRIPT_REMOVE(destination->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 		if (!is_nan() && !operand.is_nan()){
-			if (compare(0) == 0)//Division by zero
+			if (operand.compare(0) == 0)//Division by zero
 				CSCRIPT_SET(destination->get_memory().attributes, memory::virtual_address::attribute::is_nan);
 			else
 				op->modulus(destination->get_memory().base, left, right);
@@ -591,11 +578,11 @@ std::string cscript::object::primitive::numeric::to_string_(bool echo){
 	case type::id::ullong:
 		return echo ? (std::to_string(get_value<unsigned long long>()) + "ull") : std::to_string(get_value<unsigned long long>());
 	case type::id::float_:
-		return echo ? (std::to_string(get_value<float>()) + "f") : std::to_string(get_value<float>());
+		return common::env::real_to_string(get_value<float>()) + (echo ? "f" : "");
 	case type::id::double_:
-		return std::to_string(get_value<double>());
+		return common::env::real_to_string(get_value<double>());
 	case type::id::ldouble:
-		return echo ? (std::to_string(get_value<long double>()) + "l") : std::to_string(get_value<long double>());
+		return common::env::real_to_string(get_value<long double>()) + (echo ? "l" : "");
 	default:
 		break;
 	}

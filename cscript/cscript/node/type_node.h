@@ -65,6 +65,29 @@ namespace cscript{
 			ptr_type type_;
 			std::string value_;
 		};
+
+		class pointer_type : public basic{
+		public:
+			pointer_type(const lexer::token::index &index, ptr_type base_type);
+
+			virtual ~pointer_type();
+
+			virtual ptr_type clone() override;
+
+			virtual bool is(id id) const override;
+
+			virtual object::generic *evaluate() override;
+
+			virtual type::generic::ptr_type get_type() override;
+
+			virtual ptr_type get_base_type() const;
+
+		protected:
+			virtual std::string print_() const override;
+
+			ptr_type base_type_;
+			type::generic::ptr_type type_value_;
+		};
 	}
 }
 

@@ -102,7 +102,7 @@ namespace cscript{
 
 			virtual bool is_same(const generic *type) const override;
 
-			virtual ptr_type get_value();
+			virtual ptr_type get_value() const;
 
 		protected:
 			ptr_type value_;

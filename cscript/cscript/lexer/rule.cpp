@@ -3,6 +3,7 @@
 #define CSCRIPT_LEXER_RULE_REAL			"[0-9]+\\.[0-9]*"
 #define CSCRIPT_LEXER_RULE_REAL2		"\\.[0-9]+"
 #define CSCRIPT_LEXER_RULE_EXCLUDES		"\\s\\r\\n\\w\\d\\(\\)\\[\\]\\{\\}\"'`\\/\\\\,;$_"
+#define CSCRIPT_LEXER_RULE_EXCLUDES2	"\\s\\r\\n\\w\\d\\(\\)\\[\\]\\{\\}\"'`\\\\,;$_"
 #define CSCRIPT_LEXER_RULE_ID			"[$_a-zA-Z][$_a-zA-Z0-9]*"
 
 cscript::lexer::rule::rule(){
@@ -60,7 +61,8 @@ cscript::lexer::rule::rule(){
 		"[\\r\\n]",													//New line
 		"[\\s]+",													//Blanks
 		"[^" CSCRIPT_LEXER_RULE_EXCLUDES "]+",						//Symbol
-		"\\/.*",													//Symbol
+		"\\/",														//Symbol
+		"\\/[^\\*" CSCRIPT_LEXER_RULE_EXCLUDES "][^" CSCRIPT_LEXER_RULE_EXCLUDES2 "]*",//Symbol
 	});
 
 	std::string combined_value;

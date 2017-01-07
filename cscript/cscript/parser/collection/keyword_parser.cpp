@@ -236,7 +236,16 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_pointer_type_(){
 	//pointer_t< <type> >
-	return nullptr;//echo type_cast<pointer_t<byte>>(0);
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto type = parse_type_(index, false);
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::pointer_type>(index, type);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_function_type_(){

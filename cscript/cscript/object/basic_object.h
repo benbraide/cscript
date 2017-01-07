@@ -60,6 +60,8 @@ namespace cscript{
 			virtual bool is_constant() override;
 
 		protected:
+			virtual generic *post_assignment_(generic &operand);
+
 			memory::virtual_address::value_type memory_value_;
 		};
 	}

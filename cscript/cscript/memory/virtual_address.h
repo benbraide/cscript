@@ -90,12 +90,26 @@ namespace cscript{
 
 			entry get_bound_entry(value_type value);
 
+			base_type get_bound_base(value_type value);
+
+			void copy(value_type destination, generic_type type, value_type source);
+
 			bool copy(value_type destination, value_type source);
 
 			void copy_unchecked(value_type destination, value_type source, size_type size);
 
 			template <typename value_type>
-			bool write(value_type destination, value_type value){
+			void write(address_value_type destination, generic_type type, value_type value){
+				shared_lock_type guard(lock_);
+				auto entry = table::map_.find(destination);
+				if (entry != table::map_.end() && entry->second.info.type == type)
+					pool::write_unchecked(entry->second.base, value);
+				else
+					write_unchecked_(destination, value);
+			}
+
+			template <typename value_type>
+			bool write(address_value_type destination, value_type value){
 				auto entry = get_entry(destination);
 				if (entry.base == nullptr)
 					return false;
@@ -108,25 +122,25 @@ namespace cscript{
 			}
 
 			template <typename value_type>
-			void write_unchecked(value_type destination, value_type value){
-				auto size = sizeof(value_type);
-				for (auto source = reinterpret_cast<base_type>(&value); size > 0u; --size, ++source, ++destination){
-					auto destination_entry = get_bound_entry(destination);
-					*destination_entry.base = *source;
-				}
+			void write_unchecked(address_value_type destination, value_type value){
+				shared_lock_type guard(lock_);
+				write_unchecked_<value_type>(destination, value);
 			}
 
 			template <typename value_type>
-			static bool write_ref(value_type destination, const value_type &value){
-				auto entry = get_entry(destination);
-				if (entry.base == nullptr)
-					return false;
+			value_type convert(address_value_type source, generic_type type){
+				shared_lock_type guard(lock_);
+				auto entry = table::map_.find(source);
+				if (entry == table::map_.end() || entry->second.info.type != type)
+					return convert_unchecked_<value_type>(source);
 
-				if (entry.size < static_cast<address_value_type>(sizeof(value_type)))
-					return false;
+				return *reinterpret_cast<value_type *>(entry->second.base);
+			}
 
-				pool::write_ref_unchecked(entry.base, value);
-				return true;
+			template <typename value_type>
+			value_type convert_unchecked(address_value_type source){
+				shared_lock_type guard(lock_);
+				return convert_unchecked_<value_type>(source);
 			}
 
 			static const size_type value_type_size = static_cast<size_type>(sizeof(value_type));
@@ -135,6 +149,43 @@ namespace cscript{
 			value_type find_available_(size_type size);
 
 			void merge_available_(value_type value, size_type size);
+
+			entry get_bound_entry_(value_type value, table::map_type::iterator &offset);
+
+			base_type get_bound_base_(value_type value, table::map_type::iterator &offset);
+
+			void copy_unchecked_(value_type destination, value_type source, size_type size);
+
+			template <typename value_type>
+			void write_unchecked_(address_value_type destination, value_type value){
+				auto size = sizeof(value_type);
+				auto offset = table::map_.begin();
+
+				for (auto source = reinterpret_cast<base_type>(&value); size > 0u; --size, ++source, ++destination){
+					auto base = get_bound_base_(destination, offset);
+					if (base != nullptr)
+						*base = *source;
+					else
+						break;
+				}
+			}
+
+			template <typename value_type>
+			value_type convert_unchecked_(address_value_type source){
+				auto size = sizeof(value_type);
+				auto offset = table::map_.begin();
+
+				auto value = value_type();
+				for (auto destination = reinterpret_cast<base_type>(&value); size > 0u; --size, ++source, ++destination){
+					auto base = get_bound_base_(source, offset);
+					if (base != nullptr)
+						*destination = *base;
+					else
+						break;
+				}
+
+				return value;
+			}
 
 			entry none_{};
 			lock_type lock_;

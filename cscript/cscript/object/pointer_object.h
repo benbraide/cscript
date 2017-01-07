@@ -45,9 +45,11 @@ namespace cscript{
 			}
 
 		protected:
+			virtual generic *post_assignment_(generic &operand) override;
+
 			virtual generic *offset_(bool increment);
 
-			virtual value_type &get_value_();
+			virtual value_type get_value_();
 		};
 
 		class pointer_ref : public pointer{

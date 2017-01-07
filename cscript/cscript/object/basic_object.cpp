@@ -42,16 +42,16 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 		if (operand == nullptr)
 			return common::env::error.set("Operator does not take specified operand");
 
-		auto &memory = get_memory();
-		auto value = operand->ref_cast(memory.info.type.get());
+		auto &memory_entry = get_memory();
+		auto value = operand->ref_cast(memory_entry.info.type.get());
 
-		if (value == nullptr && (value = operand->cast(memory.info.type.get())) == nullptr)
+		if (value == nullptr && (value = operand->cast(memory_entry.info.type.get())) == nullptr)
 			return common::env::error.set("Cannot assign value into object");
 
-		common::env::address_space.copy(memory_value_, value->get_memory_value());
-		CSCRIPT_REMOVE(memory.attributes, memory::virtual_address::attribute::uninitialized);
+		common::env::address_space.copy(memory_value_, memory_entry.info.type, value->get_memory_value());
+		CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 
-		return this;
+		return post_assignment_(*operand);
 	}
 
 	return common::env::error.set("Operator does not take specified operands");
@@ -135,4 +135,8 @@ bool cscript::object::basic::is_temp(){
 
 bool cscript::object::basic::is_constant(){
 	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant);
+}
+
+cscript::object::generic *cscript::object::basic::post_assignment_(generic &operand){
+	return this;
 }

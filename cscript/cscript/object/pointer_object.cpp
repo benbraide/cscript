@@ -25,8 +25,11 @@ cscript::object::pointer::pointer(value_type value, type::generic::ptr_type type
 	memory_entry.info.type = std::make_shared<type::pointer>(type);
 	memory::pool::write_unchecked(memory_entry.base, value);
 
+	auto &entry = common::env::address_space.get_entry(value);
+	if (entry.value == 0ull || (!entry.info.type->is_any() && !entry.info.type->is_same(type.get())))
+		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
+
 	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
-	CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
 }
 
 cscript::object::pointer::pointer(memory::virtual_address::base_type base, const type::generic::ptr_type type)
@@ -94,6 +97,9 @@ cscript::object::generic *cscript::object::pointer::cast(const type::generic *ty
 }
 
 cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	auto operand = common::env::get_object_operand();
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
@@ -105,32 +111,26 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 	auto &memory_entry = get_memory();
 	if (!operand_type->is_same(memory_entry.info.type.get())){
 		if (operand_type->is_integral()){
-			auto &value = get_value_();
+			auto value = operand->query<primitive::numeric>()->get_value<int>();
+			auto type_size = memory_entry.info.type->remove_pointer()->get_size();
+
 			switch (info.id){
 			case lexer::operator_id::compound_plus:
 				if (!is_lvalue() || is_constant())
 					return common::env::error.set("Operator does not take specified operands");
 
-				value += (operand->query<primitive::numeric>()->get_value<int>() *
-					memory_entry.info.type->remove_pointer()->get_size());
-
+				common::env::address_space.write(memory_value_, memory_entry.info.type, get_value_() + (value * type_size));
 				return this;
 			case lexer::operator_id::compound_minus:
 				if (!is_lvalue() || is_constant())
 					return common::env::error.set("Operator does not take specified operands");
 
-				value -= (operand->query<primitive::numeric>()->get_value<int>() *
-					memory_entry.info.type->remove_pointer()->get_size());
-
+				common::env::address_space.write(memory_value_, memory_entry.info.type, get_value_() - (value * type_size));
 				return this;
 			case lexer::operator_id::plus:
-				return common::env::temp_storage.add(std::make_shared<pointer>(
-					value + (operand->query<primitive::numeric>()->get_value<int>() *
-						memory_entry.info.type->remove_pointer()->get_size())));
+				return common::env::temp_storage.add(std::make_shared<pointer>(get_value_() + (value * type_size)));
 			case lexer::operator_id::minus:
-				return common::env::temp_storage.add(std::make_shared<pointer>(
-					value - (operand->query<primitive::numeric>()->get_value<int>() *
-						memory_entry.info.type->remove_pointer()->get_size())));
+				return common::env::temp_storage.add(std::make_shared<pointer>(get_value_() - (value * type_size)));
 			case lexer::operator_id::member_pointer_access:
 			{
 				auto &entry = common::env::address_space.get_entry(value);
@@ -186,6 +186,9 @@ cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &i
 		{
 			if (is_null())
 				return common::env::error.set("Operator does not take specified operand");
+
+			if (!CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::byte_aligned))
+				return common::env::address_space.get_entry(get_value_()).info.object;
 
 			auto base_type = get_type()->query<type::pointer>()->get_value();
 			return common::env::temp_storage.add(base_type->create_ref(get_value_(), is_constant_target(), base_type));
@@ -253,7 +256,7 @@ std::string cscript::object::pointer::echo(){
 	if (common::env::error.has())
 		return "";
 
-	return ("<" + std::to_string(get_value_()) + ": " + echo_value + ">");
+	return ("<" + common::env::to_hex(get_value_()) + ": " + echo_value + ">");
 }
 
 bool cscript::object::pointer::is_constant_target(){
@@ -261,24 +264,36 @@ bool cscript::object::pointer::is_constant_target(){
 }
 
 bool cscript::object::pointer::is_null(){
-	return (get_value_() == 0u || common::env::address_space.get_entry(get_value_()).value == 0u);
+	return (get_value_() == 0u);
+}
+
+cscript::object::generic *cscript::object::pointer::post_assignment_(generic &operand){
+	if (CSCRIPT_IS(operand.get_memory().attributes, memory::virtual_address::attribute::byte_aligned))
+		CSCRIPT_SET(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
+	else
+		CSCRIPT_REMOVE(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
+
+	return this;
 }
 
 cscript::object::generic *cscript::object::pointer::offset_(bool increment){
 	if (is_uninitialized())
 		return common::env::error.set("Uninitialized object in expression");
 
-	auto &value = get_value_();
+	auto type = get_type();
+	auto type_size = type->remove_pointer()->get_size();
+
+	CSCRIPT_SET(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
 	if (increment)
-		get_value_() += get_memory().info.type->remove_pointer()->get_size();
+		common::env::address_space.write(memory_value_, type, get_value_() + type_size);
 	else//Decrement
-		get_value_() -= get_memory().info.type->remove_pointer()->get_size();
+		common::env::address_space.write(memory_value_, type, get_value_() - type_size);
 	
 	return this;
 }
 
-cscript::object::pointer::value_type &cscript::object::pointer::get_value_(){
-	return memory::pool::convert_unchecked<value_type>(get_memory().base);
+cscript::object::pointer::value_type cscript::object::pointer::get_value_(){
+	return common::env::address_space.convert<value_type>(memory_value_, get_type());
 }
 
 cscript::object::pointer_ref::pointer_ref(memory::virtual_address::value_type memory_value,

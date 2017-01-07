@@ -446,6 +446,6 @@ bool cscript::type::pointer::is_same(const generic *type) const{
 	return (type->get_id() == id::pointer && type->query<pointer>()->value_->is_same(value_.get()));
 }
 
-cscript::type::generic::ptr_type cscript::type::pointer::get_value(){
+cscript::type::generic::ptr_type cscript::type::pointer::get_value() const{
 	return value_;
 }

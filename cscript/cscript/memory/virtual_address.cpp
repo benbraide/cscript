@@ -66,21 +66,28 @@ cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_e
 
 cscript::memory::virtual_address::entry cscript::memory::virtual_address::get_bound_entry(value_type value){
 	shared_lock_type guard(lock_);
-	for (auto &entry : table::map_){
-		if (entry.first == value)
-			return entry.second;
+	auto offset = table::map_.begin();
+	return get_bound_entry_(value, offset);
+}
 
-		if (entry.first < value && value < (entry.first + entry.second.size)){
-			return address_entry{
-				entry.second.base + (value - entry.first),
-				1u,
-				value,
-				entry.second.attributes
-			};
-		}
+cscript::memory::virtual_address::base_type cscript::memory::virtual_address::get_bound_base(value_type value){
+	shared_lock_type guard(lock_);
+	auto offset = table::map_.begin();
+	return get_bound_base_(value, offset);
+}
+
+void cscript::memory::virtual_address::copy(value_type destination, generic_type type, value_type source){
+	shared_lock_type guard(lock_);
+	auto entry = table::map_.find(destination);
+	if (entry != table::map_.end() && entry->second.info.type == type){
+		auto &source_entry = get_entry(source);
+		if (entry->second.size < source_entry.size)
+			copy_unchecked_(destination, source, entry->second.size);
+		else
+			std::copy(source_entry.base, source_entry.base + source_entry.size, entry->second.base);
 	}
-
-	return none_;
+	else
+		copy_unchecked_(destination, source, type->get_size());
 }
 
 bool cscript::memory::virtual_address::copy(value_type destination, value_type source){
@@ -96,13 +103,8 @@ bool cscript::memory::virtual_address::copy(value_type destination, value_type s
 }
 
 void cscript::memory::virtual_address::copy_unchecked(value_type destination, value_type source, size_type size){
-	if (destination == source || size == 0u)
-		return;
-
-	for (; size > 0u; --size, ++destination, ++source){
-		auto destination_entry = get_bound_entry(destination), source_entry = get_bound_entry(source);
-		*destination_entry.base = *source_entry.base;
-	}
+	shared_lock_type guard(lock_);
+	copy_unchecked_(destination, source, size);
 }
 
 cscript::memory::virtual_address::value_type cscript::memory::virtual_address::find_available_(size_type size){
@@ -128,4 +130,48 @@ void cscript::memory::virtual_address::merge_available_(value_type value, size_t
 	}
 
 	available_list_[value] = size;
+}
+
+cscript::memory::virtual_address::entry cscript::memory::virtual_address::get_bound_entry_(value_type value, table::map_type::iterator &offset){
+	for (; offset != table::map_.end(); ++offset){
+		if (offset->first == value)
+			return offset->second;
+
+		if (offset->first < value && value < (offset->first + offset->second.size)){
+			return address_entry{
+				offset->second.base + (value - offset->first),
+				1u,
+				value,
+				offset->second.attributes
+			};
+		}
+	}
+
+	return none_;
+}
+
+cscript::memory::virtual_address::base_type cscript::memory::virtual_address::get_bound_base_(value_type value, table::map_type::iterator &offset){
+	for (; offset != table::map_.end(); ++offset){
+		if (offset->first == value)
+			return offset->second.base;
+
+		if (offset->first < value && value < (offset->first + offset->second.size))
+			return offset->second.base + (value - offset->first);
+	}
+
+	return nullptr;
+}
+
+void cscript::memory::virtual_address::copy_unchecked_(value_type destination, value_type source, size_type size){
+	if (destination == source || size == 0u)
+		return;
+
+	auto destination_offset = table::map_.begin(), source_offset = destination_offset;
+	for (; size > 0u; --size, ++destination, ++source){
+		auto destination_base = get_bound_base_(destination, destination_offset), source_base = get_bound_base_(source, source_offset);
+		if (destination_base != nullptr && source_base != nullptr)
+			*destination_base = *source_base;
+		else
+			break;
+	}
 }

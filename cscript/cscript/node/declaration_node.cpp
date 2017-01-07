@@ -150,7 +150,13 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 	if (value == nullptr)
 		return common::env::error.set("", declaration_->get_index());
 
-	auto *object = declaration_->evaluate();
+	type::generic::ptr_type type;
+	if (get_type()->is(id::auto_type))
+		type = value->get_type();
+	else
+		type = get_type_value();
+
+	auto *object = declaration::allocate(declaration_->get_index(), type, get_identifier(), get_type_attributes());
 	if (common::env::error.has())
 		return nullptr;
 
