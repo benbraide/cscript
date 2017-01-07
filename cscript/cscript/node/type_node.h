@@ -88,6 +88,55 @@ namespace cscript{
 			ptr_type base_type_;
 			type::generic::ptr_type type_value_;
 		};
+
+		class array_type : public basic{
+		public:
+			array_type(const lexer::token::index &index, ptr_type base_type);
+
+			virtual ~array_type();
+
+			virtual ptr_type clone() override;
+
+			virtual bool is(id id) const override;
+
+			virtual object::generic *evaluate() override;
+
+			virtual type::generic::ptr_type get_type() override;
+
+			virtual ptr_type get_base_type() const;
+
+		protected:
+			virtual std::string print_() const override;
+
+			ptr_type base_type_;
+			type::generic::ptr_type type_value_;
+		};
+
+		class function_type : public basic{
+		public:
+			function_type(const lexer::token::index &index, ptr_type return_type, ptr_type parameter_types);
+
+			virtual ~function_type();
+
+			virtual ptr_type clone() override;
+
+			virtual bool is(id id) const override;
+
+			virtual object::generic *evaluate() override;
+
+			virtual type::generic::ptr_type get_type() override;
+
+			virtual ptr_type get_return_type() const;
+
+			virtual ptr_type get_parameter_types() const;
+
+		protected:
+			virtual std::string print_() const override;
+
+			ptr_type return_type_;
+			ptr_type parameter_types_;
+			type::generic::ptr_type type_value_;
+		};
 	}
 }
 

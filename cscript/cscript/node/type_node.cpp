@@ -1,4 +1,5 @@
 #include "type_node.h"
+#include "collection_node.h"
 #include "../common/env.h"
 
 cscript::node::primitive_type::primitive_type(const lexer::token::index &index, lexer::token_id value)
@@ -192,7 +193,7 @@ cscript::node::generic::ptr_type cscript::node::pointer_type::clone(){
 }
 
 bool cscript::node::pointer_type::is(id id) const{
-	return (id == id_ || id == node::id::type_compatible || id == node::id::pointer_type);
+	return (id == id_ || id == node::id::type_compatible);
 }
 
 cscript::object::generic *cscript::node::pointer_type::evaluate(){
@@ -217,4 +218,91 @@ cscript::node::generic::ptr_type cscript::node::pointer_type::get_base_type() co
 
 std::string cscript::node::pointer_type::print_() const{
 	return ("pointer_t<" + base_type_->print() + ">");
+}
+
+cscript::node::array_type::array_type(const lexer::token::index &index, ptr_type base_type)
+	: basic(id::array_type, index), base_type_(base_type){}
+
+cscript::node::array_type::~array_type(){}
+
+cscript::node::generic::ptr_type cscript::node::array_type::clone(){
+	return std::make_shared<array_type>(index_, base_type_->clone());
+}
+
+bool cscript::node::array_type::is(id id) const{
+	return (id == id_ || id == node::id::type_compatible);
+}
+
+cscript::object::generic *cscript::node::array_type::evaluate(){
+	return nullptr;
+}
+
+cscript::type::generic::ptr_type cscript::node::array_type::get_type(){
+	if (type_value_ == nullptr){
+		auto base_type_value = base_type_->get_type();
+		if (common::env::error.has() || base_type_value == nullptr)
+			return nullptr;
+
+		type_value_ = std::make_shared<type::array>(base_type_value);
+	}
+
+	return type_value_;
+}
+
+cscript::node::generic::ptr_type cscript::node::array_type::get_base_type() const{
+	return base_type_;
+}
+
+std::string cscript::node::array_type::print_() const{
+	return ("array<" + base_type_->print() + ">");
+}
+
+cscript::node::function_type::function_type(const lexer::token::index &index, ptr_type return_type, ptr_type parameter_types)
+	: basic(id::function_type, index), return_type_(return_type), parameter_types_(parameter_types){}
+
+cscript::node::function_type::~function_type(){}
+
+cscript::node::generic::ptr_type cscript::node::function_type::clone(){
+	return std::make_shared<function_type>(index_, return_type_->clone(), parameter_types_->clone());
+}
+
+bool cscript::node::function_type::is(id id) const{
+	return (id == id_ || id == node::id::type_compatible);
+}
+
+cscript::object::generic *cscript::node::function_type::evaluate(){
+	return nullptr;
+}
+
+cscript::type::generic::ptr_type cscript::node::function_type::get_type(){
+	if (type_value_ == nullptr){
+		auto return_type_value = return_type_->get_type();
+		if (common::env::error.has() || return_type_value == nullptr)
+			return nullptr;
+
+		type::function::list_type parameter_type_values;
+		for (auto type_node : parameter_types_->query<collection>()->get_list()){
+			auto type_value = type_node->get_type();
+			if (common::env::error.has() || type_value == nullptr)
+				return nullptr;
+
+			parameter_type_values.push_back(type_value);
+		}
+
+		type_value_ = std::make_shared<type::function>(return_type_value, parameter_type_values);
+	}
+
+	return type_value_;
+}
+
+cscript::node::generic::ptr_type cscript::node::function_type::get_return_type() const{
+	return return_type_;
+}
+
+cscript::node::generic::ptr_type cscript::node::function_type::get_parameter_types() const{
+	return parameter_types_;
+}
+
+std::string cscript::node::function_type::print_() const{
+	return ("function<" + return_type_->print() + "(" + parameter_types_->print() + ")>");
 }

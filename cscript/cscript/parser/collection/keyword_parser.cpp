@@ -231,7 +231,16 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_array_type_(){
 	//array< <type> >
-	return nullptr;
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto type = parse_type_(index, false);
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::array_type>(index, type);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_pointer_type_(){
@@ -250,7 +259,49 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_function_type_(){
 	//function< <return_type>(<parameter_types>) >
-	return nullptr;
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto next = common::env::source_info.source->next(common::env::source_info);
+	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
+		next->get_value() != "<"){
+		return common::env::error.set("", index);
+	}
+
+	auto halt = common::env::source_info.halt;
+	common::env::source_info.halt = builder::halt_info{ lexer::token_id::operator_symbol, ">" };//Enable halt
+
+	auto return_type = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::open_par });
+	if (common::env::error.has())
+		return nullptr;
+
+	if (return_type == nullptr || return_type->is(node::id::auto_type) || !return_type->is(node::id::type_compatible) ||
+		return_type->is(node::id::type_with_storage)){
+		return common::env::error.set("", index);
+	}
+
+	auto parameter_types = common::env::builder.parse(builder::options{
+		common::env::expression_parser,
+		builder::halt_info{ lexer::token_id::close_par },
+		builder::halt_info{ lexer::token_id::comma },
+		false,
+		nullptr,
+		[&index](node::generic::ptr_type &value) -> bool{
+			if (value == nullptr || value->is(node::id::auto_type) || !value->is(node::id::type_compatible) ||
+				value->is(node::id::type_with_storage)){
+				common::env::error.set("", index);
+			}
+
+			return true;
+		}
+	});
+
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::function_type>(index, return_type, parameter_types);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_echo_(){

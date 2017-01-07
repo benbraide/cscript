@@ -18,11 +18,22 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	token_id_type token_id;
 	auto collection = std::make_shared<node::collection>(token->get_index());
 
-	auto halt = common::env::source_info.halt;
-	common::env::source_info.halt = {};//Disable halt
+	lexer::source_info::halt_info halt{};
+	auto same_halt = (common::env::source_info.halt == options.terminator);
+	if (!same_halt)
+		halt = common::env::source_info.halt;
 
 	while (common::env::source_info.source->has_more()){
-		if ((token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
+		if (same_halt)//Disable halt
+			common::env::source_info.halt = {};
+		else//Use previous halt
+			common::env::source_info.halt = halt;
+
+		token = common::env::source_info.source->peek(common::env::source_info);
+		if (same_halt)//Restore halt
+			common::env::source_info.halt = options.terminator;
+
+		if (token == nullptr)
 			break;
 
 		token_id = common::env::source_info.rule->map_index(token->get_match_index());
@@ -46,7 +57,8 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			break;
 
 		node = nullptr;
-		common::env::source_info.halt = options.delimiter;//Enable halt
+		if (!same_halt)
+			common::env::source_info.halt = options.delimiter;//Enable halt
 
 		if (options.before_callback != nullptr && (!options.before_callback(node) || common::env::error.has()))
 			break;
@@ -58,9 +70,16 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			break;
 
 		collection->append(node);
-		common::env::source_info.halt = {};//Disable halt
+		if (same_halt)//Disable halt
+			common::env::source_info.halt = {};
+		else//Use previous halt
+			common::env::source_info.halt = halt;
 
-		if ((token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
+		token = common::env::source_info.source->peek(common::env::source_info);
+		if (same_halt)//Restore halt
+			common::env::source_info.halt = options.terminator;
+
+		if (token == nullptr)
 			break;
 
 		token_id = common::env::source_info.rule->map_index(token->get_match_index());
@@ -79,7 +98,9 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 			return common::env::error.set("", collection->get_index());
 	}
 
-	common::env::source_info.halt = halt;//Restore halt info
+	if (!same_halt)//Restore halt info
+		common::env::source_info.halt = halt;
+
 	if (common::env::error.has())
 		return nullptr;
 
@@ -129,9 +150,20 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 }
 
 cscript::parser::collection::builder::node_type cscript::parser::collection::builder::parse_single(const halt_info &terminator){
+	lexer::source_info::halt_info halt{};
+	auto same_halt = (common::env::source_info.halt == terminator);
+	if (!same_halt)
+		halt = common::env::source_info.halt;
+	else//Disable halt
+		common::env::source_info.halt = {};
+
 	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	auto token = common::env::source_info.source->peek(common::env::source_info);
+
 	if (token == nullptr){
+		if (same_halt)//Restore halt
+			common::env::source_info.halt = terminator;
+
 		if (terminator.id != lexer::token_id::nil)
 			return common::env::error.set("", common::env::source_info.source->get_index());
 		return nullptr;
@@ -140,17 +172,15 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	auto token_id = common::env::source_info.rule->map_index(token->get_match_index());
 	if (token_id == terminator.id && (terminator.value.empty() || token->get_value() == terminator.value)){
 		common::env::source_info.source->ignore(common::env::source_info);
+		if (same_halt)//Restore halt
+			common::env::source_info.halt = terminator;
+
 		return nullptr;
 	}
 
-	lexer::source_info::halt_info halt{};
-	auto same_halt = (common::env::source_info.halt == terminator);
-	if (!same_halt){
-		halt = common::env::source_info.halt;
-		common::env::source_info.halt = terminator;//Enable halt
-	}
-
+	common::env::source_info.halt = terminator;//Enable halt
 	auto node = common::env::expression_parser.parse();
+
 	if (!same_halt)
 		common::env::source_info.halt = halt;//Restore halt info
 
@@ -159,7 +189,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 
 	if (terminator.id != lexer::token_id::nil){//Ensure next token is terminator
 		if (same_halt)//Disable halt
-			common::env::source_info.halt.id = lexer::token_id::nil;
+			common::env::source_info.halt = {};
 
 		token = common::env::source_info.source->peek(common::env::source_info);
 		if (token == nullptr)
@@ -171,7 +201,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 
 		common::env::source_info.source->ignore(common::env::source_info);
 		if (same_halt)//Restore halt
-			common::env::source_info.halt.id = terminator.id;
+			common::env::source_info.halt = terminator;
 	}
 
 	return node;

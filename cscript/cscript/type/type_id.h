@@ -30,6 +30,7 @@ namespace cscript{
 			string,
 			array_,
 			pointer,
+			function,
 		};
 
 		template <id>

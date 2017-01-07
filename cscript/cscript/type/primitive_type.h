@@ -3,6 +3,8 @@
 #ifndef CSCRIPT_PRIMITIVE_TYPE_H
 #define CSCRIPT_PRIMITIVE_TYPE_H
 
+#include <list>
+
 #include "generic_type.h"
 
 namespace cscript{
@@ -70,6 +72,10 @@ namespace cscript{
 
 			virtual bool is_pointer() const override;
 			
+			virtual bool is_array() const override;
+
+			virtual bool is_function() const override;
+
 		protected:
 			id id_;
 			size_type size_;
@@ -106,6 +112,75 @@ namespace cscript{
 
 		protected:
 			ptr_type value_;
+		};
+
+		class array : public primitive{
+		public:
+			explicit array(ptr_type value);
+
+			virtual ~array();
+
+			virtual std::string name() const override;
+
+			virtual std::string print() const override;
+
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::base_type base, ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create_ref(memory::virtual_address::value_type memory_value,
+				bool is_constant, ptr_type this_ptr) override;
+
+			virtual const generic *get_bully(const generic *type) const override;
+
+			virtual int get_score(const generic *type) const override;
+
+			virtual bool has_conversion(const generic *type) const override;
+
+			virtual bool is_same(const generic *type) const override;
+
+			virtual ptr_type get_value() const;
+
+		protected:
+			ptr_type value_;
+		};
+
+		class function : public primitive{
+		public:
+			typedef std::list<ptr_type> list_type;
+
+			explicit function(ptr_type return_type, const list_type &parameter_types);
+
+			virtual ~function();
+
+			virtual std::string name() const override;
+
+			virtual std::string print() const override;
+
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::base_type base, ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create_ref(memory::virtual_address::value_type memory_value,
+				bool is_constant, ptr_type this_ptr) override;
+
+			virtual const generic *get_bully(const generic *type) const override;
+
+			virtual int get_score(const generic *type) const override;
+
+			virtual bool has_conversion(const generic *type) const override;
+
+			virtual bool is_same(const generic *type) const override;
+
+			virtual ptr_type get_return_type() const;
+
+			virtual const list_type &get_parameter_types() const;
+
+		protected:
+			virtual std::string print_parameters_(bool full) const;
+
+			ptr_type return_type_;
+			list_type parameter_types_;
 		};
 	}
 }
