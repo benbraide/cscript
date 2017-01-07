@@ -31,6 +31,10 @@ namespace cscript{
 			array_,
 			pointer,
 			function,
+			enum_,
+			class_,
+			choice,
+			variadic,
 		};
 
 		template <id>

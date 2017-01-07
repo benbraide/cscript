@@ -1,5 +1,7 @@
 #include "binary_operator_node.h"
+
 #include "../common/env.h"
+#include "../type/choice_type.h"
 
 cscript::node::binary_operator::binary_operator(const lexer::token::index &index, const info_type &info, ptr_type left, ptr_type right)
 	: basic(id::operator_, index), info_(info), left_(left), right_(right){}
@@ -73,6 +75,8 @@ cscript::type::generic::ptr_type cscript::node::binary_operator::get_type(){
 		auto right = right_->get_type();
 		if (right == nullptr)
 			return nullptr;
+
+		return std::make_shared<type::choice>(left, right);
 	}
 
 	return nullptr;
