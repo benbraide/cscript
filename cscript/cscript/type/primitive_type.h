@@ -76,6 +76,8 @@ namespace cscript{
 
 			virtual bool is_function() const override;
 
+			virtual bool is_nullptr() const override;
+
 		protected:
 			id id_;
 			size_type size_;

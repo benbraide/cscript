@@ -77,6 +77,8 @@ namespace cscript{
 
 			virtual bool is_function() const = 0;
 
+			virtual bool is_nullptr() const = 0;
+
 			template <typename object_type>
 			object_type *query(){
 				return dynamic_cast<object_type *>(this);

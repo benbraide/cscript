@@ -1,4 +1,5 @@
 #include "pointer_object.h"
+#include "byte_object.h"
 
 cscript::object::primitive::numeric::numeric()
 	: basic(common::env::address_space.add<char>()){
@@ -35,6 +36,8 @@ cscript::object::generic *cscript::object::primitive::numeric::clone(){
 
 cscript::object::generic *cscript::object::primitive::numeric::cast(const type::generic *type){
 	switch (type->get_id()){
+	case type::id::byte:
+		return common::env::temp_storage.add(std::make_shared<byte>(get_value<byte::value_type>()));
 	case type::id::char_:
 		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::char_type, get_value<char>()));
 	case type::id::uchar:

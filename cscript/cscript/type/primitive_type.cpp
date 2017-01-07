@@ -1,5 +1,6 @@
 #include "primitive_type.h"
 #include "../object/pointer_object.h"
+#include "../object/byte_object.h"
 
 cscript::type::primitive::primitive(id id)
 	: id_(id){
@@ -11,7 +12,7 @@ cscript::type::primitive::primitive(id id)
 		size_ = static_cast<memory::pool::size_type>(sizeof(boolean_value_type));
 		break;
 	case type::id::byte:
-		size_ = static_cast<memory::pool::size_type>(sizeof(unsigned char));
+		size_ = static_cast<memory::pool::size_type>(sizeof(object::primitive::byte::value_type));
 		break;
 	case type::id::char_:
 		size_ = static_cast<memory::pool::size_type>(sizeof(char));
@@ -132,7 +133,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_t
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean>();
 	case type::id::byte:
-		return std::make_shared<object::primitive::numeric>(this_ptr);
+		return std::make_shared<object::primitive::byte>();
 	case type::id::char_:
 	case type::id::uchar:
 	case type::id::wchar:
@@ -162,7 +163,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memor
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean>(base);
 	case type::id::byte:
-		return std::make_shared<object::primitive::numeric>(base, this_ptr);
+		return std::make_shared<object::primitive::byte>(base);
 	case type::id::char_:
 	case type::id::uchar:
 	case type::id::wchar:
@@ -193,7 +194,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create_ref(m
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean_ref>(memory_value, is_constant);
 	case type::id::byte:
-		return std::make_shared<object::primitive::numeric>(this_ptr);
+		return std::make_shared<object::primitive::byte_ref>(memory_value, is_constant);
 	case type::id::char_:
 	case type::id::uchar:
 	case type::id::wchar:
@@ -266,7 +267,7 @@ int cscript::type::primitive::get_score(const generic *type) const{
 	if (id_ == type::id::auto_ || type->is_auto())
 		return 19;
 
-	if (id_ == type::id::any || type->is_any())
+	if (id_ == type::id::any || type->is_any() || (id_ == type::id::nullptr_ && type->is_pointer()))
 		return 18;
 
 	if (!type->is_primitive())//Type is not a primitive
@@ -391,6 +392,10 @@ bool cscript::type::primitive::is_function() const{
 	return (id_ == id::function);
 }
 
+bool cscript::type::primitive::is_nullptr() const{
+	return (id_ == id::nullptr_);
+}
+
 cscript::type::pointer::pointer(ptr_type value)
 	: primitive(id::pointer), value_(value){}
 
@@ -429,7 +434,7 @@ int cscript::type::pointer::get_score(const generic *type) const{
 	if (type->is_auto())
 		return 19;
 
-	if (type->is_any())
+	if (type->is_any() || type->is_nullptr())
 		return 18;
 
 	if (!type->is_pointer())//Type is not a pointer

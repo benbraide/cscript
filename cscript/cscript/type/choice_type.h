@@ -68,6 +68,8 @@ namespace cscript{
 
 			virtual bool is_function() const override;
 
+			virtual bool is_nullptr() const override;
+
 			virtual ptr_type get_left() const;
 
 			virtual ptr_type get_right() const;

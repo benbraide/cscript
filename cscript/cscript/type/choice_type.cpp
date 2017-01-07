@@ -122,6 +122,10 @@ bool cscript::type::choice::is_function() const{
 	return (right_->is_function() || left_->is_function());
 }
 
+bool cscript::type::choice::is_nullptr() const{
+	return (right_->is_nullptr() || left_->is_nullptr());
+}
+
 cscript::type::generic::ptr_type cscript::type::choice::get_left() const{
 	return left_;
 }

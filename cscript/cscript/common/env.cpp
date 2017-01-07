@@ -29,6 +29,8 @@ const cscript::type::generic::ptr_type cscript::common::env::any_type = std::mak
 
 const cscript::type::generic::ptr_type cscript::common::env::auto_type = std::make_shared<type::primitive>(type::id::auto_);
 
+const cscript::type::generic::ptr_type cscript::common::env::nullptr_type = std::make_shared<type::primitive>(type::id::nullptr_);
+
 const cscript::type::generic::ptr_type cscript::common::env::void_type = std::make_shared<type::primitive>(type::id::void_);
 
 const cscript::type::generic::ptr_type cscript::common::env::bool_type = std::make_shared<type::primitive>(type::id::bool_);

@@ -35,6 +35,7 @@ namespace cscript{
 			class_,
 			choice,
 			variadic,
+			nullptr_,
 		};
 
 		template <id>

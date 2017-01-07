@@ -1,4 +1,14 @@
 #include "pointer_object.h"
+#include "byte_object.h"
+
+cscript::object::pointer::pointer()
+	: basic(common::env::address_space.add<value_type>()){
+	auto &memory_entry = get_memory();
+	memory_entry.info.type = common::env::nullptr_type;
+	memory::pool::write_unchecked(memory_entry.base, static_cast<value_type>(0));
+	CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
 
 cscript::object::pointer::pointer(const type::generic::ptr_type type)
 	: basic(common::env::address_space.add<value_type>()){
@@ -47,6 +57,9 @@ cscript::object::generic *cscript::object::pointer::clone(){
 
 cscript::object::generic *cscript::object::pointer::cast(const type::generic *type){
 	switch (type->get_id()){
+	case type::id::byte:
+		return common::env::temp_storage.add(std::make_shared<primitive::byte>(
+			get_value<primitive::byte::value_type>()));
 	case type::id::char_:
 		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
 			common::env::char_type, get_value<char>()));
@@ -109,7 +122,7 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 		return basic::evaluate(info);
 
 	auto &memory_entry = get_memory();
-	if (!operand_type->is_same(memory_entry.info.type.get())){
+	if (!memory_entry.info.type->is_nullptr() && !operand_type->is_nullptr() && !operand_type->is_same(memory_entry.info.type.get())){
 		if (operand_type->is_integral()){
 			auto value = operand->query<primitive::numeric>()->get_value<int>();
 			auto type_size = memory_entry.info.type->remove_pointer()->get_size();
