@@ -17,6 +17,8 @@ namespace cscript{
 
 			virtual const std::string &get_name() const;
 
+			virtual std::string print() const;
+
 		protected:
 			std::string name_;
 		};

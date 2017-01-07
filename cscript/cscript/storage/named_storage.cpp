@@ -15,3 +15,8 @@ cscript::storage::generic *cscript::storage::named::get_matched(const std::strin
 const std::string &cscript::storage::named::get_name() const{
 	return name_;
 }
+
+std::string cscript::storage::named::print() const{
+	auto named_parent = (parent_ == nullptr) ? nullptr : parent_->query<named>();
+	return (named_parent == nullptr) ? name_ : (named_parent->print() + "::" + name_);
+}

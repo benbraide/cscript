@@ -13,7 +13,7 @@
 #include "../type/primitive_type.h"
 
 #include "../storage/temp_storage.h"
-#include "../storage/basic_storage.h"
+#include "../storage/named_storage.h"
 
 #include "../parser/collection/literal_parser.h"
 #include "../parser/collection/term_parser.h"
@@ -37,7 +37,7 @@ namespace cscript{
 			static thread_local parser::parser_info parser_info;
 
 			static thread_local storage::temp temp_storage;
-			static storage::basic global_storage;
+			static storage::named global_storage;
 
 			static thread_local error error;
 			static thread_local runtime runtime;

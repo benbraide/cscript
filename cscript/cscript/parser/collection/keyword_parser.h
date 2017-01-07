@@ -33,14 +33,7 @@ namespace cscript{
 
 				virtual node_type parse_operator_();
 
-				virtual node_type parse_symbol_operator_(const lexer::token::index &index,
-					storage::operator_key &value, const std::string &operator_value, std::string &string_value);
-
-				virtual node_type parse_symbol_operator_(const lexer::token::index &index, storage::operator_key &value,
-					lexer::operator_id id, const std::string &operator_value, std::string &string_value);
-
-				virtual node_type parse_type_operator_(const lexer::token::index &index,
-					storage::operator_key &value);
+				virtual nullptr_t parse_type_operator_(const lexer::token::index &index, node::operator_value::key &key);
 
 				virtual node_type parse_array_type_();
 
@@ -53,6 +46,8 @@ namespace cscript{
 				virtual node_type parse_type_(const lexer::token::index &index, bool allow_storage_class);
 
 				virtual node_type parse_value_(const lexer::token::index &index);
+
+				virtual lexer::token_id get_next_id_();
 			};
 		}
 	}

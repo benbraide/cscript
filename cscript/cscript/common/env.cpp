@@ -13,7 +13,7 @@ thread_local cscript::parser::parser_info cscript::common::env::parser_info{};
 
 thread_local cscript::storage::temp cscript::common::env::temp_storage;
 
-cscript::storage::basic cscript::common::env::global_storage;
+cscript::storage::named cscript::common::env::global_storage("");
 
 thread_local cscript::common::error cscript::common::env::error;
 
