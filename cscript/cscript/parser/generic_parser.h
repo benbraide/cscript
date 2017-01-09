@@ -29,6 +29,9 @@ namespace cscript{
 			nil				= (0 << 0x0000),
 			typename_		= (1 << 0x0000),
 			list			= (1 << 0x0001),
+			loop			= (1 << 0x0002),
+			function		= (1 << 0x0003),
+			class_			= (1 << 0x0004),
 		};
 
 		struct parser_info{

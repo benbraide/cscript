@@ -34,6 +34,8 @@ namespace cscript{
 
 				static node_type parse(const options &options);
 
+				static node_type parse_parameters(const halt_info &terminator = halt_info{ lexer::token_id::close_par });
+
 				static node_type parse_list(const halt_info &terminator, const halt_info &delimiter, bool no_trailing_delimiter);
 
 				static node_type parse_list(const halt_info &terminator, bool no_trailing_delimiter);
@@ -42,13 +44,15 @@ namespace cscript{
 
 				static node_type parse_block(const halt_info &terminator, callback_type before_callback, callback_type after_callback);
 
-				static node_type parse_block(const halt_info &terminator);
+				static node_type parse_block(const halt_info &terminator = halt_info{ lexer::token_id::close_cur });
 
 				static node_type parse_single(const halt_info &terminator);
 
 				static node_type parse_type();
 
 				static node_type parse_expression();
+
+				static node_type parse_name();
 			};
 		}
 	}

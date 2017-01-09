@@ -22,6 +22,7 @@
 #include "../parser/collection/expression_parser.h"
 #include "../parser/collection/statement_parser.h"
 #include "../parser/collection/declaration_parser.h"
+#include "../parser/collection/function_parser.h"
 #include "../parser/collection/keyword_parser.h"
 #include "../parser/collection/collection_parser.h"
 
@@ -29,9 +30,6 @@ namespace cscript{
 	namespace common{
 		class env{
 		public:
-			static thread_local object::generic *object_operand;
-			static thread_local node::generic *node_operand;
-
 			static thread_local lexer::source_guard source_guard;
 			static thread_local lexer::source_info source_info;
 			static thread_local parser::parser_info parser_info;
@@ -95,8 +93,9 @@ namespace cscript{
 			static parser::collection::statement statement_parser;
 
 			static parser::collection::declaration declaration_parser;
-			static parser::collection::keyword keyword_parser;
+			static parser::collection::function function_parser;
 
+			static parser::collection::keyword keyword_parser;
 			static parser::collection::builder builder;
 
 			static object::generic *get_object_operand();
@@ -119,8 +118,8 @@ namespace cscript{
 			static std::string real_to_string(value_type value){
 				auto string_value = std::to_string(value);
 				auto index = string_value.size();
-				for (; index > 0u; --index){
-					if (string_value[index - 1] != '0')
+				for (; index > 1u; --index){
+					if (string_value[index - 2] == '.' || string_value[index - 1] != '0')
 						break;
 				}
 

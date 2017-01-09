@@ -3,13 +3,41 @@
 #include "../common/env.h"
 #include "../type/primitive_type.h"
 
-cscript::function::entry::entry(std::string &name, type::generic::ptr_type type)
-	: basic(name), definition_(nullptr), type_(type){}
+cscript::function::entry::entry(const std::string &name, storage::generic *storage,
+	type::generic::ptr_type type, const parameter_limits &parameter_limits)
+	: basic(name, storage), definition_(nullptr), type_(type), parameter_limits_(parameter_limits){}
 
 cscript::function::entry::~entry(){}
 
 cscript::function::generic *cscript::function::entry::get_matched(int &score){
-	return basic::get_matched(score);
+	auto argument_count = static_cast<int>(common::env::runtime.arguments.size());
+	if (argument_count < parameter_limits_.minimum ||
+		(parameter_limits_.maximum != -1 && parameter_limits_.maximum < argument_count)){
+		return basic::get_matched(score);
+	}
+
+	if (argument_count == 0)
+		return this;
+
+	auto minimum_score = 0, current_score = 0;
+	auto type_iter = type_->query<type::function>()->get_parameter_types().begin();
+
+	for (auto argument : common::env::runtime.arguments){
+		if ((current_score = (*type_iter)->get_score(argument->get_type().get())) == 0)
+			break;
+
+		if (minimum_score == 0 || current_score < minimum_score)
+			minimum_score = current_score;
+
+		if (!(*type_iter)->is_variadic())
+			++type_iter;
+	}
+
+	if (minimum_score < score)
+		return basic::get_matched(score);
+
+	score = minimum_score;
+	return this;
 }
 
 cscript::function::generic *cscript::function::entry::get_matched(const type::generic *type){
@@ -21,7 +49,7 @@ cscript::type::generic::ptr_type cscript::function::entry::get_type(){
 }
 
 cscript::function::definition *cscript::function::entry::get_definition(){
-	return definition_;
+	return definition_.get();
 }
 
 std::string cscript::function::entry::print(){
@@ -43,6 +71,6 @@ std::string cscript::function::entry::print(){
 	return (function_type->get_return_type()->print() + " " + get_name() + "(" + parameter_types_string + ")");
 }
 
-void cscript::function::entry::set_definition(definition &definition){
-	definition_ = &definition;
+void cscript::function::entry::set_definition(definition_type definition){
+	definition_ = definition;
 }

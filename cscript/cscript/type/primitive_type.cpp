@@ -1,6 +1,9 @@
 #include "primitive_type.h"
+
 #include "../object/pointer_object.h"
 #include "../object/byte_object.h"
+#include "../object/type_object.h"
+#include "../object/function_object.h"
 
 cscript::type::primitive::primitive(id id)
 	: id_(id){
@@ -77,6 +80,8 @@ const cscript::type::generic *cscript::type::primitive::remove_pointer() const{
 
 std::string cscript::type::primitive::name() const{
 	switch (id_){
+	case type::id::void_:
+		return "void";
 	case type::id::any:
 		return "any";
 	case type::id::auto_:
@@ -488,16 +493,16 @@ std::string cscript::type::array::print() const{
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create(ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::type_object>();
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create(memory::virtual_address::base_type base, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::type_object>(base);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create_ref(memory::virtual_address::value_type memory_value,
 	bool is_constant, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::type_object_ref>(memory_value, is_constant);
 }
 
 const cscript::type::generic *cscript::type::array::get_bully(const generic *type) const{
@@ -552,16 +557,16 @@ std::string cscript::type::function::print() const{
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::function::create(ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::function_object>(this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::function::create(memory::virtual_address::base_type base, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::function_object>(base, this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::function::create_ref(memory::virtual_address::value_type memory_value,
 	bool is_constant, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::primitive::function_object_ref>(memory_value, this_ptr, is_constant);
 }
 
 const cscript::type::generic *cscript::type::function::get_bully(const generic *type) const{

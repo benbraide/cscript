@@ -4,7 +4,7 @@
 #define CSCRIPT_GENERIC_FUNCTION_H
 
 #include "../object/generic_object.h"
-#include "../type/generic_type.h"
+#include "../storage/generic_storage.h"
 
 namespace cscript{
 	namespace function{
@@ -25,6 +25,8 @@ namespace cscript{
 			virtual type::generic::ptr_type get_type() = 0;
 
 			virtual definition *get_definition() = 0;
+
+			virtual storage::generic *get_storage() = 0;
 
 			virtual const std::string &get_name() const = 0;
 

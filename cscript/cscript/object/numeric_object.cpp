@@ -136,7 +136,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 	case lexer::operator_id::less_or_equal:
 		return create_boolean_(boolean_value(!is_nan() && !numeric_operand->is_nan() && compare_(bully, *numeric_operand) <= 0));
 	case lexer::operator_id::equality:
-		return create_boolean_(boolean_value(is_nan() == numeric_operand->is_nan() || compare_(bully, *numeric_operand) == 0));
+		return create_boolean_(boolean_value(is_nan() == numeric_operand->is_nan() && compare_(bully, *numeric_operand) == 0));
 	case lexer::operator_id::inverse_equality:
 		return create_boolean_(boolean_value(is_nan() != numeric_operand->is_nan() || compare_(bully, *numeric_operand) != 0));
 	case lexer::operator_id::more_or_equal:
@@ -160,11 +160,11 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 		case lexer::operator_id::bitwise_inverse:
 			return bitwise_inverse_();
 		case lexer::operator_id::decrement:
-			common::env::object_operand = common::env::one.get();
-			return subtract_(nullptr, *common::env::object_operand->query<numeric>(), true);
+			common::env::runtime.operand.object = common::env::one.get();
+			return subtract_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 		case lexer::operator_id::increment:
-			common::env::object_operand = common::env::one.get();
-			return add_(nullptr, *common::env::object_operand->query<numeric>(), true);
+			common::env::runtime.operand.object = common::env::one.get();
+			return add_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 		default:
 			break;
 		}
@@ -177,8 +177,8 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 				return common::env::error.set("Operator does not take specified operand");
 
 			auto old = clone();
-			common::env::object_operand = common::env::one.get();
-			subtract_(nullptr, *common::env::object_operand->query<numeric>(), true);
+			common::env::runtime.operand.object = common::env::one.get();
+			subtract_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 
 			return old;
 		}
@@ -188,8 +188,8 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 				return common::env::error.set("Operator does not take specified operand");
 
 			auto old = clone();
-			common::env::object_operand = common::env::one.get();
-			add_(nullptr, *common::env::object_operand->query<numeric>(), true);
+			common::env::runtime.operand.object = common::env::one.get();
+			add_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 
 			return old;
 		}

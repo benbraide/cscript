@@ -55,7 +55,7 @@ int cscript::parser::collection::unary_operator::get_precedence_(lexer::operator
 	case lexer::operator_id::unknown:
 		return 13;
 	case lexer::operator_id::scope_resolution:
-		return 17;
+		return 18;
 	default:
 		break;
 	}

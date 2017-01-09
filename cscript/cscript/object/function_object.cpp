@@ -13,9 +13,7 @@ cscript::object::primitive::function_object::function_object(bool){}
 cscript::object::primitive::function_object::function_object(value_type value)
 	: basic(common::env::address_space.add<value_type>()){
 	auto &memory_entry = get_memory();
-	auto function_value = reinterpret_cast<function::generic *>(value);
-
-	if ((memory_entry.info.type = function_value->get_type()) == nullptr)
+	if ((memory_entry.info.type = reinterpret_cast<function::generic *>(value)->get_type()) == nullptr)
 		memory_entry.info.type = common::env::any_type;
 
 	memory::pool::write_unchecked(memory_entry.base, value);
@@ -59,7 +57,13 @@ cscript::object::generic *cscript::object::primitive::function_object::evaluate(
 }
 
 std::string cscript::object::primitive::function_object::echo(){
-	return get_function_value()->print();
+	auto value = get_function_value()->print();
+	if (value.empty()){
+		common::env::error.set("");
+		return "";
+	}
+
+	return value;
 }
 
 cscript::function::generic *cscript::object::primitive::function_object::get_function_value(){

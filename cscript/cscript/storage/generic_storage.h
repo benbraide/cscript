@@ -7,14 +7,21 @@
 #include <functional>
 
 namespace cscript{
+	namespace function{
+		class generic;
+	}
+
 	namespace storage{
 		class generic_value;
 
 		class generic{
 		public:
 			typedef std::function<bool(const std::string &, generic_value &)> traverser_type;
+			typedef std::shared_ptr<cscript::function::generic> function_type;
 
 			virtual ~generic(){}
+
+			virtual void store_function(function_type object) = 0;
 
 			virtual generic *get_parent() = 0;
 

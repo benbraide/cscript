@@ -4,18 +4,26 @@
 #define CSCRIPT_FUNCTION_ENTRY_H
 
 #include "basic_function.h"
+#include "../storage/generic_storage.h"
 
 namespace cscript{
 	namespace function{
 		class entry : public basic{
 		public:
+			typedef std::shared_ptr<definition> definition_type;
 			typedef std::list<generic *> list_type;
 
 			typedef std::shared_mutex lock_type;
 			typedef std::shared_lock<lock_type> shared_lock_type;
 			typedef std::lock_guard<lock_type> guard_type;
 
-			entry(std::string &name, type::generic::ptr_type type);
+			struct parameter_limits{
+				int minimum;
+				int maximum;
+			};
+
+			entry(const std::string &name, storage::generic *storage, type::generic::ptr_type type,
+				const parameter_limits &parameter_limits);
 
 			virtual ~entry();
 
@@ -29,11 +37,12 @@ namespace cscript{
 
 			virtual std::string print() override;
 
-			virtual void set_definition(definition &definition);
+			virtual void set_definition(definition_type definition);
 
 		protected:
-			definition *definition_;
 			type::generic::ptr_type type_;
+			parameter_limits parameter_limits_;
+			definition_type definition_;
 		};
 	}
 }

@@ -14,7 +14,7 @@ cscript::node::generic::ptr_type cscript::node::declaration::clone(){
 }
 
 cscript::object::generic *cscript::node::declaration::evaluate(){
-	return allocate(index_, get_type_value(), id_, get_type_attributes());
+	return allocate();
 }
 
 cscript::node::generic::ptr_type cscript::node::declaration::get_type() const{
@@ -32,6 +32,14 @@ cscript::memory::virtual_address::attribute cscript::node::declaration::get_type
 
 cscript::type::generic::ptr_type cscript::node::declaration::get_type_value(){
 	return (type_value_ == nullptr) ? (type_value_ = type_->get_type()) : type_value_;
+}
+
+cscript::object::generic *cscript::node::declaration::allocate(){
+	return allocate(index_, get_type_value(), get_identifier(), get_type_attributes());
+}
+
+cscript::object::generic *cscript::node::declaration::allocate(type::generic::ptr_type type){
+	return allocate(index_, type, get_identifier(), get_type_attributes());
 }
 
 cscript::object::generic *cscript::node::declaration::allocate(const lexer::token::index &index, type::generic::ptr_type type,
@@ -73,82 +81,50 @@ std::string cscript::node::declaration::print_() const{
 }
 
 cscript::node::dependent_declaration::dependent_declaration(const lexer::token::index &index, ptr_type declaration, ptr_type id)
-	: basic(id::declaration, index), declaration_(declaration), id_(id){}
+	: declaration(index, declaration, id){}
 
 cscript::node::dependent_declaration::~dependent_declaration(){}
 
 cscript::node::generic::ptr_type cscript::node::dependent_declaration::clone(){
-	return std::make_shared<dependent_declaration>(index_, declaration_->clone(), id_->clone());
-}
-
-cscript::object::generic *cscript::node::dependent_declaration::evaluate(){
-	return declaration::allocate(declaration_->get_index(), get_type_value(), id_, get_type_attributes());
+	return std::make_shared<dependent_declaration>(index_, type_->clone(), id_->clone());
 }
 
 cscript::node::generic::ptr_type cscript::node::dependent_declaration::get_type() const{
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type();
-
-	auto dependent_declaration_node = declaration_->query<dependent_declaration>();
-	if (dependent_declaration_node != nullptr)
-		return dependent_declaration_node->get_type();
-
-	return declaration_->query<initialization_declaration>()->get_type();
-}
-
-cscript::node::generic::ptr_type cscript::node::dependent_declaration::get_identifier() const{
-	return id_;
+	return type_->query<declaration>()->get_type();
 }
 
 cscript::node::generic::ptr_type cscript::node::dependent_declaration::get_declaration() const{
-	return declaration_;
+	return type_;
 }
 
 cscript::memory::virtual_address::attribute cscript::node::dependent_declaration::get_type_attributes() const{
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type_attributes();
-
-	auto dependent_declaration_node = declaration_->query<dependent_declaration>();
-	if (dependent_declaration_node != nullptr)
-		return dependent_declaration_node->get_type_attributes();
-
-	return declaration_->query<initialization_declaration>()->get_type_attributes();
+	return type_->query<declaration>()->get_type_attributes();
 }
 
 cscript::type::generic::ptr_type cscript::node::dependent_declaration::get_type_value(){
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type_value();
-
-	auto dependent_declaration_node = declaration_->query<dependent_declaration>();
-	if (dependent_declaration_node != nullptr)
-		return dependent_declaration_node->get_type_value();
-
-	return declaration_->query<initialization_declaration>()->get_type_value();
+	return type_->query<declaration>()->get_type_value();
 }
 
 std::string cscript::node::dependent_declaration::print_() const{
-	return (declaration_->print() + ", " + id_->print());
+	return (type_->print() + ", " + id_->print());
 }
 
 cscript::node::initialization_declaration::initialization_declaration(const lexer::token::index &index, ptr_type declaration, ptr_type value)
-	: basic(id::declaration, index), declaration_(declaration), value_(value){}
+	: declaration(index, declaration, value){}
 
 cscript::node::initialization_declaration::~initialization_declaration(){}
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::clone(){
-	return std::make_shared<initialization_declaration>(index_, declaration_->clone(), value_->clone());
+	return std::make_shared<initialization_declaration>(index_, type_->clone(), id_->clone());
 }
 
 cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
-	auto value = value_->evaluate();
+	auto value = id_->evaluate();
 	if (common::env::error.has())
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", declaration_->get_index());
+		return common::env::error.set("", type_->get_index());
 
 	type::generic::ptr_type type;
 	if (get_type()->is(id::auto_type))
@@ -156,57 +132,41 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 	else
 		type = get_type_value();
 
-	auto *object = declaration::allocate(declaration_->get_index(), type, get_identifier(), get_type_attributes());
+	auto *object = allocate(type_->get_index(), type, get_identifier(), get_type_attributes());
 	if (common::env::error.has())
 		return nullptr;
 
 	if (object == nullptr)
-		return common::env::error.set("", declaration_->get_index());
+		return common::env::error.set("", type_->get_index());
 
-	common::env::object_operand = value;
+	common::env::runtime.operand = { nullptr, value };
 	return object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });
 }
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::get_type() const{
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type();
-
-	return declaration_->query<dependent_declaration>()->get_type();
+	return type_->query<declaration>()->get_type();
 }
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::get_identifier() const{
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_identifier();
-
-	return declaration_->query<dependent_declaration>()->get_identifier();
+	return type_->query<declaration>()->get_identifier();
 }
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::get_declaration() const{
-	return declaration_;
+	return type_;
 }
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::get_value() const{
-	return value_;
+	return id_;
 }
 
 cscript::memory::virtual_address::attribute cscript::node::initialization_declaration::get_type_attributes() const{
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type_attributes();
-
-	return declaration_->query<dependent_declaration>()->get_type_attributes();
+	return type_->query<declaration>()->get_type_attributes();
 }
 
 cscript::type::generic::ptr_type cscript::node::initialization_declaration::get_type_value(){
-	auto declaration_node = declaration_->query<declaration>();
-	if (declaration_node != nullptr)
-		return declaration_node->get_type_value();
-
-	return declaration_->query<dependent_declaration>()->get_type_value();
+	return type_->query<declaration>()->get_type_value();
 }
 
 std::string cscript::node::initialization_declaration::print_() const{
-	return (declaration_->print() + " = " + value_->print());
+	return (type_->print() + " = " + id_->print());
 }

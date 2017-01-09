@@ -54,6 +54,12 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 		return post_assignment_(*operand);
 	}
 
+	if (info.id == lexer::operator_id::comma){
+		if (!is_uninitialized())
+			return common::env::error.set("Operator does not take specified operands");
+		return common::env::get_object_operand();
+	}
+
 	return common::env::error.set("Operator does not take specified operands");
 }
 

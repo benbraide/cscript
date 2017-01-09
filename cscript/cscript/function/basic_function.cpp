@@ -1,22 +1,36 @@
 #include "basic_function.h"
-#include "../common/env.h"
 
-cscript::function::basic::basic(std::string &name)
-	: name_(&name){}
+#include "../common/env.h"
+#include "../node/collection_node.h"
+
+cscript::function::basic::basic(const std::string &name, storage::generic *storage)
+	: name_(name), storage_(storage){}
 
 cscript::function::basic::~basic(){}
 
 cscript::object::generic *cscript::function::basic::call(){
+	for (auto argument : common::env::runtime.operand.node->query<node::collection>()->get_list()){
+		common::env::runtime.arguments.push_back(argument->evaluate());
+		if (common::env::error.has()){
+			common::env::runtime.arguments.clear();
+			return nullptr;
+		}
+	}
+
 	auto score = 0;
 	auto matched = get_matched(score);
-	if (matched == nullptr)
+	if (matched == nullptr){
+		common::env::runtime.arguments.clear();
 		return common::env::error.set("");
+	}
 
 	auto definition = matched->get_definition();
-	if (definition == nullptr)
+	if (definition == nullptr){
+		common::env::runtime.arguments.clear();
 		return common::env::error.set("");
+	}
 
-	return definition->call();
+	return definition->call(matched->get_storage());
 }
 
 cscript::function::generic &cscript::function::basic::add(generic &value){
@@ -59,13 +73,17 @@ cscript::function::definition *cscript::function::basic::get_definition(){
 	return (list_.size() == 1u) ? (*list_.begin())->get_definition() : nullptr;
 }
 
+cscript::storage::generic *cscript::function::basic::get_storage(){
+	return storage_;
+}
+
 std::string cscript::function::basic::print(){
 	shared_lock_type guard(lock_);
 	return (list_.size() == 1u) ? (*list_.begin())->print() : "";
 }
 
 const std::string &cscript::function::basic::get_name() const{
-	return *name_;
+	return name_;
 }
 
 void cscript::function::basic::set_definition(definition &definition){}

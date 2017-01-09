@@ -55,9 +55,7 @@ cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	if (left == nullptr)
 		return common::env::error.set("", left_->get_index());
 
-	common::env::object_operand = nullptr;
-	common::env::node_operand = right_.get();
-
+	common::env::runtime.operand = { right_.get() };
 	return left->evaluate(info_);
 }
 

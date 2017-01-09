@@ -17,6 +17,9 @@ bool cscript::node::primitive_type::is(id id) const{
 	if (id == node::id::type || id == node::id::type_compatible)
 		return true;
 
+	if (id == node::id::void_type)
+		return (value_ == lexer::token_id::void_);
+
 	return (id == node::id::auto_type) ? (value_ == lexer::token_id::auto_) : false;
 }
 
@@ -157,8 +160,8 @@ bool cscript::node::type_with_storage_class::is(id id) const{
 	if (id == node::id::type_with_storage || id == node::id::type_compatible)
 		return true;
 
-	return (id == node::id::auto_type || id == node::id::array_type || id == node::id::pointer_type ||
-		id == node::id::function_type || id == node::id::placeholder) ? type_->is(id) : false;
+	return (id == node::id::void_type || id == node::id::auto_type || id == node::id::array_type ||
+		id == node::id::pointer_type || id == node::id::function_type || id == node::id::placeholder) ? type_->is(id) : false;
 }
 
 cscript::object::generic *cscript::node::type_with_storage_class::evaluate(){

@@ -159,7 +159,7 @@ int cscript::parser::collection::binary_operator::get_precedence_(lexer::operato
 	case lexer::operator_id::member_pointer_access:
 		return 14;
 	case lexer::operator_id::scope_resolution:
-		return 17;
+		return 18;
 	default:
 		break;
 	}

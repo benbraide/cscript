@@ -7,7 +7,8 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 
 	{//Get next
 		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
-		common::env::parser_info.token = common::env::source_info.source->peek(common::env::source_info);
+		if ((common::env::parser_info.token = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
+			return nullptr;
 	}
 
 	auto token = common::env::parser_info.token;

@@ -5,6 +5,10 @@ cscript::storage::basic::basic(generic *parent)
 
 cscript::storage::basic::~basic(){}
 
+void cscript::storage::basic::store_function(function_type object){
+	function_list_.push_back(object);
+}
+
 cscript::storage::generic *cscript::storage::basic::get_parent(){
 	return parent_;
 }

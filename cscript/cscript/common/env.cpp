@@ -1,10 +1,6 @@
 #include "env.h"
 #include "../object/numeric_object.h"
 
-thread_local cscript::object::generic *cscript::common::env::object_operand;
-
-thread_local cscript::node::generic *cscript::common::env::node_operand;
-
 thread_local cscript::lexer::source_guard cscript::common::env::source_guard;
 
 thread_local cscript::lexer::source_info cscript::common::env::source_info{};
@@ -91,15 +87,17 @@ cscript::parser::collection::statement cscript::common::env::statement_parser;
 
 cscript::parser::collection::declaration cscript::common::env::declaration_parser;
 
+cscript::parser::collection::function cscript::common::env::function_parser;
+
 cscript::parser::collection::keyword cscript::common::env::keyword_parser;
 
 cscript::parser::collection::builder cscript::common::env::builder;
 
 cscript::object::generic *cscript::common::env::get_object_operand(){
-	if (object_operand != nullptr || node_operand == nullptr)
-		return object_operand;
+	if (runtime.operand.object != nullptr || runtime.operand.node == nullptr)
+		return runtime.operand.object;
 
-	return (object_operand = node_operand->evaluate());
+	return (runtime.operand.object = runtime.operand.node->evaluate());
 }
 
 void cscript::common::env::initialize(){

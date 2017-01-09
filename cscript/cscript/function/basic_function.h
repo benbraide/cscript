@@ -18,7 +18,7 @@ namespace cscript{
 			typedef std::shared_lock<lock_type> shared_lock_type;
 			typedef std::lock_guard<lock_type> guard_type;
 
-			explicit basic(std::string &name);
+			basic(const std::string &name, storage::generic *storage);
 
 			virtual ~basic();
 
@@ -34,6 +34,8 @@ namespace cscript{
 
 			virtual definition *get_definition() override;
 
+			virtual storage::generic *get_storage() override;
+
 			virtual std::string print() override;
 
 			virtual const std::string &get_name() const override;
@@ -41,7 +43,8 @@ namespace cscript{
 			virtual void set_definition(definition &definition);
 
 		protected:
-			std::string *name_;
+			std::string name_;
+			storage::generic *storage_;
 			list_type list_;
 			lock_type lock_;
 		};

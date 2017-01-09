@@ -16,8 +16,12 @@ namespace cscript{
 			public:
 				virtual node_type parse() override;
 
+				virtual node_type parse_parameter();
+
 			protected:
 				virtual node_type extend_(node_type value);
+
+				virtual node_type extend_parameter_(node_type value);
 			};
 		}
 	}

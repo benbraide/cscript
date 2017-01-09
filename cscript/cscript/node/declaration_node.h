@@ -25,6 +25,10 @@ namespace cscript{
 
 			virtual type::generic::ptr_type get_type_value();
 
+			virtual object::generic *allocate();
+
+			virtual object::generic *allocate(type::generic::ptr_type type);
+
 			static object::generic *allocate(const lexer::token::index &index, type::generic::ptr_type type,
 				ptr_type id, memory::virtual_address::attribute attributes);
 
@@ -36,7 +40,7 @@ namespace cscript{
 			type::generic::ptr_type type_value_;
 		};
 
-		class dependent_declaration : public basic{
+		class dependent_declaration : public declaration{
 		public:
 			dependent_declaration(const lexer::token::index &index, ptr_type declaration, ptr_type id);
 
@@ -44,11 +48,7 @@ namespace cscript{
 
 			virtual ptr_type clone() override;
 
-			virtual object::generic *evaluate() override;
-
 			virtual ptr_type get_type() const;
-
-			virtual ptr_type get_identifier() const;
 
 			virtual ptr_type get_declaration() const;
 
@@ -58,12 +58,9 @@ namespace cscript{
 
 		protected:
 			virtual std::string print_() const override;
-
-			ptr_type declaration_;
-			ptr_type id_;
 		};
 
-		class initialization_declaration : public basic{
+		class initialization_declaration : public declaration{
 		public:
 			initialization_declaration(const lexer::token::index &index, ptr_type declaration, ptr_type value);
 
@@ -87,9 +84,6 @@ namespace cscript{
 
 		protected:
 			virtual std::string print_() const override;
-
-			ptr_type declaration_;
-			ptr_type value_;
 		};
 	}
 }
