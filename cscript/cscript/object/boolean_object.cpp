@@ -25,7 +25,7 @@ cscript::object::primitive::boolean::boolean(memory::virtual_address::base_type 
 cscript::object::primitive::boolean::~boolean(){}
 
 cscript::object::generic *cscript::object::primitive::boolean::clone(){
-	return common::env::temp_storage.add(std::make_shared<boolean>(get_value_()));
+	return is_uninitialized() ? nullptr : common::env::temp_storage.add(std::make_shared<boolean>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::primitive::boolean::evaluate(const binary_info &info){
@@ -49,10 +49,20 @@ cscript::object::generic *cscript::object::primitive::boolean::evaluate(const bi
 }
 
 bool cscript::object::primitive::boolean::to_bool(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return false;
+	}
+
 	return (get_value_() == value_type::true_);
 }
 
 std::string cscript::object::primitive::boolean::echo(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	switch (get_value_()){
 	case value_type::true_:
 		return "true";

@@ -149,7 +149,11 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 		return common::env::error.set("Declaration failure", type_->get_index());
 
 	common::env::runtime.operand = { nullptr, value };
-	return object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });
+	value = object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });
+	if (common::env::error.has())//Delete entry
+		common::env::runtime.storage->remove(*common::env::runtime.declaration.value);
+
+	return value;
 }
 
 cscript::object::generic *cscript::node::initialization_declaration::allocate(type::generic::ptr_type type){

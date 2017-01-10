@@ -60,10 +60,13 @@ cscript::object::pointer::~pointer(){
 }
 
 cscript::object::generic *cscript::object::pointer::clone(){
-	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
+	return is_uninitialized() ? nullptr : common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::pointer::cast(const type::generic *type){
+	if (is_uninitialized())
+		return nullptr;
+
 	switch (type->get_id()){
 	case type::id::byte:
 		return common::env::temp_storage.add(std::make_shared<primitive::byte>(
@@ -247,6 +250,9 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 }
 
 cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	if (info.left){
 		switch (info.id){
 		case lexer::operator_id::times://Dereference
@@ -310,10 +316,20 @@ cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &i
 }
 
 bool cscript::object::pointer::to_bool(){
-	return false;
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return false;
+	}
+
+	return !is_null();
 }
 
 std::string cscript::object::pointer::to_string(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	if (is_string()){
 		auto &string_value = common::env::address_space.get_string(get_value_());
 		if (&string_value != &common::env::address_space.get_empty_string())
@@ -325,6 +341,11 @@ std::string cscript::object::pointer::to_string(){
 }
 
 std::string cscript::object::pointer::echo(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	if (is_null())
 		return "nullptr";
 
@@ -351,7 +372,8 @@ std::string cscript::object::pointer::echo(){
 }
 
 bool cscript::object::pointer::is_constant(){
-	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::final_);
+	return (CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::final_) ||
+		common::env::is_constant(*this));
 }
 
 bool cscript::object::pointer::is_constant_target(){
@@ -375,7 +397,12 @@ cscript::object::primitive::boolean::value_type cscript::object::pointer::boolea
 }
 
 void cscript::object::pointer::pre_assignment_(generic &operand){
-	if (get_memory().info.type->get_id() == type::id::char_)
+	if (!is_constant_target()){
+		auto pointer_operand = operand.remove_reference()->query<pointer>();
+		if (pointer_operand != nullptr && pointer_operand->is_constant_target())
+			common::env::error.set("Cannot assign a constant pointer to a non-constant target");
+	}
+	else if (get_memory().info.type->get_id() == type::id::char_)
 		common::env::address_space.remove_string_reference(get_value_());
 }
 

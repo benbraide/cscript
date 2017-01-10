@@ -26,10 +26,13 @@ cscript::object::primitive::byte::byte(memory::virtual_address::base_type base)
 cscript::object::primitive::byte::~byte(){}
 
 cscript::object::generic *cscript::object::primitive::byte::clone(){
-	return common::env::temp_storage.add(std::make_shared<byte>(get_value_()));
+	return is_uninitialized() ? nullptr : common::env::temp_storage.add(std::make_shared<byte>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::primitive::byte::cast(const type::generic *type){
+	if (is_uninitialized())
+		return nullptr;
+
 	switch (type->get_id()){
 	case type::id::char_:
 		return common::env::temp_storage.add(std::make_shared<numeric>(common::env::char_type, get_value<char>()));
@@ -69,6 +72,11 @@ cscript::object::generic *cscript::object::primitive::byte::evaluate(const binar
 }
 
 std::string cscript::object::primitive::byte::echo(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	return common::env::to_hex(get_value_());
 }
 

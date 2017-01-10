@@ -29,6 +29,8 @@ namespace cscript{
 
 			virtual generic *ref_cast(const type::generic *type) override;
 
+			virtual generic *const_ref_cast(const type::generic *type) override;
+
 			virtual generic *evaluate(const binary_info &info) override;
 
 			virtual generic *evaluate(const unary_info &info) override;

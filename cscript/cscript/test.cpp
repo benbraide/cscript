@@ -37,11 +37,17 @@ int main(){
 
 		ss.reset(buffer);
 		auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
-		if (lines != nullptr)
-			lines->evaluate();
+		if (lines != nullptr){
+			for (auto statement : lines->query<node::collection>()->get_list()){
+				statement->evaluate();
+				env::temp_storage.clear();
+				env::runtime.operand.constant_objects.clear();
+				if (env::error.has())
+					break;
+			}
+		}
 
 		env::error.report();
-		env::temp_storage.clear();
 	}
 
 	return 0;

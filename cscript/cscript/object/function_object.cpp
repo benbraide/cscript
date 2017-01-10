@@ -30,10 +30,13 @@ cscript::object::primitive::function_object::function_object(memory::virtual_add
 cscript::object::primitive::function_object::~function_object(){}
 
 cscript::object::generic *cscript::object::primitive::function_object::clone(){
-	return common::env::temp_storage.add(std::make_shared<function_object>(get_value_()));
+	return is_uninitialized() ? nullptr : common::env::temp_storage.add(std::make_shared<function_object>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::primitive::function_object::evaluate(const binary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	if (info.id == lexer::operator_id::call)
 		return get_function_value()->call();
 
@@ -57,6 +60,11 @@ cscript::object::generic *cscript::object::primitive::function_object::evaluate(
 }
 
 std::string cscript::object::primitive::function_object::echo(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	auto value = get_function_value()->print();
 	if (value.empty()){
 		common::env::error.set("");

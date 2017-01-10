@@ -102,6 +102,14 @@ cscript::object::generic *cscript::common::env::get_object_operand(){
 	return (runtime.operand.object = runtime.operand.node->evaluate());
 }
 
+cscript::object::generic::ptr_type cscript::common::env::create_pointer(memory::address_value_type value, bool is_constant){
+	auto pointer_object = std::make_shared<object::pointer>(value);
+	if (is_constant)
+		CSCRIPT_SET(pointer_object->get_memory().attributes, memory::address_attribute::constant);
+
+	return pointer_object;
+}
+
 cscript::object::generic::ptr_type cscript::common::env::create_string(const std::string &value){
 	return std::make_shared<object::pointer>(address_space.add(value));
 }
@@ -112,4 +120,14 @@ void cscript::common::env::initialize(){
 
 void cscript::common::env::echo(const std::string &value){
 	std::cout << value << "\n";
+}
+
+bool cscript::common::env::is_constant(object::generic &object){
+	auto storage = object.get_memory().info.storage;
+	auto parent = (storage == nullptr) ? nullptr : storage->query<object::generic>();
+	if (parent != nullptr && parent->is_constant())
+		return true;
+
+	return (std::find(runtime.operand.constant_objects.begin(), runtime.operand.constant_objects.end(), &object) !=
+		runtime.operand.constant_objects.end());
 }

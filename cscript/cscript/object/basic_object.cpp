@@ -25,13 +25,20 @@ cscript::object::generic *cscript::object::basic::clone(){
 }
 
 cscript::object::generic *cscript::object::basic::cast(const type::generic *type){
-	if (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto())
+	if (!is_uninitialized() && (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto()))
 		return clone();
 
 	return nullptr;
 }
 
 cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *type){
+	if (!is_constant() && (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto()))
+		return this;
+
+	return nullptr;
+}
+
+cscript::object::generic *cscript::object::basic::const_ref_cast(const type::generic *type){
 	if (type->is_same(get_memory().info.type.get()) || type->is_any() || type->is_auto())
 		return this;
 
@@ -40,34 +47,53 @@ cscript::object::generic *cscript::object::basic::ref_cast(const type::generic *
 
 cscript::object::generic *cscript::object::basic::evaluate(const binary_info &info){
 	if (info.id == lexer::operator_id::assignment){
-		if (!is_lvalue() || (is_constant() && !is_uninitialized()))
-			return common::env::error.set("Operator does not take specified operands");
+		if (!is_lvalue())
+			return common::env::error.set("Cannot assign to an rvalue");
+
+		if (is_constant() && !is_uninitialized())
+			return common::env::error.set("Cannot modify a constant object");
 
 		auto operand = common::env::get_object_operand();
 		if (operand == nullptr)
-			return common::env::error.set("Operator does not take specified operand");
+			return common::env::error.set("void value in expression");
 
 		pre_assignment_(*operand);
 		if (common::env::error.has())
 			return nullptr;
 
+		auto is_ref = is_reference();
 		auto &memory_entry = get_memory();
-		auto value = operand->ref_cast(memory_entry.info.type.get());
 
-		if (value == nullptr && (value = operand->cast(memory_entry.info.type.get())) == nullptr)
-			return common::env::error.set("Cannot assign value into object");
+		generic *value;
+		if (is_ref){
+			if (!operand->is_lvalue())
+				return common::env::error.set("Cannot get address of an rvalue");
 
-		common::env::address_space.copy(memory_value_, memory_entry.info.type, value->get_memory_value());
+			if (operand->is_constant() && !is_constant())
+				return common::env::error.set("Cannot assign constant reference to non-constant target");
+
+			value = operand->const_ref_cast(memory_entry.info.type.get());
+		}
+		else if ((value = operand->const_ref_cast(memory_entry.info.type.get())) == nullptr)
+			value = operand->cast(memory_entry.info.type.get());
+
+		if (value == nullptr)
+			return common::env::error.set("Object is not compatible with target type");
+
+		if (is_ref)//Store address
+			memory::pool::write_unchecked(memory_entry.base, value->get_memory_value());
+		else//Copy value
+			common::env::address_space.copy(memory_value_, memory_entry.info.type, value->get_memory_value());
+
 		CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
-
 		return post_assignment_(*operand);
 	}
 
-	if (info.id == lexer::operator_id::comma){
-		if (!is_uninitialized())
-			return common::env::error.set("Operator does not take specified operands");
+	if (is_uninitialized())
+		return common::env::error.set("Uninitialized value in expression");
+
+	if (info.id == lexer::operator_id::comma)
 		return common::env::get_object_operand();
-	}
 
 	return common::env::error.set("Operator does not take specified operands");
 }
@@ -77,12 +103,17 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 		switch (info.id){
 		case lexer::operator_id::bitwise_and:
 			if (is_lvalue())
-				return common::env::temp_storage.add(std::make_shared<pointer>(memory_value_));
-			break;
+				return common::env::temp_storage.add(common::env::create_pointer(memory_value_, is_constant()));
+			return common::env::error.set("Cannot get reference of an rvalue");
 		case lexer::operator_id::relational_not:
+			if (is_uninitialized())
+				return common::env::error.set("Uninitialized value in expression");
+
 			return common::env::error.has() ? nullptr : common::env::temp_storage.add(std::make_shared<primitive::boolean>(
 				to_bool() ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 		case lexer::operator_id::call:
+			if (is_uninitialized())
+				return common::env::error.set("Uninitialized value in expression");
 			return this;
 		case lexer::operator_id::sizeof_:
 			return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::uint_type, get_type()->get_size()));
@@ -92,6 +123,9 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 			break;
 		}
 	}
+
+	if (is_uninitialized())
+		return common::env::error.set("Uninitialized value in expression");
 
 	return common::env::error.set("Operator does not take specified operand");
 }
@@ -155,7 +189,8 @@ bool cscript::object::basic::is_temp(){
 }
 
 bool cscript::object::basic::is_constant(){
-	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant);
+	return (CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant) ||
+		common::env::is_constant(*this));
 }
 
 void cscript::object::basic::pre_assignment_(generic &operand){}

@@ -102,11 +102,15 @@ namespace cscript{
 
 			static object::generic *get_object_operand();
 
+			static object::generic::ptr_type create_pointer(memory::address_value_type value, bool is_constant);
+
 			static object::generic::ptr_type create_string(const std::string &value);
 
 			static void initialize();
 
 			static void echo(const std::string &value);
+
+			static bool is_constant(object::generic &object);
 
 			template <typename value_type>
 			static std::string to_hex(value_type value, std::size_t width = sizeof(value_type) << 1) {

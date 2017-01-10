@@ -39,6 +39,8 @@ namespace cscript{
 
 			virtual generic *ref_cast(const type::generic *type) = 0;
 
+			virtual generic *const_ref_cast(const type::generic *type) = 0;
+
 			virtual generic *evaluate(const binary_info &info) = 0;
 
 			virtual generic *evaluate(const unary_info &info) = 0;

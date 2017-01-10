@@ -38,12 +38,19 @@ cscript::object::primitive::type_object::type_object(memory::virtual_address::ba
 cscript::object::primitive::type_object::~type_object(){}
 
 cscript::object::generic *cscript::object::primitive::type_object::clone(){
+	if (is_uninitialized())
+		return nullptr;
+
 	if (value_ == nullptr)
 		return common::env::temp_storage.add(std::make_shared<type_object>(get_value_()));
+
 	return common::env::temp_storage.add(std::make_shared<type_object>(value_));
 }
 
 cscript::object::generic *cscript::object::primitive::type_object::evaluate(const binary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	auto operand = common::env::get_object_operand();
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
@@ -66,6 +73,11 @@ cscript::object::generic *cscript::object::primitive::type_object::evaluate(cons
 }
 
 std::string cscript::object::primitive::type_object::echo(){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	return get_value<type::generic *>()->print();
 }
 

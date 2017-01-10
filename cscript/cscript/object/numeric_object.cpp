@@ -26,6 +26,9 @@ cscript::object::primitive::numeric::numeric(memory::virtual_address::base_type 
 cscript::object::primitive::numeric::~numeric(){}
 
 cscript::object::generic *cscript::object::primitive::numeric::clone(){
+	if (is_uninitialized())
+		return nullptr;
+
 	auto value = std::make_shared<numeric>(get_memory().info.type);
 
 	common::env::temp_storage.add(value);
@@ -35,6 +38,9 @@ cscript::object::generic *cscript::object::primitive::numeric::clone(){
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::cast(const type::generic *type){
+	if (is_uninitialized())
+		return nullptr;
+
 	switch (type->get_id()){
 	case type::id::byte:
 		return common::env::temp_storage.add(std::make_shared<byte>(get_value<byte::value_type>()));
@@ -84,6 +90,9 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::evaluate(const binary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	auto operand = common::env::get_object_operand();
 	if (operand == nullptr || (operand = operand->remove_reference()) == nullptr)
 		return common::env::error.set("Operator does not take specified operand");
@@ -181,6 +190,9 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 }
 
 cscript::object::generic *cscript::object::primitive::numeric::evaluate(const unary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
 	if (info.left){
 		switch (info.id){
 		case lexer::operator_id::plus:
@@ -586,6 +598,11 @@ cscript::object::primitive::numeric::block_operator_type cscript::object::primit
 }
 
 std::string cscript::object::primitive::numeric::to_string_(bool echo){
+	if (is_uninitialized()){
+		common::env::error.set("Uninitialized value in expression");
+		return "";
+	}
+
 	if (is_nan())
 		return "nan";
 

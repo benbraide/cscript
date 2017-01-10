@@ -22,6 +22,7 @@ namespace cscript{
 		struct operand_info{
 			node::generic *node;
 			object::generic *object;
+			std::list<object::generic *> constant_objects;
 		};
 
 		struct runtime{

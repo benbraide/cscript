@@ -27,6 +27,8 @@ namespace cscript{
 
 			virtual generic *ref_cast(const type::generic *type) override;
 
+			virtual generic *const_ref_cast(const type::generic *type) override;
+
 			virtual generic *evaluate(const binary_info &info) override;
 
 			virtual generic *evaluate(const unary_info &info) override;
@@ -37,9 +39,15 @@ namespace cscript{
 
 			virtual std::string echo() override;
 
-			virtual bool is_constant_ref() const;
+			virtual bool is_reference() override;
+
+			virtual bool is_constant() override;
 
 		protected:
+			virtual generic *get_object_();
+
+			virtual value_type get_value_();
+
 			bool is_constant_;
 		};
 	}
