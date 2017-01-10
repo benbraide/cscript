@@ -45,7 +45,7 @@ cscript::object::generic *cscript::node::declaration::allocate(type::generic::pt
 cscript::object::generic *cscript::node::declaration::allocate(const lexer::token::index &index, type::generic::ptr_type type,
 	ptr_type id, memory::virtual_address::attribute attributes){
 	if (type == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("Type not found", index);
 
 	object::generic::ptr_type object;
 	if (CSCRIPT_IS(attributes, memory::virtual_address::attribute::ref))
@@ -54,16 +54,16 @@ cscript::object::generic *cscript::node::declaration::allocate(const lexer::toke
 		object = type->create(type);
 
 	if (object == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("Declaration failure", index);
 
 	common::env::runtime.declaration.object = object;
 	if (id != nullptr){//Named
 		auto key = id->get_key();
 		if (key.empty())
-			return common::env::error.set("", index);
+			return common::env::error.set("Invalid key", index);
 
 		if (common::env::runtime.storage->find(key) != nullptr)
-			return common::env::error.set("", index);
+			return common::env::error.set("'" + id->print() + "' name already exists", index);
 
 		common::env::runtime.declaration.value = &common::env::runtime.storage->add(key);
 		common::env::runtime.declaration.value->set(object);
@@ -124,7 +124,7 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", type_->get_index());
+		return common::env::error.set("void value in expression", type_->get_index());
 
 	type::generic::ptr_type type;
 	if (get_type()->is(id::auto_type))
@@ -137,7 +137,7 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 		return nullptr;
 
 	if (object == nullptr)
-		return common::env::error.set("", type_->get_index());
+		return common::env::error.set("Declaration failure", type_->get_index());
 
 	common::env::runtime.operand = { nullptr, value };
 	return object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });

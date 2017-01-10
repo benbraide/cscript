@@ -37,7 +37,7 @@ cscript::parser::generic::node_type cscript::parser::collection::unary_operator:
 
 		}
 
-		return common::env::error.set("", token->get_index());
+		return common::env::error.set("Missing operator operand", token->get_index());
 	}
 
 	return std::make_shared<node::unary_operator>(operator_token->get_index(),

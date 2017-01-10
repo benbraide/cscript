@@ -15,7 +15,7 @@ cscript::parser::generic::node_type cscript::parser::collection::function::parse
 		return nullptr;
 
 	if (parameters == nullptr)
-		return common::env::error.set("", operand->get_index());
+		return common::env::error.set("Missing function parameters", operand->get_index());
 
 	node_type definition;
 	auto next = common::env::source_info.source->peek(common::env::source_info);
@@ -32,7 +32,7 @@ cscript::parser::generic::node_type cscript::parser::collection::function::parse
 			return nullptr;
 
 		if (definition == nullptr)
-			return common::env::error.set("", operand->get_index());
+			return common::env::error.set("Missing function definition", operand->get_index());
 	}
 
 	return std::make_shared<node::function>(operand->get_index(), operand, parameters, definition);

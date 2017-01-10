@@ -68,7 +68,7 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::pa
 				return nullptr;
 		}
 		else if (id != lexer::token_id::operator_symbol)
-			return common::env::error.set("", type->get_index());
+			return common::env::error.set("Bad parameter declaration", type->get_index());
 	}
 	else{//Identifier
 		common::env::source_info.source->ignore(common::env::source_info);
@@ -80,16 +80,21 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::pa
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::declaration::extend_(node_type value){
+	auto declaration = value->query<node::declaration>();
+
+	auto id_node = declaration->get_identifier();
+	auto type_node = declaration->get_type();
+
 	auto next = common::env::source_info.source->peek(common::env::source_info);
-	if (next == nullptr)
-		return value;
+	if (next == nullptr){
+		requires_initialization_(value, type_node);
+		return common::env::error.has() ? nullptr : value;
+	}
 
-	auto id_node = value->query<node::declaration>()->get_identifier();
 	auto id = common::env::source_info.rule->map_index(next->get_match_index());
-
 	if (id == lexer::token_id::operator_symbol){//Check initialization
 		if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-			return common::env::error.set("", value->get_index());
+			return common::env::error.set("Bad declaration", value->get_index());
 
 		auto operator_token = next->query<lexer::operator_token>();
 		if (operator_token == nullptr || operator_token->get_id() != lexer::operator_id::assignment)
@@ -103,12 +108,13 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 		return extend_(std::make_shared<node::initialization_declaration>(value->get_index(), value, right_value));
 	}
 
-	if (id_node->is(node::id::auto_type))
-		return common::env::error.set("", value->get_index());
-	
+	requires_initialization_(value, type_node);
+	if (common::env::error.has())
+		return nullptr;
+
 	if (id == lexer::token_id::comma){//Dependent declaration
 		if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-			return common::env::error.set("", value->get_index());
+			return common::env::error.set("Bad declaration", value->get_index());
 
 		common::env::source_info.source->ignore(common::env::source_info);
 		auto next = common::env::source_info.source->peek(common::env::source_info);
@@ -117,13 +123,27 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 
 		node::generic::ptr_type id_node;
 		auto id = common::env::source_info.rule->map_index(next->get_match_index());
-		if (id != lexer::token_id::identifier){
+		if (id != lexer::token_id::identifier){//Check operator | placeholder
+			switch (id){
+			case lexer::token_id::placeholder:
+				common::env::parser_info.token = next;
+				id_node = common::env::keyword_parser.parse();
+
+				if (common::env::error.has())
+					return nullptr;
+
+				break;
+			default:
+				break;
+			}
+		}
+		else{//Identifier
 			common::env::source_info.source->ignore(common::env::source_info);
 			id_node = std::make_shared<node::identifier>(next->get_index(), next->get_value());
 		}
 
 		if (id_node == nullptr)
-			return nullptr;
+			return common::env::error.set("Bad declaration", value->get_index());
 
 		auto declaration = std::make_shared<node::dependent_declaration>(value->get_index(), value, id_node);
 		return extend_(declaration);
@@ -136,7 +156,7 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 	}
 
 	if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-		return common::env::error.set("", value->get_index());
+		return common::env::error.set("Bad declaration", value->get_index());
 	
 	if (id == lexer::token_id::open_sq){//Array
 
@@ -168,4 +188,23 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 		return nullptr;
 
 	return extend_(std::make_shared<node::initialization_declaration>(value->get_index(), value, right_value));
+}
+
+std::nullptr_t cscript::parser::collection::declaration::requires_initialization_(node_type value, node_type type_node){
+	if (value->query<node::initialization_declaration>() != nullptr)
+		return nullptr;
+
+	if (type_node->is(node::id::auto_type))
+		return common::env::error.set("'auto' expects initializations", value->get_index());
+
+	if (type_node->is(node::id::type_with_storage)){
+		auto attributes = type_node->query<node::type_with_storage_class>()->get_attributes();
+		if (CSCRIPT_IS(attributes, memory::address_attribute::constant))
+			return common::env::error.set("'const' expects initializations", value->get_index());
+
+		if (CSCRIPT_IS(attributes, memory::address_attribute::final_))
+			return common::env::error.set("'final' expects initializations", value->get_index());
+	}
+
+	return nullptr;
 }

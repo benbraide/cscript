@@ -20,7 +20,7 @@ bool cscript::node::decl_type::is(id id) const{
 cscript::object::generic *cscript::node::decl_type::evaluate(){
 	auto type_value = get_type();
 	if (type_value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + value_->print() + "' type not found", index_);
 
 	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }

@@ -24,7 +24,7 @@ cscript::object::generic *cscript::node::identifier::evaluate(){
 	}
 
 	if (value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + value_ + "' name not found", index_);
 
 	if (value->is_storage()){
 

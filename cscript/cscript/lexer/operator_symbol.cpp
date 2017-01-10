@@ -29,8 +29,8 @@ cscript::lexer::operator_id cscript::lexer::operator_symbol::match(const std::st
 
 cscript::lexer::operator_id cscript::lexer::operator_symbol::convert_id(const std::string &value, token_id id) const{
 	switch (id){
-	case token_id::comma:
-		return operator_id::comma;
+	//case token_id::comma:
+		//return operator_id::comma;
 	case token_id::throw_:
 		return operator_id::throw_;
 	case token_id::delete_:

@@ -33,7 +33,7 @@ cscript::object::generic *cscript::node::unary_operator::evaluate(){
 	if (info_.id == lexer::operator_id::scope_resolution){
 		auto value = common::env::global_storage.find(operand_->get_key());
 		if (value == nullptr)
-			return common::env::error.set("", index_);
+			return common::env::error.set("'" + operand_->print() + "' name not found", index_);
 
 		auto type_value = value->get_type();
 		if (type_value != nullptr)
@@ -47,7 +47,7 @@ cscript::object::generic *cscript::node::unary_operator::evaluate(){
 		return nullptr;
 
 	if (operand == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("void value in expression", index_);
 
 	if (info_.left){
 		switch (info_.id){

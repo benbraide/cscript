@@ -49,7 +49,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 	auto next = common::env::source_info.source->peek(common::env::source_info);
 	if (next == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("Missing 'typedef' target", index);
 
 	node_type id_node;
 	auto id = common::env::source_info.rule->map_index(next->get_match_index());
@@ -63,7 +63,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		id_node = std::make_shared<node::identifier>(next->get_index(), next->get_value());
 	}
 	else//Error
-		return common::env::error.set("", index);
+		return common::env::error.set("'typedef' expects an identifier as target", index);
 
 	return std::make_shared<node::type_definition>(index, type, id_node);
 }
@@ -123,7 +123,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 	auto next = common::env::source_info.source->peek(common::env::source_info);
 	if (next == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad operator statement", index);
 
 	node::operator_value::key key{};
 	auto id = common::env::source_info.rule->map_index(next->get_match_index());
@@ -133,17 +133,17 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		lexer::auto_skip disable_skip(common::env::source_info, nullptr);
 
 		if ((next = common::env::source_info.source->next(common::env::source_info)) == nullptr)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad operator statement", index);
 
 		id = common::env::source_info.rule->map_index(next->get_match_index());
 		if (id == lexer::token_id::identifier && next->get_value() == "right")
 			key.right = true;
 		else//Error
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad operator statement", index);
 
 		common::env::source_info.source->ignore(common::env::source_info);
 		if ((next = common::env::source_info.source->peek(common::env::source_info)) == nullptr)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad operator statement", index);
 
 		id = common::env::source_info.rule->map_index(next->get_match_index());
 	}
@@ -165,18 +165,18 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	}
 	else if (id == lexer::token_id::open_par){
 		if (get_next_id_() != lexer::token_id::close_par)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad operator statement", index);
 		key.value = "()";
 	}
 	else if (id == lexer::token_id::open_sq){
 		if (get_next_id_() != lexer::token_id::close_sq)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad operator statement", index);
 		key.value = "[]";
 	}
 	else if (id == lexer::token_id::echo)
 		key.value = "echo";
 	else//Error
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad operator statement", index);
 	
 	return std::make_shared<node::operator_value>(index, key);
 }
@@ -184,14 +184,14 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 nullptr_t cscript::parser::collection::keyword::parse_type_operator_(
 	const lexer::token::index &index, node::operator_value::key &key){
 	if (key.right)
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad operator statement", index);
 
 	key.type = common::env::builder.parse_type();
 	if (common::env::error.has())
 		return nullptr;
 
 	if (key.type == nullptr || key.type->is(node::id::auto_type))
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad operator statement", index);
 
 	return nullptr;
 }
@@ -234,7 +234,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	auto next = common::env::source_info.source->next(common::env::source_info);
 	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
 		next->get_value() != "<"){
-		return common::env::error.set("", index);
+		return common::env::error.set("Expected a '<'", index);
 	}
 
 	auto halt = common::env::source_info.halt;
@@ -246,7 +246,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 	if (return_type == nullptr || return_type->is(node::id::auto_type) || !return_type->is(node::id::type_compatible) ||
 		return_type->is(node::id::type_with_storage)){
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad type statement", index);
 	}
 
 	auto parameter_types = common::env::builder.parse(builder::options{
@@ -258,7 +258,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		[&index](node::generic::ptr_type &value) -> bool{
 			if (value == nullptr || value->is(node::id::auto_type) || !value->is(node::id::type_compatible) ||
 				value->is(node::id::type_with_storage)){
-				common::env::error.set("", index);
+				common::env::error.set("Bad type statement", index);
 			}
 
 			return true;
@@ -283,7 +283,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("'echo' expects an expression", index);
 
 	return std::make_shared<node::echo>(index, value);
 }
@@ -293,7 +293,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	auto next = common::env::source_info.source->next(common::env::source_info);
 	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
 		next->get_value() != "<"){
-		return common::env::error.set("", index);
+		return common::env::error.set("Expected a '<'", index);
 	}
 
 	auto type = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::operator_symbol, ">" });
@@ -301,11 +301,11 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		return nullptr;
 
 	if (type == nullptr || type->is(node::id::auto_type) || !type->is(node::id::type_compatible))
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad type statement", index);
 
 	if (type->is(node::id::type_with_storage)){
 		if (!allow_storage_class)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad type statement", index);
 
 		auto attributes = type->query<node::type_with_storage_class>()->get_attributes();
 		if (attributes != memory::virtual_address::attribute::ref && (attributes != (memory::virtual_address::attribute::ref |
@@ -320,14 +320,14 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_value_(const lexer::token::index &index){
 	auto next = common::env::source_info.source->next(common::env::source_info);
 	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::open_par)
-		return common::env::error.set("", index);
+		return common::env::error.set("Expected a '('", index);
 
 	auto value = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_par });
 	if (common::env::error.has())
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad expression", index);
 
 	return value;
 }

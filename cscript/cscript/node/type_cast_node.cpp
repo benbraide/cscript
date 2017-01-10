@@ -13,14 +13,14 @@ cscript::node::generic::ptr_type cscript::node::type_cast::clone(){
 cscript::object::generic *cscript::node::type_cast::evaluate(){
 	auto type = type_->get_type();
 	if (type == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + type_->print() + "' type not found", index_);
 
 	auto value = value_->evaluate();
 	if (common::env::error.has())
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("void value in expression", index_);
 
 	auto is_ref = false, is_const = false;
 	if (type_->is(id::type_with_storage)){
@@ -30,11 +30,11 @@ cscript::object::generic *cscript::node::type_cast::evaluate(){
 	}
 
 	if (is_ref && !is_const && value->is_constant())
-		return common::env::error.set("", index_);
+		return common::env::error.set("Bad type cast", index_);
 
 	auto cast_value = is_ref ? value->ref_cast(type.get()) : value->cast(type.get());
 	if (cast_value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("Couldn't cast value", index_);
 
 	return cast_value;
 }

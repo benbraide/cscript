@@ -13,7 +13,7 @@ cscript::node::generic::ptr_type cscript::node::type_definition::clone(){
 cscript::object::generic *cscript::node::type_definition::evaluate(){
 	auto type = type_->get_type();
 	if (type == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + type_->print() + "' type not found", index_);
 
 	std::string name;
 	if (name_->is(id::placeholder)){
@@ -22,7 +22,7 @@ cscript::object::generic *cscript::node::type_definition::evaluate(){
 			return nullptr;
 
 		if (value == nullptr)
-			return common::env::error.set("", index_);
+			return common::env::error.set("Invalid key", index_);
 
 		name = value->to_string();
 		if (common::env::error.has())
@@ -32,7 +32,7 @@ cscript::object::generic *cscript::node::type_definition::evaluate(){
 		name = name_->print();
 
 	if (common::env::runtime.storage->find(name) != nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + name + "' name already exists", index_);
 
 	common::env::runtime.declaration.value = &common::env::runtime.storage->add(name);
 	common::env::runtime.declaration.value->set(type);

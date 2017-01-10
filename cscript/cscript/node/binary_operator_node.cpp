@@ -35,11 +35,11 @@ cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	if (info_.id == lexer::operator_id::scope_resolution){
 		auto storage = left_->get_storage();
 		if (storage == nullptr)
-			return common::env::error.set("", index_);
+			return common::env::error.set("'" + left_->print() + "' namespace not found", index_);
 
 		auto value = storage->find(right_->get_key());
 		if (value == nullptr)
-			return common::env::error.set("", index_);
+			return common::env::error.set("'" + print() + "' name not found", index_);
 
 		auto type_value = value->get_type();
 		if (type_value != nullptr)
@@ -53,7 +53,7 @@ cscript::object::generic *cscript::node::binary_operator::evaluate(){
 		return nullptr;
 
 	if (left == nullptr)
-		return common::env::error.set("", left_->get_index());
+		return common::env::error.set("void value in expression", left_->get_index());
 
 	switch (info_.id){
 	case lexer::operator_id::relational_or:
@@ -135,7 +135,7 @@ cscript::object::generic *cscript::node::binary_operator::short_circuit_(object:
 		return nullptr;
 
 	if (right == nullptr)
-		return common::env::error.set("", left_->get_index());
+		return common::env::error.set("void value in expression", left_->get_index());
 
 	boolean_value = right->to_bool();
 	if (common::env::error.has())
@@ -151,7 +151,7 @@ cscript::object::generic *cscript::node::binary_operator::explicit_compare_(obje
 		return nullptr;
 
 	if (right == nullptr)
-		return common::env::error.set("", left_->get_index());
+		return common::env::error.set("void value in expression", left_->get_index());
 
 	if (!left->get_type()->is_same(right->get_type().get())){
 		return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(truth ?

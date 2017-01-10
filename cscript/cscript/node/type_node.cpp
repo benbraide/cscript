@@ -26,7 +26,7 @@ bool cscript::node::primitive_type::is(id id) const{
 cscript::object::generic *cscript::node::primitive_type::evaluate(){
 	auto type_value = get_type();
 	if (type_value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + print_() + "' type not found", index_);
 
 	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
@@ -165,7 +165,7 @@ bool cscript::node::type_with_storage_class::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::type_with_storage_class::evaluate(){
-	return common::env::error.set("", index_);
+	return common::env::error.set("Cannot evaluate expression", index_);
 }
 
 std::string cscript::node::type_with_storage_class::get_key(){
@@ -208,7 +208,7 @@ bool cscript::node::pointer_type::is(id id) const{
 cscript::object::generic *cscript::node::pointer_type::evaluate(){
 	auto type_value = get_type();
 	if (type_value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + base_type_->print() + "' type not found", index_);
 
 	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
@@ -286,7 +286,7 @@ bool cscript::node::function_type::is(id id) const{
 cscript::object::generic *cscript::node::function_type::evaluate(){
 	auto type_value = get_type();
 	if (type_value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("Failed to resolve function type", index_);
 
 	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }

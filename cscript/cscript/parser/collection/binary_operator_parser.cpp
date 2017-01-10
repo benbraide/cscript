@@ -13,6 +13,14 @@ cscript::parser::generic::node_type cscript::parser::collection::binary_operator
 
 	if (operator_token == nullptr){
 		switch (common::env::source_info.rule->map_index(token->get_match_index())){
+		case lexer::token_id::comma:
+			if (CSCRIPT_IS(common::env::parser_info.states, state::list))
+				return nullptr;
+
+			precedence = 0;
+			id = lexer::operator_id::comma;
+
+			break;
 		case lexer::token_id::open_par:
 			type = 1;
 			precedence = 14;

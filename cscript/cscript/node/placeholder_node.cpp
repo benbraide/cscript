@@ -22,7 +22,7 @@ cscript::object::generic *cscript::node::placeholder::evaluate(){
 		return nullptr;
 
 	if (key.empty())
-		return common::env::error.set("", index_);
+		return common::env::error.set("Invalid key", index_);
 
 	storage::generic_value *value = nullptr;
 	for (auto storage = common::env::runtime.storage; storage != nullptr; storage = storage->get_parent()){
@@ -31,7 +31,7 @@ cscript::object::generic *cscript::node::placeholder::evaluate(){
 	}
 
 	if (value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("Key not found", index_);
 
 	if (value->is_storage()){
 

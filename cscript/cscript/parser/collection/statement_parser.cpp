@@ -35,7 +35,7 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 	case lexer::token_id::prep_else:
 		common::env::source_info.source->ignore_one(token);
 		if (common::env::source_guard.is_empty())
-			return common::env::error.set("", token->get_index());
+			return common::env::error.set("Invalid '#else' encountered", token->get_index());
 
 		if (!common::env::source_guard.is_rejected())
 			ignore_inactive_block_();
@@ -44,7 +44,7 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 	case lexer::token_id::prep_endif:
 		common::env::source_info.source->ignore_one(token);
 		if (common::env::source_guard.is_empty())
-			return common::env::error.set("", token->get_index());
+			return common::env::error.set("Invalid '#endif' encountered", token->get_index());
 
 		common::env::source_guard.end();
 		return parse();
@@ -69,7 +69,7 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 		common::env::source_info.halt = halt;//Restore halt
 
 		if (token == nullptr || common::env::source_info.rule->map_index(token->get_match_index()) != lexer::token_id::semi_colon)
-			return common::env::error.set("", index);
+			return common::env::error.set("Statement not terminated", index);
 	}
 
 	return value;

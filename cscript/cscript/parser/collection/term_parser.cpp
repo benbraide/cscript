@@ -41,7 +41,7 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 			attribute = convert_storage_class_(id);
 
 			if (CSCRIPT_IS(attributes, attribute))
-				return common::env::error.set("", index);
+				return common::env::error.set("Bad type storage class list", index);
 
 			CSCRIPT_SET(attributes, attribute);
 			common::env::source_info.source->ignore(common::env::source_info);
@@ -52,7 +52,7 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 			return nullptr;
 
 		if (type == nullptr)
-			return common::env::error.set("", index);
+			return common::env::error.set("Bad type statement", index);
 
 		return std::make_shared<node::type_with_storage_class>(index, attributes, type, string_value);
 	}
@@ -111,7 +111,7 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 				return nullptr;
 
 			if (operand == nullptr)
-				return common::env::error.set("", token->get_index());
+				return common::env::error.set("'()' expected an expression", token->get_index());
 
 			return std::make_shared<node::unary_operator>(token->get_index(),
 				node::unary_operator::info_type{ true, lexer::operator_id::call, token->get_value() }, operand);

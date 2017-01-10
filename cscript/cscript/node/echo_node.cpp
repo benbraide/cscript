@@ -16,7 +16,7 @@ cscript::object::generic *cscript::node::echo::evaluate(){
 		return nullptr;
 
 	if (value == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("void value in expression", index_);
 
 	auto string_value = value->echo();
 	if (common::env::error.has())

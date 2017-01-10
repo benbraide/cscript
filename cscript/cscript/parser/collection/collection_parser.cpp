@@ -105,9 +105,17 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	if (common::env::error.has())
 		return nullptr;
 
-	if ((!terminated && options.terminator.id != lexer::token_id::nil) || (has_trailing_delimiter && options.no_trailing_delimiter) ||
-		(!has_trailing_delimiter && options.require_trailing_delimiter)){
-		return common::env::error.set("", collection->get_index());
+	if (!terminated && options.terminator.id != lexer::token_id::nil)
+		return common::env::error.set("Statement not terminated", collection->get_index());
+
+	if (has_trailing_delimiter && options.no_trailing_delimiter)
+		return common::env::error.set("Trailing delimiter encountered", collection->get_index());
+
+	if (!has_trailing_delimiter && options.require_trailing_delimiter){
+		if (options.delimiter.id == lexer::token_id::semi_colon)
+			return common::env::error.set("Statement not terminated", collection->get_index());
+
+		return common::env::error.set("Missing trailing delimiter", collection->get_index());
 	}
 
 	return collection;
@@ -126,7 +134,7 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 		},
 		[&state](node_type &value){
 			if (!value->is(node::id::declaration)){
-				common::env::error.set("");
+				common::env::error.set("Expected declaration as parameter");
 				return true;
 			}
 
@@ -137,10 +145,10 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 				else if (value->query<node::initialization_declaration>() != nullptr)
 					state = 1;
 				else if (state > 0)
-					common::env::error.set("");
+					common::env::error.set("Malformed parameter list");
 			}
 			else
-				common::env::error.set("");
+				common::env::error.set("Malformed parameter list");
 
 			return true;
 		}
@@ -200,13 +208,13 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 
 		if (token == nullptr){
 			common::env::source_info.halt = halt;//Restore halt
-			return common::env::error.set("", common::env::source_info.source->get_index());
+			return common::env::error.set("Statement not terminated", common::env::source_info.source->get_index());
 		}
 
 		auto token_id = common::env::source_info.rule->map_index(token->get_match_index());
 		if (token_id != terminator.id || (!terminator.value.empty() && token->get_value() != terminator.value)){
 			common::env::source_info.halt = halt;//Restore halt
-			return common::env::error.set("", common::env::source_info.source->get_index());
+			return common::env::error.set("Statement not terminated", common::env::source_info.source->get_index());
 		}
 
 		common::env::source_info.source->ignore(common::env::source_info);

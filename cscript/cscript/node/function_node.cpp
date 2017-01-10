@@ -25,11 +25,12 @@ cscript::object::generic *cscript::node::function::evaluate(){
 		return nullptr;
 
 	auto declaration_node = declaration_->query<declaration>();
-	auto entry = common::env::runtime.storage->find(declaration_node->get_identifier()->get_key());
+	auto key = declaration_node->get_identifier()->get_key();
+
+	auto entry = common::env::runtime.storage->find(key);
 	if (entry == nullptr){//New entry
-		auto key = declaration_node->get_identifier()->get_key();
 		if (key.empty())
-			return common::env::error.set("", index_);
+			return common::env::error.set("Invalid key", index_);
 
 		auto base = std::make_shared<cscript::function::basic>(key, common::env::runtime.storage);
 		common::env::runtime.storage->store_function(base);
@@ -46,7 +47,7 @@ cscript::object::generic *cscript::node::function::evaluate(){
 	auto entry_object = entry->get_object();
 	auto function_object = (entry_object == nullptr) ? nullptr : entry_object->query<object::primitive::function_object>();
 	if (function_object == nullptr)
-		return common::env::error.set("", index_);
+		return common::env::error.set("'" + key + "' name already exists", index_);
 
 	return insert_(function_object->get_function_value());
 }
