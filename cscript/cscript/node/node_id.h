@@ -20,6 +20,7 @@ namespace cscript{
 			decl_type,
 			operator_value_,
 			echo,
+			return_,
 			array_type,
 			pointer_type,
 			function_type,

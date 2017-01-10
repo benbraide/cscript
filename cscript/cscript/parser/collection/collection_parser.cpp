@@ -111,7 +111,10 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	if (has_trailing_delimiter && options.no_trailing_delimiter)
 		return common::env::error.set("Trailing delimiter encountered", collection->get_index());
 
-	if (!has_trailing_delimiter && options.require_trailing_delimiter){
+	if (!has_trailing_delimiter && options.require_trailing_delimiter && !collection->get_list().empty()){
+		if ((*collection->get_list().rbegin())->is(options.alternate_delimiter))
+			return collection;
+
 		if (options.delimiter.id == lexer::token_id::semi_colon)
 			return common::env::error.set("Statement not terminated", collection->get_index());
 

@@ -24,6 +24,8 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse(
 		return parse_function_type_();
 	case lexer::token_id::echo:
 		return parse_echo_();
+	case lexer::token_id::return_:
+		return parse_return_();
 	default:
 		break;
 	}
@@ -286,6 +288,20 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		return common::env::error.set("'echo' expects an expression", index);
 
 	return std::make_shared<node::echo>(index, value);
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_return_(){
+	//return [<expression>]
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto value = common::env::expression_parser.parse();
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::return_node>(index, value);
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_type_(

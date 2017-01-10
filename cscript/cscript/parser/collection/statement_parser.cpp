@@ -59,7 +59,7 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 	if (common::env::error.has())
 		return nullptr;
 
-	if ((value == nullptr || !value->is(node::id::block))){
+	if (value != nullptr && !value->is(node::id::block)){
 		auto index = token->get_index();
 		auto halt = common::env::source_info.halt;
 		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);

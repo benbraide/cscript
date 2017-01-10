@@ -3,10 +3,11 @@
 #include "../common/env.h"
 #include "../node/collection_node.h"
 #include "../node/declaration_node.h"
+#include "../object/ref_object.h"
 #include "../storage/basic_storage.h"
 
-cscript::function::definition::definition(node_type parameters, node_type value)
-	: parameters_(parameters), value_(value){}
+cscript::function::definition::definition(const return_type_info &info, node_type parameters, node_type value)
+	: info_(info), parameters_(parameters), value_(value){}
 
 cscript::function::definition::~definition(){}
 
@@ -66,6 +67,44 @@ cscript::object::generic *cscript::function::definition::call(storage::generic *
 
 	common::env::runtime.storage = previous_storage;
 	common::env::runtime.arguments.clear();
+
+	bool is_void;
+	if (common::env::error.has()){
+		if (!common::env::error.is_return())
+			return nullptr;
+
+		is_void = (common::env::error.get() == nullptr);
+	}
+	else//No return
+		is_void = true;
+
+	if (!is_void){
+		auto return_value = common::env::error.get();
+		common::env::error.clear();
+
+		if (info_.value->is_same(common::env::void_type.get()))
+			return common::env::error.set("void function returning a value");
+
+		object::generic::ptr_type object = CSCRIPT_IS(info_.attributes, memory::address_attribute::ref) ?
+			std::make_shared<object::ref>(info_.value) : info_.value->create(info_.value);
+
+		if (object == nullptr)
+			return common::env::error.set("Return value validation failure");
+
+		auto &memory_entry = object->get_memory();
+		memory_entry.info.storage = &local_storage;
+		if (CSCRIPT_IS(info_.attributes, memory::address_attribute::constant | memory::address_attribute::final_))
+			CSCRIPT_SET(memory_entry.attributes, memory::address_attribute::constant);
+
+		common::env::runtime.operand = { nullptr, return_value.get() };
+		object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });
+		memory_entry.info.storage = nullptr;
+
+		if (!common::env::error.has())
+			return common::env::temp_storage.add(object);
+	}
+	else if (!info_.value->is_same(common::env::void_type.get()))
+		return common::env::error.set("Function must return a value");
 
 	return nullptr;
 }

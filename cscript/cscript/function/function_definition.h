@@ -12,7 +12,12 @@ namespace cscript{
 		public:
 			typedef node::generic::ptr_type node_type;
 
-			explicit definition(node_type parameters, node_type value);
+			struct return_type_info{
+				type::generic::ptr_type value;
+				memory::address_attribute attributes;
+			};
+
+			explicit definition(const return_type_info &info, node_type parameters, node_type value);
 
 			virtual ~definition();
 
@@ -23,6 +28,7 @@ namespace cscript{
 			virtual node_type get_parameters() const;
 
 		protected:
+			return_type_info info_;
 			node_type parameters_;
 			node_type value_;
 		};

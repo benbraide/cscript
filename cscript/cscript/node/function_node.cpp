@@ -20,7 +20,7 @@ cscript::node::generic::ptr_type cscript::node::function::clone(){
 }
 
 bool cscript::node::function::is(id id) const{
-	return (id == id_ || id == node::id::block);
+	return (id == id_ || (id == node::id::block && definition_ != nullptr));
 }
 
 cscript::object::generic *cscript::node::function::evaluate(){
@@ -85,14 +85,25 @@ std::nullptr_t cscript::node::function::insert_(cscript::function::generic *valu
 		value->add(*(matched = entry.get()));
 	}
 	else if (definition_ == nullptr)//Multiple declarations
-		return common::env::error.set("", index_);
+		return common::env::error.set("Function has already been declared", index_);
 
 	if (definition_ != nullptr){
 		if (matched->get_definition() != nullptr)//Multiple definitions
-			return common::env::error.set("", index_);
+			return common::env::error.set("Function has already been defined", index_);
+
+		auto return_type = declaration_->query<declaration>()->get_type();
+		auto with_storage = return_type->query<type_with_storage_class>();
+
+		cscript::function::definition::return_type_info info{
+			return_type->get_type(),
+			(with_storage == nullptr) ? memory::address_attribute::nil : with_storage->get_attributes()
+		};
+
+		if (info.value == nullptr)
+			return common::env::error.set("Could not resolve return type", index_);
 
 		dynamic_cast<cscript::function::entry *>(matched)->set_definition(
-			std::make_shared<cscript::function::definition>(parameters_, definition_));
+			std::make_shared<cscript::function::definition>(info, parameters_, definition_));
 	}
 
 	return nullptr;
