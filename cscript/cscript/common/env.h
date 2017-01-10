@@ -76,6 +76,8 @@ namespace cscript{
 			static const type::generic::ptr_type double_type;
 			static const type::generic::ptr_type ldouble_type;
 
+			static const type::generic::ptr_type string_type;
+
 			static const type::generic::ptr_type type_object_type;
 			static const type::generic::ptr_type node_object_type;
 			static const type::generic::ptr_type storage_object_type;
@@ -99,6 +101,8 @@ namespace cscript{
 			static parser::collection::builder builder;
 
 			static object::generic *get_object_operand();
+
+			static object::generic::ptr_type create_string(const std::string &value);
 
 			static void initialize();
 

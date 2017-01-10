@@ -42,6 +42,10 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 		if (operand == nullptr)
 			return common::env::error.set("Operator does not take specified operand");
 
+		pre_assignment_(*operand);
+		if (common::env::error.has())
+			return nullptr;
+
 		auto &memory_entry = get_memory();
 		auto value = operand->ref_cast(memory_entry.info.type.get());
 
@@ -144,6 +148,8 @@ bool cscript::object::basic::is_temp(){
 bool cscript::object::basic::is_constant(){
 	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant);
 }
+
+void cscript::object::basic::pre_assignment_(generic &operand){}
 
 cscript::object::generic *cscript::object::basic::post_assignment_(generic &operand){
 	return this;

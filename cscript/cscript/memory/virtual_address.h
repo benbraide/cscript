@@ -40,7 +40,7 @@ namespace cscript{
 			protected_		= (1 << 0x000A),
 			no_dealloc		= (1 << 0x000B),
 			is_child		= (1 << 0x000C),
-			const_target	= (1 << 0x000D),
+			string_			= (1 << 0x000D),
 		};
 
 		struct address_entry_info{
@@ -71,7 +71,15 @@ namespace cscript{
 			typedef std::shared_mutex lock_type;
 			typedef std::shared_lock<lock_type> shared_lock_type;
 			typedef std::lock_guard<lock_type> guard_type;
+
 			typedef std::map<value_type, size_type> available_list_type;
+
+			struct string_info{
+				std::string value;
+				int ref_count;
+			};
+
+			typedef std::unordered_map<value_type, string_info> string_list_type;
 
 			virtual_address();
 
@@ -84,13 +92,23 @@ namespace cscript{
 				return add(static_cast<size_type>(sizeof(type)), allocate);
 			}
 
+			value_type add(const std::string &value);
+
 			bool remove(value_type value);
+
+			void remove_string_reference(value_type value);
+
+			void add_string_reference(value_type value);
 
 			entry &get_entry(value_type value);
 
 			entry get_bound_entry(value_type value);
 
 			base_type get_bound_base(value_type value);
+
+			std::string &get_string(value_type value);
+
+			const std::string &get_empty_string() const;
 
 			void copy(value_type destination, generic_type type, value_type source);
 
@@ -146,6 +164,10 @@ namespace cscript{
 			static const size_type value_type_size = static_cast<size_type>(sizeof(value_type));
 
 		protected:
+			value_type add_(size_type size, bool allocate);
+
+			bool remove_(value_type value);
+
 			value_type find_available_(size_type size);
 
 			void merge_available_(value_type value, size_type size);
@@ -190,6 +212,8 @@ namespace cscript{
 			entry none_{};
 			lock_type lock_;
 			available_list_type available_list_;
+			string_list_type string_list_;
+			std::string empty_string_;
 			value_type next_ = 1u;
 		};
 

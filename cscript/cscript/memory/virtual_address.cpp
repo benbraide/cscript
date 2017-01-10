@@ -14,48 +14,47 @@ cscript::memory::virtual_address::~virtual_address(){
 
 cscript::memory::virtual_address::value_type cscript::memory::virtual_address::add(size_type size, bool allocate){
 	guard_type guard(lock_);
+	return add_(size, allocate);
+}
 
-	auto base = allocate ? new char[size] : nullptr;
-	if (allocate && base == nullptr)//Failed to allocate memory
-		return 0ull;
+cscript::memory::virtual_address::value_type cscript::memory::virtual_address::add(const std::string &value){
+	guard_type guard(lock_);
 
-	auto attributes = attribute::uninitialized;
-	if (!allocate)
-		CSCRIPT_SET(attributes, attribute::no_dealloc);
+	auto &memory_entry = table::map_.find(add_(static_cast<size_type>(value.size() + 1), false))->second;
+	auto &sinfo = (string_list_[memory_entry.value] = string_info{ value + " " });
 
-	auto available = find_available_(size);
-	if (available == 0u){
-		available = next_;
-		next_ += size;
-	}
-	else//Remove from list
-		available_list_.erase(available);
-	
-	table::map_[available] = address_entry{
-		base,
-		size,
-		available,
-		attributes
-	};
+	memory_entry.info.type = common::env::char_type;
+	memory_entry.base = const_cast<char *>(sinfo.value.c_str());
 
-	return available;
+	CSCRIPT_SET(memory_entry.attributes, attribute::string_ | attribute::constant);
+	CSCRIPT_REMOVE(memory_entry.attributes, attribute::uninitialized);
+
+	return memory_entry.value;
 }
 
 bool cscript::memory::virtual_address::remove(value_type value){
 	guard_type guard(lock_);
+	return remove_(value);
+}
 
-	auto entry = table::map_.find(value);
-	if (entry == table::map_.end())
-		return false;
+void cscript::memory::virtual_address::remove_string_reference(value_type value){
+	guard_type guard(lock_);
 
-	if (entry->second.base != nullptr && !CSCRIPT_IS(entry->second.attributes, attribute::no_dealloc))
-		delete[] entry->second.base;
+	auto entry = string_list_.find(value);
+	if (entry == string_list_.end())
+		return;
 
-	if (!CSCRIPT_IS(entry->second.attributes, attribute::is_child))
-		merge_available_(value, entry->second.size);
+	if (--entry->second.ref_count <= 0){
+		string_list_.erase(entry);
+		remove_(value);
+	}
+}
 
-	table::map_.erase(entry);
-	return true;
+void cscript::memory::virtual_address::add_string_reference(value_type value){
+	shared_lock_type guard(lock_);
+	auto entry = string_list_.find(value);
+	if (entry != string_list_.end())
+		++entry->second.ref_count;
 }
 
 cscript::memory::virtual_address::entry &cscript::memory::virtual_address::get_entry(value_type value){
@@ -74,6 +73,16 @@ cscript::memory::virtual_address::base_type cscript::memory::virtual_address::ge
 	shared_lock_type guard(lock_);
 	auto offset = table::map_.begin();
 	return get_bound_base_(value, offset);
+}
+
+std::string &cscript::memory::virtual_address::get_string(value_type value){
+	shared_lock_type guard(lock_);
+	auto entry = string_list_.find(value);
+	return (entry == string_list_.end()) ? empty_string_ : entry->second.value;
+}
+
+const std::string &cscript::memory::virtual_address::get_empty_string() const{
+	return empty_string_;
 }
 
 void cscript::memory::virtual_address::copy(value_type destination, generic_type type, value_type source){
@@ -105,6 +114,48 @@ bool cscript::memory::virtual_address::copy(value_type destination, value_type s
 void cscript::memory::virtual_address::copy_unchecked(value_type destination, value_type source, size_type size){
 	shared_lock_type guard(lock_);
 	copy_unchecked_(destination, source, size);
+}
+
+cscript::memory::virtual_address::value_type cscript::memory::virtual_address::add_(size_type size, bool allocate){
+	auto base = allocate ? new char[size] : nullptr;
+	if (allocate && base == nullptr)//Failed to allocate memory
+		return 0ull;
+
+	auto attributes = attribute::uninitialized;
+	if (!allocate)
+		CSCRIPT_SET(attributes, attribute::no_dealloc);
+
+	auto available = find_available_(size);
+	if (available == 0u){
+		available = next_;
+		next_ += size;
+	}
+	else//Remove from list
+		available_list_.erase(available);
+
+	table::map_[available] = address_entry{
+		base,
+		size,
+		available,
+		attributes
+	};
+
+	return available;
+}
+
+bool cscript::memory::virtual_address::remove_(value_type value){
+	auto entry = table::map_.find(value);
+	if (entry == table::map_.end())
+		return false;
+
+	if (entry->second.base != nullptr && !CSCRIPT_IS(entry->second.attributes, attribute::no_dealloc))
+		delete[] entry->second.base;
+
+	if (!CSCRIPT_IS(entry->second.attributes, attribute::is_child))
+		merge_available_(value, entry->second.size);
+
+	table::map_.erase(entry);
+	return true;
 }
 
 cscript::memory::virtual_address::value_type cscript::memory::virtual_address::find_available_(size_type size){

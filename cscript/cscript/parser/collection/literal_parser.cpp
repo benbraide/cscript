@@ -261,7 +261,17 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse_double_(bool escaped){
-	return nullptr;
+	auto &token_value = common::env::parser_info.token->get_value();
+	auto &index = common::env::parser_info.token->get_index();
+	auto id = lexer::token_id::quote_dbl;
+
+	return std::make_shared<node::literal>(index, id, token_value, [escaped](const std::string &value){
+		std::string value_copy(std::next(value.begin()), std::prev(value.end()));
+		if (escaped && !value_copy.empty())
+			escape_string_(value_copy);
+
+		return common::env::create_string(value_copy);
+	});
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse_back_(bool escaped){
@@ -343,7 +353,80 @@ cscript::parser::collection::literal::suffix cscript::parser::collection::litera
 	return suffix::wchar;
 }
 
-int cscript::parser::collection::literal::get_match_index_(boost::match_results<std::string::const_iterator> &results){
+void cscript::parser::collection::literal::escape_string_(std::string &value){
+	static boost::regex regex(get_escapes_(), boost::regex_constants::optimize);
+	value = boost::regex_replace(value, regex, [](const boost::smatch &match) -> std::string{
+		switch (get_match_index_(match)){
+		case 0:
+			return "\0";
+		case 1:
+			return "\a";
+		case 2:
+			return "\b";
+		case 3:
+			return "\f";
+		case 4:
+			return "\n";
+		case 5:
+			return "\r";
+		case 6:
+			return "\t";
+		case 7:
+			return "\v";
+		case 8:
+			return "\"";
+		case 9:
+			return "\'";
+		case 10:
+			return "`";
+		case 11:
+			return "\\";
+		case 12://Rad
+			return "\\";
+		case 13://Hex
+			return std::string(1, static_cast<char>(std::stoi(std::string(std::next(match[13].begin(), 2), match[13].end()), nullptr, 16)));
+		case 14://Oct
+			return std::string(1, static_cast<char>(std::stoi(std::string(std::next(match[14].begin()), match[14].end()), nullptr, 8)));
+		default://Unknown
+			break;
+		}
+
+		return std::string(std::next(match[15].begin()), match[15].end());
+	});
+}
+
+std::string cscript::parser::collection::literal::get_escapes_(){
+	std::vector<std::string> escapes({
+		"\\\\0",
+		"\\\\a",
+		"\\\\b",
+		"\\\\f",
+		"\\\\n",
+		"\\\\r",
+		"\\\\t",
+		"\\\\v",
+		"\\\\\"",
+		"\\\\\'",
+		"\\\\`",
+		"\\\\\\\\",
+		"\\\\((2[0-6])|(1[0-9])|[2-9])r",
+		"\\\\x[0-9a-fA-F]+",
+		"\\\\[1-7][0-7]*",
+		"\\\\."
+	});
+
+	std::string value;
+	for (auto &escape : escapes){
+		if (value.empty())
+			value = ("(" + escape + ")");
+		else//Append
+			value += ("|(" + escape + ")");
+	}
+
+	return value;
+}
+
+int cscript::parser::collection::literal::get_match_index_(const boost::match_results<std::string::const_iterator> &results){
 	auto index = 0;
 	for (auto match = std::next(results.begin()); match != results.end(); ++match, ++index){
 		if (match->matched)

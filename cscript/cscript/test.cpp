@@ -37,8 +37,11 @@ int main(){
 
 		ss.reset(buffer);
 		auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
-		if (lines != nullptr)
+		if (lines != nullptr){
 			lines->evaluate();
+			if (env::error.has())
+				env::error.report();
+		}
 
 		env::temp_storage.clear();
 	}

@@ -3,31 +3,50 @@
 #ifndef CSCRIPT_ERROR_H
 #define CSCRIPT_ERROR_H
 
-#include <string>
+#include "../lexer/token.h"
+#include "../object/generic_object.h"
 
 namespace cscript{
 	namespace common{
 		class error{
 		public:
-			struct info{
-				std::string value;
-				int line;
-				int column;
+			typedef lexer::token::index index_type;
+			typedef object::generic::ptr_type object_type;
+
+			enum class type{
+				nil,
+				return_,
+				break_,
+				continue_,
 			};
 
-			nullptr_t set(const std::string &value);
+			std::nullptr_t set(object_type object);
 
-			template <typename index_type>
-			nullptr_t set(const std::string &value, const index_type &index){
-				return nullptr;
-			}
+			std::nullptr_t set(type type, object_type object = nullptr);
 
-			template <typename index_type>
-			void set_warning(const std::string &value, const index_type &index){
+			std::nullptr_t set(const std::string &value);
 
-			}
+			std::nullptr_t set(const std::string &value, const index_type &index);
+
+			void warn(const std::string &value);
+
+			void clear();
+
+			void report();
+
+			object_type get();
 
 			bool has() const;
+
+			bool is_return() const;
+
+			bool is_break() const;
+
+			bool is_continue() const;
+
+		private:
+			type type_ = type::nil;
+			object_type object_;
 		};
 	}
 }

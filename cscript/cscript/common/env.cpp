@@ -1,5 +1,5 @@
 #include "env.h"
-#include "../object/numeric_object.h"
+#include "../object/pointer_object.h"
 
 thread_local cscript::lexer::source_guard cscript::common::env::source_guard;
 
@@ -63,6 +63,8 @@ const cscript::type::generic::ptr_type cscript::common::env::double_type = std::
 
 const cscript::type::generic::ptr_type cscript::common::env::ldouble_type = std::make_shared<type::primitive>(type::id::ldouble);
 
+const cscript::type::generic::ptr_type cscript::common::env::string_type = std::make_shared<type::primitive>(type::id::string);
+
 const cscript::type::generic::ptr_type cscript::common::env::type_object_type = std::make_shared<type::primitive>(type::id::type_);
 
 const cscript::type::generic::ptr_type cscript::common::env::node_object_type = std::make_shared<type::primitive>(type::id::node_);
@@ -98,6 +100,10 @@ cscript::object::generic *cscript::common::env::get_object_operand(){
 		return runtime.operand.object;
 
 	return (runtime.operand.object = runtime.operand.node->evaluate());
+}
+
+cscript::object::generic::ptr_type cscript::common::env::create_string(const std::string &value){
+	return std::make_shared<object::pointer>(address_space.add(value));
 }
 
 void cscript::common::env::initialize(){

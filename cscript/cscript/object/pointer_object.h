@@ -35,11 +35,17 @@ namespace cscript{
 
 			virtual bool to_bool() override;
 
+			virtual std::string to_string() override;
+
 			virtual std::string echo() override;
+
+			virtual bool is_constant() override;
 
 			virtual bool is_constant_target();
 
 			virtual bool is_null();
+
+			virtual bool is_string();
 
 			template <typename value_type>
 			value_type get_value(){
@@ -47,11 +53,17 @@ namespace cscript{
 			}
 
 		protected:
+			virtual void pre_assignment_(generic &operand) override;
+
 			virtual generic *post_assignment_(generic &operand) override;
+
+			virtual int compare_(generic &operand);
 
 			virtual generic *offset_(bool increment);
 
 			virtual value_type get_value_();
+
+			virtual std::string &get_string_();
 		};
 
 		class pointer_ref : public pointer{

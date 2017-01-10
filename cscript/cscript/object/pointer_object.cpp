@@ -25,6 +25,9 @@ cscript::object::pointer::pointer(value_type value)
 		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
 
 	memory_entry.info.type = std::make_shared<type::pointer>(entry.info.type);
+	if (entry.info.type->get_id() == cscript::type::id::char_)
+		common::env::address_space.add_string_reference(value);
+
 	memory::pool::write_unchecked(memory_entry.base, value);
 	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 }
@@ -38,6 +41,8 @@ cscript::object::pointer::pointer(value_type value, type::generic::ptr_type type
 	auto &entry = common::env::address_space.get_entry(value);
 	if (entry.value == 0ull || (!entry.info.type->is_any() && !entry.info.type->is_same(type.get())))
 		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
+	else if (entry.info.type->get_id() == cscript::type::id::char_)
+		common::env::address_space.add_string_reference(value);
 
 	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
 }
@@ -49,7 +54,9 @@ cscript::object::pointer::pointer(memory::virtual_address::base_type base, const
 	memory_entry.base = base;
 }
 
-cscript::object::pointer::~pointer(){}
+cscript::object::pointer::~pointer(){
+	common::env::address_space.remove_string_reference(get_value_());
+}
 
 cscript::object::generic *cscript::object::pointer::clone(){
 	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
@@ -123,6 +130,20 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 
 	auto &memory_entry = get_memory();
 	if (!memory_entry.info.type->is_nullptr() && !operand_type->is_nullptr() && !operand_type->is_same(memory_entry.info.type.get())){
+		if (is_string()){
+			if (info.id == lexer::operator_id::plus){
+				auto operand_string_value = operand->to_string();
+				if (common::env::error.has())
+					return nullptr;
+
+				auto &string_value = get_string_();
+				return common::env::temp_storage.add(common::env::create_string(
+					string_value.substr(0, string_value.size() - 1) + operand_string_value));
+			}
+
+			return basic::evaluate(info);
+		}
+
 		if (operand_type->is_integral()){
 			auto value = operand->query<primitive::numeric>()->get_value<int>();
 			auto type_size = memory_entry.info.type->remove_pointer()->get_size();
@@ -176,28 +197,22 @@ cscript::object::generic *cscript::object::pointer::evaluate(const binary_info &
 	switch (info.id){
 	case lexer::operator_id::less:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() < operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) < 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::less_or_equal:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() <= operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) <= 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::equality:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() == operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) == 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::inverse_equality:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() != operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) != 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::more_or_equal:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() >= operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) >= 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	case lexer::operator_id::more:
 		return common::env::temp_storage.add(std::make_shared<primitive::boolean>(
-			(get_value_() > operand->query<pointer>()->get_value_()) ?
-			type::boolean_value_type::true_ : type::boolean_value_type::false_));
+			(compare_(*operand) > 0) ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 	default:
 		break;
 	}
@@ -265,9 +280,28 @@ bool cscript::object::pointer::to_bool(){
 	return false;
 }
 
+std::string cscript::object::pointer::to_string(){
+	auto target_memory_entry = common::env::address_space.get_entry(get_value_());
+	if (CSCRIPT_IS(target_memory_entry.attributes, memory::virtual_address::attribute::string_)){
+		auto &string_value = common::env::address_space.get_string(target_memory_entry.value);
+		if (&string_value != &common::env::address_space.get_empty_string())
+			return string_value.substr(0, string_value.size() - 1);
+	}
+
+	common::env::error.set("Cannot convert object to string value");
+	return "";
+}
+
 std::string cscript::object::pointer::echo(){
 	if (is_null())
 		return "nullptr";
+
+	auto target_memory_entry = common::env::address_space.get_entry(get_value_());
+	if (CSCRIPT_IS(target_memory_entry.attributes, memory::virtual_address::attribute::string_)){
+		auto &string_value = common::env::address_space.get_string(target_memory_entry.value);
+		if (&string_value != &common::env::address_space.get_empty_string())
+			return ("\"" + string_value.substr(0, string_value.size() - 1) + "\"");
+	}
 
 	auto target = evaluate(unary_info{ true, lexer::operator_id::times });
 	if (common::env::error.has())
@@ -285,21 +319,53 @@ std::string cscript::object::pointer::echo(){
 	return ("<" + common::env::to_hex(get_value_()) + ": " + echo_value + ">");
 }
 
+bool cscript::object::pointer::is_constant(){
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::final_);
+}
+
 bool cscript::object::pointer::is_constant_target(){
-	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::const_target);
+	return CSCRIPT_IS(get_memory().attributes, memory::virtual_address::attribute::constant);
 }
 
 bool cscript::object::pointer::is_null(){
 	return (get_value_() == 0u);
 }
 
+bool cscript::object::pointer::is_string(){
+	return CSCRIPT_IS(common::env::address_space.get_entry(get_value_()).attributes,
+		memory::virtual_address::attribute::string_);
+}
+
+void cscript::object::pointer::pre_assignment_(generic &operand){
+	common::env::address_space.remove_string_reference(get_value_());
+}
+
 cscript::object::generic *cscript::object::pointer::post_assignment_(generic &operand){
-	if (CSCRIPT_IS(operand.get_memory().attributes, memory::virtual_address::attribute::byte_aligned))
-		CSCRIPT_SET(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
-	else
+	if (!CSCRIPT_IS(operand.get_memory().attributes, memory::virtual_address::attribute::byte_aligned)){
+		common::env::address_space.add_string_reference(get_value_());
 		CSCRIPT_REMOVE(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
+	}
+	else//Byte aligned
+		CSCRIPT_SET(get_memory().attributes, memory::virtual_address::attribute::byte_aligned);
 
 	return this;
+}
+
+int cscript::object::pointer::compare_(generic &operand){
+	auto pointer_operand = operand.query<pointer>();
+	if (this->is_string() && pointer_operand->is_string()){
+		auto &string_value = get_string_(), &operand_string_value = pointer_operand->get_string_();
+		if (string_value != operand_string_value)
+			return (string_value < operand_string_value) ? -1 : 1;
+
+		return 0;
+	}
+
+	auto value = get_value_(), operand_value = pointer_operand->get_value_();
+	if (value != operand_value)
+		return (value < operand_value) ? -1 : 1;
+
+	return 0;
 }
 
 cscript::object::generic *cscript::object::pointer::offset_(bool increment){
@@ -320,6 +386,10 @@ cscript::object::generic *cscript::object::pointer::offset_(bool increment){
 
 cscript::object::pointer::value_type cscript::object::pointer::get_value_(){
 	return common::env::address_space.convert<value_type>(memory_value_, get_type());
+}
+
+std::string &cscript::object::pointer::get_string_(){
+	return common::env::address_space.get_string(get_value_());
 }
 
 cscript::object::pointer_ref::pointer_ref(memory::virtual_address::value_type memory_value,

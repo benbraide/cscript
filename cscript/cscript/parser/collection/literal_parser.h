@@ -52,7 +52,11 @@ namespace cscript{
 
 				virtual suffix get_string_suffix_(std::string &value);
 
-				virtual int get_match_index_(boost::match_results<std::string::const_iterator> &results);
+				static void escape_string_(std::string &value);
+
+				static std::string get_escapes_();
+
+				static int get_match_index_(const boost::match_results<std::string::const_iterator> &results);
 			};
 		}
 	}

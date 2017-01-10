@@ -9,6 +9,7 @@
 #include "../type/generic_type.h"
 #include "../object/generic_object.h"
 #include "../node/generic_node.h"
+#include "../lexer/token.h"
 
 namespace cscript{
 	namespace common{
@@ -29,6 +30,7 @@ namespace cscript{
 			declaration_info declaration;
 			operand_info operand;
 			std::list<object::generic *> arguments;
+			lexer::token::index index;
 		};
 	}
 }

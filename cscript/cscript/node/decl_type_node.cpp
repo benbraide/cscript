@@ -2,6 +2,7 @@
 
 #include "../common/env.h"
 #include "../object/type_object.h"
+#include "../object/pointer_object.h"
 
 cscript::node::decl_type::decl_type(const lexer::token::index &index, ptr_type value)
 	: basic(id::decl_type, index), value_(value){}
@@ -31,13 +32,7 @@ cscript::storage::generic *cscript::node::decl_type::get_storage(){
 
 cscript::type::generic::ptr_type cscript::node::decl_type::get_type(){
 	auto value = value_->evaluate();
-	if (common::env::error.has())
-		return nullptr;
-
-	if (value == nullptr)
-		return common::env::error.set("", index_);
-
-	return value->get_type();
+	return (common::env::error.has() || value == nullptr) ? nullptr : value->get_type();
 }
 
 cscript::node::generic::ptr_type cscript::node::decl_type::get_value() const{
