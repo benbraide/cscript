@@ -19,6 +19,10 @@ cscript::node::generic::ptr_type cscript::node::function::clone(){
 	return std::make_shared<function>(index_, declaration_->clone(), parameters_->clone(), definition_->clone());
 }
 
+bool cscript::node::function::is(id id) const{
+	return (id == id_ || id == node::id::block);
+}
+
 cscript::object::generic *cscript::node::function::evaluate(){
 	resolve_type_();
 	if (common::env::error.has())

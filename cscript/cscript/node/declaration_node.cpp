@@ -35,11 +35,11 @@ cscript::type::generic::ptr_type cscript::node::declaration::get_type_value(){
 }
 
 cscript::object::generic *cscript::node::declaration::allocate(){
-	return allocate(index_, get_type_value(), get_identifier(), get_type_attributes());
+	return allocate(get_type_value());
 }
 
 cscript::object::generic *cscript::node::declaration::allocate(type::generic::ptr_type type){
-	return allocate(index_, type, get_identifier(), get_type_attributes());
+	return allocate(get_index(), type, get_identifier(), get_type_attributes());
 }
 
 cscript::object::generic *cscript::node::declaration::allocate(const lexer::token::index &index, type::generic::ptr_type type,
@@ -89,6 +89,11 @@ cscript::node::generic::ptr_type cscript::node::dependent_declaration::clone(){
 	return std::make_shared<dependent_declaration>(index_, type_->clone(), id_->clone());
 }
 
+cscript::object::generic *cscript::node::dependent_declaration::allocate(type::generic::ptr_type type){
+	type_->query<declaration>()->evaluate();
+	return common::env::error.has() ? nullptr : declaration::allocate(type);
+}
+
 cscript::node::generic::ptr_type cscript::node::dependent_declaration::get_type() const{
 	return type_->query<declaration>()->get_type();
 }
@@ -118,6 +123,10 @@ cscript::node::generic::ptr_type cscript::node::initialization_declaration::clon
 	return std::make_shared<initialization_declaration>(index_, type_->clone(), id_->clone());
 }
 
+const cscript::lexer::token::index &cscript::node::initialization_declaration::get_index() const{
+	return type_->get_index();
+}
+
 cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 	auto value = id_->evaluate();
 	if (common::env::error.has())
@@ -132,7 +141,7 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 	else
 		type = get_type_value();
 
-	auto *object = allocate(type_->get_index(), type, get_identifier(), get_type_attributes());
+	auto *object = allocate(type);
 	if (common::env::error.has())
 		return nullptr;
 
@@ -141,6 +150,10 @@ cscript::object::generic *cscript::node::initialization_declaration::evaluate(){
 
 	common::env::runtime.operand = { nullptr, value };
 	return object->evaluate(object::generic::binary_info{ lexer::operator_id::assignment });
+}
+
+cscript::object::generic *cscript::node::initialization_declaration::allocate(type::generic::ptr_type type){
+	return type_->query<declaration>()->allocate(type);
 }
 
 cscript::node::generic::ptr_type cscript::node::initialization_declaration::get_type() const{

@@ -29,6 +29,16 @@ void cscript::common::error::warn(const std::string &value){
 	env::echo(value);
 }
 
+void cscript::common::error::suppress(){
+	if (object_ != nullptr && type_ == type::nil)
+		type_ = type::suppressed;
+}
+
+void cscript::common::error::unsuppress(){
+	if (type_ == type::suppressed)
+		type_ = type::nil;
+}
+
 void cscript::common::error::clear(){
 	type_ = type::nil;
 	object_ = nullptr;
@@ -73,7 +83,7 @@ cscript::common::error::object_type cscript::common::error::get(){
 }
 
 bool cscript::common::error::has() const{
-	return (object_ != nullptr);
+	return (object_ != nullptr || (type_ != type::nil && type_ != type::suppressed));
 }
 
 bool cscript::common::error::is_return() const{
@@ -86,4 +96,8 @@ bool cscript::common::error::is_break() const{
 
 bool cscript::common::error::is_continue() const{
 	return (type_ == type::continue_);
+}
+
+bool cscript::common::error::is_suppressed() const{
+	return (type_ == type::suppressed);
 }

@@ -48,6 +48,8 @@ namespace cscript{
 
 			virtual ptr_type clone() override;
 
+			virtual object::generic *allocate(type::generic::ptr_type type) override;
+
 			virtual ptr_type get_type() const;
 
 			virtual ptr_type get_declaration() const;
@@ -68,7 +70,11 @@ namespace cscript{
 
 			virtual ptr_type clone() override;
 
+			virtual const lexer::token::index &get_index() const override;
+
 			virtual object::generic *evaluate() override;
+
+			virtual object::generic *allocate(type::generic::ptr_type type) override;
 
 			virtual ptr_type get_type() const;
 

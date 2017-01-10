@@ -18,6 +18,7 @@ namespace cscript{
 				return_,
 				break_,
 				continue_,
+				suppressed,
 			};
 
 			std::nullptr_t set(object_type object);
@@ -29,6 +30,10 @@ namespace cscript{
 			std::nullptr_t set(const std::string &value, const index_type &index);
 
 			void warn(const std::string &value);
+
+			void suppress();
+
+			void unsuppress();
 
 			void clear();
 
@@ -43,6 +48,8 @@ namespace cscript{
 			bool is_break() const;
 
 			bool is_continue() const;
+
+			bool is_suppressed() const;
 
 		private:
 			type type_ = type::nil;
