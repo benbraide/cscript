@@ -22,7 +22,7 @@ std::nullptr_t cscript::common::error::set(const std::string &value){
 }
 
 std::nullptr_t cscript::common::error::set(const std::string &value, const index_type &index){
-	return set(env::create_string("<line: " + std::to_string(index.line) + ", column: " + std::to_string(index.column) + ">" + value));
+	return set(env::create_string("<line: " + std::to_string(index.line) + ", column: " + std::to_string(index.column) + "> " + value));
 }
 
 void cscript::common::error::warn(const std::string &value){
@@ -35,8 +35,26 @@ void cscript::common::error::clear(){
 }
 
 void cscript::common::error::report(){
-	if (object_ == nullptr)
+	if (object_ == nullptr){
+		switch (type_){
+		case type::return_:
+			env::echo("Error: Invalid 'return' statement.");
+			type_ = type::nil;
+			break;
+		case type::break_:
+			env::echo("Error: Invalid 'break' statement.");
+			type_ = type::nil;
+			break;
+		case type::continue_:
+			env::echo("Error: Invalid 'continue' statement.");
+			type_ = type::nil;
+			break;
+		default:
+			break;
+		}
+
 		return;
+	}
 
 	auto object = object_;
 	clear();
@@ -47,7 +65,7 @@ void cscript::common::error::report(){
 		value = "<Object>";
 	}
 
-	env::echo("Error: " + value);
+	env::echo("Error: " + value + ".");
 }
 
 cscript::common::error::object_type cscript::common::error::get(){

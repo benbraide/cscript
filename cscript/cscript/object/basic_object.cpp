@@ -1,4 +1,5 @@
 #include "pointer_object.h"
+#include "type_object.h"
 
 cscript::object::basic::basic(memory::virtual_address::value_type memory_value)
 	: memory_value_(memory_value){
@@ -79,6 +80,10 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 				to_bool() ? type::boolean_value_type::true_ : type::boolean_value_type::false_));
 		case lexer::operator_id::call:
 			return this;
+		case lexer::operator_id::sizeof_:
+			return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::uint_type, get_type()->get_size()));
+		case lexer::operator_id::typeof_:
+			return common::env::temp_storage.add(std::make_shared<primitive::type_object>(get_type()));
 		default:
 			break;
 		}

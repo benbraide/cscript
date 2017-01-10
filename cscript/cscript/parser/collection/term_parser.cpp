@@ -98,7 +98,8 @@ cscript::parser::generic::node_type cscript::parser::collection::term::parse(){
 	if ((value = common::env::unary_operator_parser.parse()) != nullptr)//Unary operator parsed
 		return value;
 
-	if (common::env::parser_info.context->query<context::expression>() == nullptr){
+	if (CSCRIPT_IS(common::env::parser_info.states, state::unary) ||
+		common::env::parser_info.context->query<context::expression>() == nullptr){
 		switch (id){
 		case lexer::token_id::open_par:
 		{

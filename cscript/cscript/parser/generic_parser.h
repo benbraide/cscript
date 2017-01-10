@@ -32,6 +32,7 @@ namespace cscript{
 			loop			= (1 << 0x0002),
 			function		= (1 << 0x0003),
 			class_			= (1 << 0x0004),
+			unary			= (1 << 0x0005),
 		};
 
 		struct parser_info{

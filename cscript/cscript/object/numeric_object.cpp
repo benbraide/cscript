@@ -83,8 +83,16 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 		return common::env::error.set("Operator does not take specified operand");
 
 	auto operand_type = operand->get_type();
-	if (!operand_type->is_numeric())
-		return basic::evaluate(info);
+	if (!operand_type->is_numeric()){
+		if (info.id != lexer::operator_id::plus)
+			return basic::evaluate(info);
+
+		auto pointer_operand = operand->query<pointer>();
+		if (pointer_operand == nullptr || !pointer_operand->is_string())
+			return basic::evaluate(info);
+
+		return common::env::temp_storage.add(common::env::create_string(to_string() + operand->to_string()));
+	}
 
 	auto type = get_type();
 	auto bully = (type->get_bully(operand_type.get()) == type.get()) ? type : operand_type;

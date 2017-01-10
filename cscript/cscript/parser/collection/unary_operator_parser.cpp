@@ -22,14 +22,22 @@ cscript::parser::generic::node_type cscript::parser::collection::unary_operator:
 	context::expression context(precedence, common::env::parser_info.context);
 	common::env::parser_info.context = &context;
 
+	auto states = common::env::parser_info.states;
+	CSCRIPT_SET(common::env::parser_info.states, parser::state::unary);
+
 	auto operand = common::env::expression_parser.parse();
 	common::env::parser_info.context = context.get_parent();//Restore context
+	common::env::parser_info.states = states;//Restore states
 
 	if (common::env::error.has())
 		return nullptr;
 
 	if (operand == nullptr){
+		if (operator_token->get_id() == lexer::operator_id::throw_){
 
+		}
+
+		return common::env::error.set("", token->get_index());
 	}
 
 	return std::make_shared<node::unary_operator>(operator_token->get_index(),

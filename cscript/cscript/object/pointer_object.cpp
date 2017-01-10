@@ -242,6 +242,13 @@ cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &i
 			if (is_constant() || !is_lvalue())
 				return common::env::error.set("Operator does not take specified operand");
 			return offset_(true);
+		case lexer::operator_id::sizeof_:
+			if (is_string()){
+				return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::uint_type,
+					static_cast<unsigned int>(get_string_().size() - 1)));
+			}
+				
+			return common::env::temp_storage.add(std::make_shared<primitive::numeric>(common::env::uint_type, get_type()->get_size()));
 		default:
 			break;
 		}
