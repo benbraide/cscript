@@ -12,6 +12,10 @@ cscript::object::basic::~basic(){
 		common::env::address_space.remove(memory_value_);
 }
 
+cscript::object::generic::ptr_type cscript::object::basic::get_ptr(){
+	return shared_from_this();
+}
+
 cscript::object::generic *cscript::object::basic::remove_reference(){
 	return this;
 }

@@ -83,7 +83,7 @@ cscript::type::generic::ptr_type cscript::node::primitive_type::get_type(){
 	case lexer::token_id::ldouble:
 		return common::env::ldouble_type;
 	case lexer::token_id::string:
-		//return common::env::string_type;
+		return common::env::string_type;
 	default:
 		break;
 	}

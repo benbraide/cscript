@@ -12,7 +12,7 @@
 
 namespace cscript{
 	namespace object{
-		class generic{
+		class generic : protected std::enable_shared_from_this<generic>{
 		public:
 			typedef std::shared_ptr<generic> ptr_type;
 
@@ -28,6 +28,8 @@ namespace cscript{
 			};
 
 			virtual ~generic(){}
+
+			virtual ptr_type get_ptr() = 0;
 
 			virtual generic *remove_reference() = 0;
 

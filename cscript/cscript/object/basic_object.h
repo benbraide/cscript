@@ -19,6 +19,8 @@ namespace cscript{
 
 			virtual ~basic();
 
+			virtual ptr_type get_ptr() override;
+
 			virtual generic *remove_reference() override;
 
 			virtual generic *clone() override;
