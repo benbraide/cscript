@@ -257,7 +257,20 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse_single_(bool escaped){
-	return nullptr;
+	auto &token_value = common::env::parser_info.token->get_value();
+	auto &index = common::env::parser_info.token->get_index();
+	auto id = lexer::token_id::quote_dbl;
+
+	return std::make_shared<node::literal>(index, id, token_value, [index, escaped](const std::string &value) -> object::generic::ptr_type{
+		std::string value_copy(std::next(value.begin(), escaped ? 1 : 2), std::prev(value.end()));
+		if (escaped && !value_copy.empty())
+			escape_string_(value_copy);
+
+		if (value_copy.size() != 1u)
+			return common::env::error.set("Expected a character", index);
+
+		return std::make_shared<object::primitive::numeric>(common::env::char_type, value_copy[0]);
+	});
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse_double_(bool escaped){
@@ -266,7 +279,7 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 	auto id = lexer::token_id::quote_dbl;
 
 	return std::make_shared<node::literal>(index, id, token_value, [escaped](const std::string &value){
-		std::string value_copy(std::next(value.begin()), std::prev(value.end()));
+		std::string value_copy(std::next(value.begin(), escaped ? 1 : 2), std::prev(value.end()));
 		if (escaped && !value_copy.empty())
 			escape_string_(value_copy);
 
@@ -275,7 +288,17 @@ cscript::parser::generic::node_type cscript::parser::collection::literal::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::literal::parse_back_(bool escaped){
-	return nullptr;
+	auto &token_value = common::env::parser_info.token->get_value();
+	auto &index = common::env::parser_info.token->get_index();
+	auto id = lexer::token_id::quote_dbl;
+
+	return std::make_shared<node::literal>(index, id, token_value, [escaped](const std::string &value){
+		std::string value_copy(std::next(value.begin(), escaped ? 1 : 2), std::prev(value.end()));
+		if (escaped && !value_copy.empty())
+			escape_string_(value_copy);
+
+		return common::env::create_string(value_copy);
+	});
 }
 
 cscript::parser::collection::literal::suffix cscript::parser::collection::literal::get_integral_suffix_(std::string &value){

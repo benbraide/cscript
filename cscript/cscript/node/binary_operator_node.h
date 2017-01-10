@@ -4,6 +4,7 @@
 #define CSCRIPT_BINARY_OPERATOR_NODE_H
 
 #include "basic_node.h"
+#include "../type/primitive_type.h"
 
 namespace cscript{
 	namespace node{
@@ -32,6 +33,10 @@ namespace cscript{
 			ptr_type get_right() const;
 
 		protected:
+			virtual object::generic *short_circuit_(object::generic *left, bool truth, type::boolean_value_type value);
+
+			virtual object::generic *explicit_compare_(object::generic *left, bool truth);
+
 			virtual std::string print_() const override;
 
 			virtual std::string print_open_() const;

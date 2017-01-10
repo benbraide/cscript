@@ -55,6 +55,19 @@ cscript::object::generic *cscript::node::binary_operator::evaluate(){
 	if (left == nullptr)
 		return common::env::error.set("", left_->get_index());
 
+	switch (info_.id){
+	case lexer::operator_id::relational_or:
+		return short_circuit_(left, true, type::boolean_value_type::true_);
+	case lexer::operator_id::relational_and:
+		return short_circuit_(left, false, type::boolean_value_type::false_);
+	case lexer::operator_id::explicit_equality:
+		return explicit_compare_(left, true);
+	case lexer::operator_id::explicit_inverse_equality:
+		return explicit_compare_(left, false);
+	default:
+		break;
+	}
+
 	common::env::runtime.operand = { right_.get() };
 	return left->evaluate(info_);
 }
@@ -107,6 +120,46 @@ cscript::node::generic::ptr_type cscript::node::binary_operator::get_left() cons
 
 cscript::node::generic::ptr_type cscript::node::binary_operator::get_right() const{
 	return right_;
+}
+
+cscript::object::generic *cscript::node::binary_operator::short_circuit_(object::generic *left, bool truth, type::boolean_value_type value){
+	auto boolean_value = left->to_bool();
+	if (common::env::error.has())
+		return nullptr;
+
+	if (boolean_value == truth)
+		return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(value));
+
+	auto right = right_->evaluate();
+	if (common::env::error.has())
+		return nullptr;
+
+	if (right == nullptr)
+		return common::env::error.set("", left_->get_index());
+
+	boolean_value = right->to_bool();
+	if (common::env::error.has())
+		return nullptr;
+
+	return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(boolean_value ?
+		type::boolean_value_type::true_ : type::boolean_value_type::false_));
+}
+
+cscript::object::generic *cscript::node::binary_operator::explicit_compare_(object::generic *left, bool truth){
+	auto right = right_->evaluate();
+	if (common::env::error.has())
+		return nullptr;
+
+	if (right == nullptr)
+		return common::env::error.set("", left_->get_index());
+
+	if (!left->get_type()->is_same(right->get_type().get())){
+		return common::env::temp_storage.add(std::make_shared<object::primitive::boolean>(truth ?
+			type::boolean_value_type::false_ : type::boolean_value_type::true_));
+	}
+
+	common::env::runtime.operand = { nullptr, right };
+	return left->evaluate(info_type{ truth ? lexer::operator_id::equality : lexer::operator_id::inverse_equality });
 }
 
 std::string cscript::node::binary_operator::print_() const{

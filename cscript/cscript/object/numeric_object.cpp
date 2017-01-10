@@ -68,10 +68,16 @@ cscript::object::generic *cscript::object::primitive::numeric::cast(const type::
 		break;
 	}
 
-	if (type->is_pointer() && get_type()->is_integral()){
-		auto value = get_value<memory::virtual_address::value_type>();
-		auto base_type = type->query<cscript::type::pointer>()->get_value();
-		return common::env::temp_storage.add(std::make_shared<pointer>(value, base_type));
+	if (type->is_pointer()){
+		if (type->remove_pointer()->get_id() == cscript::type::id::char_)
+			return common::env::temp_storage.add(common::env::create_string(to_string()));
+
+		if (get_type()->is_integral()){
+			auto value = get_value<memory::virtual_address::value_type>();
+			auto base_type = type->query<cscript::type::pointer>()->get_value();
+
+			return common::env::temp_storage.add(std::make_shared<pointer>(value, base_type));
+		}
 	}
 
 	return get_type()->has_conversion(type) ? clone() : basic::cast(type);
@@ -84,14 +90,30 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const bi
 
 	auto operand_type = operand->get_type();
 	if (!operand_type->is_numeric()){
-		if (info.id != lexer::operator_id::plus)
-			return basic::evaluate(info);
-
 		auto pointer_operand = operand->query<pointer>();
 		if (pointer_operand == nullptr || !pointer_operand->is_string())
 			return basic::evaluate(info);
 
-		return common::env::temp_storage.add(common::env::create_string(to_string() + operand->to_string()));
+		switch (info.id){
+		case lexer::operator_id::plus:
+			return common::env::temp_storage.add(common::env::create_string(to_string() + operand->to_string()));
+		case lexer::operator_id::less:
+			return create_boolean_(boolean_value(to_string() < operand->to_string()));
+		case lexer::operator_id::less_or_equal:
+			return create_boolean_(boolean_value(to_string() <= operand->to_string()));
+		case lexer::operator_id::equality:
+			return create_boolean_(boolean_value(to_string() == operand->to_string()));
+		case lexer::operator_id::inverse_equality:
+			return create_boolean_(boolean_value(to_string() != operand->to_string()));
+		case lexer::operator_id::more_or_equal:
+			return create_boolean_(boolean_value(to_string() >= operand->to_string()));
+		case lexer::operator_id::more:
+			return create_boolean_(boolean_value(to_string() > operand->to_string()));
+		default:
+			break;
+		}
+
+		return basic::evaluate(info);
 	}
 
 	auto type = get_type();

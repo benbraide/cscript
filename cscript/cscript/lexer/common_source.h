@@ -69,12 +69,12 @@ namespace cscript{
 				}
 
 				void insert(token_type value, int count){
-					if (static_cast<int>(this->size()) <= count){
+					if (static_cast<int>(size()) < count)
 						list_.push_back(value);
-						offset_ = std::next(list_.begin(), offset_value_);
-					}
-					else//Insert
-						list_.insert(std::next(list_.begin(), offset_value_ + count), value);
+					else if (count > 0)//Insert
+						list_.insert(std::next(list_.begin(), offset_value_ + (count - 1)), value);
+
+					offset_ = std::next(list_.begin(), offset_value_);
 				}
 
 				void append(token_type value){
@@ -96,6 +96,8 @@ namespace cscript{
 							break;
 						}
 					}
+
+					offset_ = std::next(list_.begin(), offset_value_);
 				}
 
 				token_type get(int &count, bool discard, source_info &info){

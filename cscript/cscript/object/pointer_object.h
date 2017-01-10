@@ -52,10 +52,40 @@ namespace cscript{
 				return static_cast<value_type>(get_value_());
 			}
 
+			template <typename value_type>
+			value_type get_integral_value(){
+				if (!is_string())
+					return get_value<value_type>();
+
+				try{
+					return static_cast<value_type>(std::stoll(get_string_()));
+				}
+				catch (...){}
+
+				return value_type();
+			}
+
+			template <typename value_type>
+			value_type get_real_value(){
+				if (!is_string())
+					return get_value<value_type>();
+
+				try{
+					return static_cast<value_type>(std::stold(get_string_()));
+				}
+				catch (...){}
+
+				return value_type();
+			}
+
+			static primitive::boolean::value_type boolean_value(bool value);
+
 		protected:
 			virtual void pre_assignment_(generic &operand) override;
 
 			virtual generic *post_assignment_(generic &operand) override;
+
+			virtual generic *create_boolean_(primitive::boolean::value_type value);
 
 			virtual int compare_(generic &operand);
 

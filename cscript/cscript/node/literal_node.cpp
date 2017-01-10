@@ -5,6 +5,10 @@ cscript::node::literal::literal(const lexer::token::index &index, lexer::token_i
 	: basic(id::literal, index), id_(id), value_(value), creator_(creator){
 	try{
 		info_.value = creator(value_);
+		if (common::env::error.has()){
+			info_.error = common::env::error.get()->to_string();
+			common::env::error.clear();
+		}
 	}
 	catch (const std::out_of_range &){
 		info_.error = "Numeric value is too large for target type";

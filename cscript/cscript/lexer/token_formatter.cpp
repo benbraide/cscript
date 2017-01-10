@@ -141,7 +141,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::type::format_unsigned_(
 	match_info &match, source_info &info) const{
-	auto_info disable_all(info, nullptr, nullptr);
+	auto_info restrict(info, nullptr, &linked_collection::string);
 
 	size_type blanks = 0;
 	auto source_index = 1;
@@ -199,7 +199,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 
 cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter::type::format_long_(
 	match_info &match, source_info &info) const{
-	auto_info disable_all(info, nullptr, nullptr);
+	auto_info restrict(info, nullptr, &linked_collection::string);
 
 	size_type blanks = 0;
 	auto source_index = 1;

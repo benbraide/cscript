@@ -197,16 +197,20 @@ cscript::parser::collection::builder::node_type cscript::parser::collection::bui
 	if (terminator.id != lexer::token_id::nil){//Ensure next token is terminator
 		common::env::source_info.halt = { lexer::token_id::nil };//Disable halt
 		auto token = common::env::source_info.source->peek(common::env::source_info);
-		common::env::source_info.halt = halt;//Restore halt
 
-		if (token == nullptr)
+		if (token == nullptr){
+			common::env::source_info.halt = halt;//Restore halt
 			return common::env::error.set("", common::env::source_info.source->get_index());
+		}
 
 		auto token_id = common::env::source_info.rule->map_index(token->get_match_index());
-		if (token_id != terminator.id || (!terminator.value.empty() && token->get_value() != terminator.value))
+		if (token_id != terminator.id || (!terminator.value.empty() && token->get_value() != terminator.value)){
+			common::env::source_info.halt = halt;//Restore halt
 			return common::env::error.set("", common::env::source_info.source->get_index());
+		}
 
 		common::env::source_info.source->ignore(common::env::source_info);
+		common::env::source_info.halt = halt;//Restore halt
 	}
 
 	return node;
