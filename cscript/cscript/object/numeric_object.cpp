@@ -33,6 +33,7 @@ cscript::object::generic *cscript::object::primitive::numeric::clone(){
 
 	common::env::temp_storage.add(value);
 	common::env::address_space.copy(value->get_memory_value(), memory_value_);
+	CSCRIPT_REMOVE(value->get_memory().attributes, memory::virtual_address::attribute::uninitialized);
 
 	return value.get();
 }
@@ -202,10 +203,10 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 		case lexer::operator_id::bitwise_inverse:
 			return bitwise_inverse_();
 		case lexer::operator_id::decrement:
-			common::env::runtime.operand.object = common::env::one.get();
+			common::env::runtime.operand.object = common::env::get_integer();
 			return subtract_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 		case lexer::operator_id::increment:
-			common::env::runtime.operand.object = common::env::one.get();
+			common::env::runtime.operand.object = common::env::get_integer();
 			return add_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 		default:
 			break;
@@ -219,7 +220,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 				return common::env::error.set("Operator does not take specified operand");
 
 			auto old = clone();
-			common::env::runtime.operand.object = common::env::one.get();
+			common::env::runtime.operand.object = common::env::get_integer();
 			subtract_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 
 			return old;
@@ -230,7 +231,7 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 				return common::env::error.set("Operator does not take specified operand");
 
 			auto old = clone();
-			common::env::runtime.operand.object = common::env::one.get();
+			common::env::runtime.operand.object = common::env::get_integer();
 			add_(nullptr, *common::env::runtime.operand.object->query<numeric>(), true);
 
 			return old;

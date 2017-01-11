@@ -404,12 +404,14 @@ void cscript::parser::collection::literal::escape_string_(std::string &value){
 			return "`";
 		case 11:
 			return "\\";
-		case 12://Rad
+		case 12:
+		case 13:
+		case 14://Rad
 			return "\\";
-		case 13://Hex
-			return std::string(1, static_cast<char>(std::stoi(std::string(std::next(match[13].begin(), 2), match[13].end()), nullptr, 16)));
-		case 14://Oct
-			return std::string(1, static_cast<char>(std::stoi(std::string(std::next(match[14].begin()), match[14].end()), nullptr, 8)));
+		case 15://Hex
+			return std::string(1, static_cast<char>(std::stoi(match.str().substr(2), nullptr, 16)));
+		case 16://Oct
+			return std::string(1, static_cast<char>(std::stoi(match.str().substr(1), nullptr, 8)));
 		default://Unknown
 			break;
 		}
@@ -432,7 +434,9 @@ std::string cscript::parser::collection::literal::get_escapes_(){
 		"\\\\\'",
 		"\\\\`",
 		"\\\\\\\\",
-		"\\\\((2[0-6])|(1[0-9])|[2-9])r",
+		"\\\\2[0-6]?r",
+		"\\\\1[0-9]r",
+		"\\\\[3-9]r",
 		"\\\\x[0-9a-fA-F]+",
 		"\\\\[1-7][0-7]*",
 		"\\\\."

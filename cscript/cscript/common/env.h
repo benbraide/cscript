@@ -24,6 +24,7 @@
 #include "../parser/collection/declaration_parser.h"
 #include "../parser/collection/function_parser.h"
 #include "../parser/collection/keyword_parser.h"
+#include "../parser/collection/control_parser.h"
 #include "../parser/collection/collection_parser.h"
 
 namespace cscript{
@@ -82,9 +83,6 @@ namespace cscript{
 			static const type::generic::ptr_type node_object_type;
 			static const type::generic::ptr_type storage_object_type;
 
-			static const object::generic::ptr_type zero;
-			static const object::generic::ptr_type one;
-
 			static parser::collection::literal literal_parser;
 
 			static parser::collection::unary_operator unary_operator_parser;
@@ -98,9 +96,13 @@ namespace cscript{
 			static parser::collection::function function_parser;
 
 			static parser::collection::keyword keyword_parser;
+			static parser::collection::control control_parser;
+
 			static parser::collection::builder builder;
 
 			static object::generic *get_object_operand();
+
+			static object::generic *get_integer(int value = 1);
 
 			static object::generic::ptr_type create_pointer(memory::address_value_type value, bool is_constant);
 

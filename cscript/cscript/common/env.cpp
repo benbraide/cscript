@@ -71,10 +71,6 @@ const cscript::type::generic::ptr_type cscript::common::env::node_object_type = 
 
 const cscript::type::generic::ptr_type cscript::common::env::storage_object_type = std::make_shared<type::primitive>(type::id::storage_);
 
-const cscript::object::generic::ptr_type cscript::common::env::zero = std::make_shared<object::primitive::numeric>(int_type, 0);
-
-const cscript::object::generic::ptr_type cscript::common::env::one = std::make_shared<object::primitive::numeric>(int_type, 1);
-
 cscript::parser::collection::literal cscript::common::env::literal_parser;
 
 cscript::parser::collection::unary_operator cscript::common::env::unary_operator_parser;
@@ -93,6 +89,8 @@ cscript::parser::collection::function cscript::common::env::function_parser;
 
 cscript::parser::collection::keyword cscript::common::env::keyword_parser;
 
+cscript::parser::collection::control cscript::common::env::control_parser;
+
 cscript::parser::collection::builder cscript::common::env::builder;
 
 cscript::object::generic *cscript::common::env::get_object_operand(){
@@ -100,6 +98,10 @@ cscript::object::generic *cscript::common::env::get_object_operand(){
 		return runtime.operand.object;
 
 	return (runtime.operand.object = runtime.operand.node->evaluate());
+}
+
+cscript::object::generic *cscript::common::env::get_integer(int value){
+	return temp_storage.add(std::make_shared<object::primitive::numeric>(int_type, value));
 }
 
 cscript::object::generic::ptr_type cscript::common::env::create_pointer(memory::address_value_type value, bool is_constant){

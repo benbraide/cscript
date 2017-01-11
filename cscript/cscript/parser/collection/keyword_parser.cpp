@@ -30,7 +30,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse(
 		break;
 	}
 
-	return nullptr;
+	return common::env::control_parser.parse();
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_typedef_(){
@@ -46,7 +46,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 
 	if (type == nullptr || !type->is(node::id::type_compatible) || type->is(node::id::type_with_storage) ||
 		type->is(node::id::auto_type) || type->is(node::id::variadic_type)){
-		return common::env::error.set("", index);
+		return common::env::error.set("Bad 'typedef' statement", index);
 	}
 
 	auto next = common::env::source_info.source->peek(common::env::source_info);

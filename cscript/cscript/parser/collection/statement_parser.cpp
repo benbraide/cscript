@@ -70,6 +70,8 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 
 		if (token == nullptr || common::env::source_info.rule->map_index(token->get_match_index()) != lexer::token_id::semi_colon)
 			return common::env::error.set("Statement not terminated", index);
+
+		common::env::source_info.source->ignore(common::env::source_info);
 	}
 
 	return value;
