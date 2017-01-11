@@ -1,4 +1,5 @@
 #include "choice_type.h"
+#include "../object/dynamic_object.h"
 
 cscript::type::choice::choice(ptr_type left, ptr_type right)
 	: left_(left), right_(right){}
@@ -22,16 +23,16 @@ std::string cscript::type::choice::print() const{
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::choice::create(ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::dynamic>(this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::choice::create(memory::virtual_address::base_type base, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::dynamic>(base, this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::choice::create_ref(memory::virtual_address::value_type memory_value,
 	bool is_constant, ptr_type this_ptr){
-	return nullptr;
+	return std::make_shared<object::dynamic_ref>(memory_value, this_ptr, is_constant);
 }
 
 cscript::type::id cscript::type::choice::get_id() const{

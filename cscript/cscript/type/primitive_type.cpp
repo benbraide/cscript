@@ -4,6 +4,7 @@
 #include "../object/byte_object.h"
 #include "../object/type_object.h"
 #include "../object/function_object.h"
+#include "../object/dynamic_object.h"
 
 cscript::type::primitive::primitive(id id)
 	: id_(id){
@@ -153,7 +154,7 @@ std::string cscript::type::primitive::print() const{
 std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_type this_ptr){
 	switch (id_){
 	case type::id::any:
-		return std::make_shared<object::primitive::numeric>(this_ptr);
+		return std::make_shared<object::dynamic>(this_ptr);
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean>();
 	case type::id::byte:
@@ -191,7 +192,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_t
 std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memory::virtual_address::base_type base, ptr_type this_ptr){
 	switch (id_){
 	case type::id::any:
-		return std::make_shared<object::primitive::numeric>(base, this_ptr);
+		return std::make_shared<object::dynamic>(base, this_ptr);
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean>(base);
 	case type::id::byte:
@@ -228,7 +229,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create_ref(m
 	bool is_constant, ptr_type this_ptr){
 	switch (id_){
 	case type::id::any:
-		return std::make_shared<object::primitive::numeric>(this_ptr);
+		return std::make_shared<object::dynamic_ref>(memory_value, this_ptr, is_constant);
 	case type::id::bool_:
 		return std::make_shared<object::primitive::boolean_ref>(memory_value, is_constant);
 	case type::id::byte:

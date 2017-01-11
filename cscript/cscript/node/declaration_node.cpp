@@ -76,6 +76,8 @@ cscript::object::generic *cscript::node::declaration::allocate(const lexer::toke
 		memory_entry.info.storage = common::env::runtime.storage;
 		CSCRIPT_SET(memory_entry.attributes, attributes);
 	}
+	else//Unnamed
+		object->get_memory().info.storage = common::env::runtime.storage;
 
 	return object.get();
 }

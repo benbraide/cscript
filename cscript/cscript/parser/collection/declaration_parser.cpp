@@ -67,8 +67,6 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::pa
 			if (common::env::error.has())
 				return nullptr;
 		}
-		else if (id != lexer::token_id::operator_symbol)
-			return common::env::error.set("Bad parameter declaration", type->get_index());
 	}
 	else{//Identifier
 		common::env::source_info.source->ignore(common::env::source_info);
@@ -181,7 +179,7 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 	if (common::env::error.has())
 		return nullptr;
 
-	return extend_(std::make_shared<node::initialization_declaration>(value->get_index(), value, right_value));
+	return std::make_shared<node::initialization_declaration>(value->get_index(), value, right_value);
 }
 
 std::nullptr_t cscript::parser::collection::declaration::requires_initialization_(node_type value, node_type type_node){
