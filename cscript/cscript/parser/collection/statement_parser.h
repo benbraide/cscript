@@ -16,6 +16,8 @@ namespace cscript{
 
 			protected:
 				virtual void ignore_inactive_block_();
+
+				virtual node_type check_for_semicolon_(const lexer::token::index &index, node_type value, bool optional);
 			};
 		}
 	}

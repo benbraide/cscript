@@ -43,6 +43,8 @@ namespace cscript{
 
 				node_type parse_for_();
 
+				node_type parse_for_each_(const lexer::token::index &index);
+
 				node_type parse_try_or_finally_(bool is_finally);
 
 				node_type parse_catch_or_finally_();

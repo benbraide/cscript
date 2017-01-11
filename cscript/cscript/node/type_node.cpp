@@ -20,6 +20,15 @@ bool cscript::node::primitive_type::is(id id) const{
 	if (id == node::id::void_type)
 		return (value_ == lexer::token_id::void_);
 
+	if (id == node::id::pointer_type)
+		return (value_ == lexer::token_id::pointer);
+
+	if (id == node::id::array_type)
+		return (value_ == lexer::token_id::array_);
+
+	if (id == node::id::function_type)
+		return (value_ == lexer::token_id::function);
+
 	return (id == node::id::auto_type) ? (value_ == lexer::token_id::auto_) : false;
 }
 
@@ -84,6 +93,12 @@ cscript::type::generic::ptr_type cscript::node::primitive_type::get_type(){
 		return common::env::ldouble_type;
 	case lexer::token_id::string:
 		return common::env::string_type;
+	case lexer::token_id::pointer:
+		return common::env::pointer_type;
+	case lexer::token_id::array_:
+		return common::env::array_type;
+	case lexer::token_id::function:
+		return common::env::function_type;
 	default:
 		break;
 	}
@@ -139,6 +154,12 @@ std::string cscript::node::primitive_type::print_() const{
 		return "long double";
 	case lexer::token_id::string:
 		return "string";
+	case lexer::token_id::pointer:
+		return "pointer_t";
+	case lexer::token_id::array_:
+		return "array";
+	case lexer::token_id::function:
+		return "function";
 	default:
 		break;
 	}

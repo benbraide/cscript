@@ -60,6 +60,49 @@ cscript::parser::generic::node_type cscript::parser::collection::control::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::control::parse_for_(){
+	//for (<initialization>; <predicate>; <update>)[{] <body> [}]
+	auto index = common::env::parser_info.token->get_index();
+
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	common::env::source_info.source->ignore(common::env::source_info);
+
+	auto next = common::env::source_info.source->peek(common::env::source_info);
+	if (next == nullptr)
+		return common::env::error.set("Expected a '(' or 'each'", index);
+
+	auto id = common::env::source_info.rule->map_index(next->get_match_index());
+	if (id == lexer::token_id::identifier && next->get_value() == "each")
+		return parse_for_each_(index);
+
+	if (id != lexer::token_id::open_par)
+		return common::env::error.set("Expected a '('", index);
+
+	common::env::source_info.source->ignore(common::env::source_info);
+	auto init = common::env::statement_parser.parse();
+	if (common::env::error.has())
+		return nullptr;
+
+	auto predicate = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::semi_colon });
+	if (common::env::error.has())
+		return nullptr;
+
+	auto update = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_par });
+	if (common::env::error.has())
+		return nullptr;
+
+	auto body = parse_body_(index);
+	if (common::env::error.has())
+		return nullptr;
+
+	auto else_ = parse_else_();
+	if (common::env::error.has())
+		return nullptr;
+
+	return std::make_shared<node::for_iteration>(index, init, predicate, update, body, else_);
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::control::parse_for_each_(const lexer::token::index &index){
+	//for each (<declaration> : <expression>)[{] <body> [}]
 	return nullptr;
 }
 

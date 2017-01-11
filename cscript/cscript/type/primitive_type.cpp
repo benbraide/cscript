@@ -8,9 +8,6 @@
 cscript::type::primitive::primitive(id id)
 	: id_(id){
 	switch (id){
-	case type::id::any:
-		size_ = static_cast<memory::pool::size_type>(sizeof(memory::virtual_address::value_type));
-		break;
 	case type::id::bool_:
 		size_ = static_cast<memory::pool::size_type>(sizeof(boolean_value_type));
 		break;
@@ -59,7 +56,13 @@ cscript::type::primitive::primitive(id id)
 	case type::id::ldouble:
 		size_ = static_cast<memory::pool::size_type>(sizeof(long double));
 		break;
+	case type::id::any:
+	case type::id::type_:
 	case type::id::pointer:
+	case type::id::array_:
+	case type::id::function:
+	case type::id::storage_:
+	case type::id::node_:
 		size_ = memory::virtual_address::value_type_size;
 		break;
 	default:
@@ -126,6 +129,12 @@ std::string cscript::type::primitive::name() const{
 		return "nullptr_t";
 	case type::id::type_:
 		return "type";
+	case type::id::pointer:
+		return "pointer_t";
+	case type::id::array_:
+		return "array";
+	case type::id::function:
+		return "function";
 	case type::id::node_:
 		return "node_t";
 	case type::id::storage_:
@@ -164,6 +173,14 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(ptr_t
 	case type::id::double_:
 	case type::id::ldouble:
 		return std::make_shared<object::primitive::numeric>(this_ptr);
+	case type::id::type_:
+		return std::make_shared<object::primitive::type_object>();
+	case type::id::pointer:
+		return std::make_shared<object::pointer>(this_ptr);
+	case type::id::array_:
+		return nullptr;
+	case type::id::function:
+		return std::make_shared<object::primitive::function_object>(this_ptr);
 	default:
 		break;
 	}
@@ -194,6 +211,12 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create(memor
 	case type::id::double_:
 	case type::id::ldouble:
 		return std::make_shared<object::primitive::numeric>(base, this_ptr);
+	case type::id::pointer:
+		return std::make_shared<object::pointer>(base, this_ptr);
+	case type::id::array_:
+		return nullptr;
+	case type::id::function:
+		return std::make_shared<object::primitive::function_object>(base, this_ptr);
 	default:
 		break;
 	}
@@ -225,6 +248,14 @@ std::shared_ptr<cscript::object::generic> cscript::type::primitive::create_ref(m
 	case type::id::double_:
 	case type::id::ldouble:
 		return std::make_shared<object::primitive::numeric_ref>(memory_value, this_ptr, is_constant);
+	case type::id::type_:
+		return std::make_shared<object::primitive::type_object_ref>(memory_value, is_constant);
+	case type::id::pointer:
+		return std::make_shared<object::pointer_ref>(memory_value, this_ptr, is_constant);
+	case type::id::array_:
+		return nullptr;
+	case type::id::function:
+		return std::make_shared<object::primitive::function_object_ref>(memory_value, this_ptr, is_constant);
 	default:
 		break;
 	}
@@ -279,6 +310,9 @@ const cscript::type::generic *cscript::type::primitive::get_bully(const generic 
 }
 
 int cscript::type::primitive::get_score(const generic *type) const{
+	if (is_same(type))
+		return 20;
+
 	if (id_ == type::id::auto_ || type->is_auto())
 		return 19;
 
@@ -310,7 +344,19 @@ bool cscript::type::primitive::has_conversion(const generic *type) const{
 }
 
 bool cscript::type::primitive::is_same(const generic *type) const{
-	return (type == this || type->get_id() == id_);
+	if (type == this || type->get_id() == id_)
+		return true;
+
+	if (id_ == id::pointer)
+		return type->is_pointer();
+
+	if (id_ == id::array_)
+		return type->is_array();
+
+	if (id_ == id::function)
+		return type->is_function();
+
+	return false;
 }
 
 bool cscript::type::primitive::is_choice() const{
@@ -433,7 +479,7 @@ std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(ptr_typ
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::pointer::create(memory::virtual_address::base_type base, ptr_type this_ptr){
-	return std::make_shared<object::pointer>(base, value_);
+	return std::make_shared<object::pointer>(base, this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::pointer::create_ref(memory::virtual_address::value_type memory_value,
@@ -446,6 +492,9 @@ const cscript::type::generic *cscript::type::pointer::get_bully(const generic *t
 }
 
 int cscript::type::pointer::get_score(const generic *type) const{
+	if (is_same(type))
+		return 20;
+
 	if (type->is_auto())
 		return 19;
 
@@ -460,7 +509,7 @@ int cscript::type::pointer::get_score(const generic *type) const{
 }
 
 bool cscript::type::pointer::has_conversion(const generic *type) const{
-	if (type->is_any() || type->is_auto())
+	if (is_same(type) || type->is_any() || type->is_auto())
 		return true;
 
 	auto pointer_type = type->query<pointer>();
@@ -472,7 +521,11 @@ bool cscript::type::pointer::has_conversion(const generic *type) const{
 }
 
 bool cscript::type::pointer::is_same(const generic *type) const{
-	return (type->is_pointer() && type->query<pointer>()->value_->is_same(value_.get()));
+	if (!type->is_pointer())
+		return false;
+
+	auto pointer_type = type->query<pointer>();
+	return (pointer_type == nullptr || pointer_type->value_->is_same(value_.get()));
 }
 
 cscript::type::generic::ptr_type cscript::type::pointer::get_value() const{
@@ -510,6 +563,9 @@ const cscript::type::generic *cscript::type::array::get_bully(const generic *typ
 }
 
 int cscript::type::array::get_score(const generic *type) const{
+	if (is_same(type))
+		return 20;
+
 	if (type->is_auto())
 		return 19;
 
@@ -524,7 +580,7 @@ int cscript::type::array::get_score(const generic *type) const{
 }
 
 bool cscript::type::array::has_conversion(const generic *type) const{
-	if (type->is_any() || type->is_auto())
+	if (is_same(type) || type->is_any() || type->is_auto())
 		return true;
 
 	auto array_type = type->query<array>();
@@ -536,7 +592,11 @@ bool cscript::type::array::has_conversion(const generic *type) const{
 }
 
 bool cscript::type::array::is_same(const generic *type) const{
-	return (type->is_array() && type->query<array>()->value_->is_same(value_.get()));
+	if (!type->is_array())
+		return false;
+
+	auto array_type = type->query<array>();
+	return (array_type == nullptr || array_type->value_->is_same(value_.get()));
 }
 
 cscript::type::generic::ptr_type cscript::type::array::get_value() const{
@@ -581,8 +641,12 @@ int cscript::type::function::get_score(const generic *type) const{
 		return 18;
 
 	auto function_type = type->query<function>();
-	if (function_type == nullptr)//Type is not a function
+	if (function_type == nullptr){//Type is not a function
+		if (type->is_function())
+			return 20;//Type is not a typed function
+
 		return type->has_conversion(this) ? 18 : 0;
+	}
 
 	if (function_type->parameter_types_.size() != parameter_types_.size())
 		return 0;

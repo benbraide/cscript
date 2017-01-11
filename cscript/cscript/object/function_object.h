@@ -25,6 +25,12 @@ namespace cscript{
 
 				virtual generic *clone() override;
 
+				virtual generic *cast(const type::generic *type) override;
+
+				virtual generic *ref_cast(const type::generic *type) override;
+
+				virtual generic *const_ref_cast(const type::generic *type) override;
+
 				virtual generic *evaluate(const binary_info &info) override;
 
 				virtual std::string echo() override;

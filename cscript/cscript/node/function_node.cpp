@@ -42,7 +42,9 @@ cscript::object::generic *cscript::node::function::evaluate(){
 		auto function_object = std::make_shared<object::primitive::function_object>(
 			reinterpret_cast<object::primitive::function_object::value_type>(base.get()));
 
-		function_object->get_memory().info.storage = common::env::runtime.storage;
+		auto &memory_entry = function_object->get_memory();
+		memory_entry.info.storage = common::env::runtime.storage;
+		CSCRIPT_SET(memory_entry.attributes, memory::address_attribute::function_base);
 		common::env::runtime.storage->add(key).set(function_object);
 
 		return insert_(base.get());
@@ -50,7 +52,7 @@ cscript::object::generic *cscript::node::function::evaluate(){
 	
 	auto entry_object = entry->get_object();
 	auto function_object = (entry_object == nullptr) ? nullptr : entry_object->query<object::primitive::function_object>();
-	if (function_object == nullptr)
+	if (function_object == nullptr || !CSCRIPT_IS(function_object->get_memory().attributes, memory::address_attribute::function_base))
 		return common::env::error.set("'" + key + "' name already exists", index_);
 
 	return insert_(function_object->get_function_value());

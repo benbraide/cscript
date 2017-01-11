@@ -46,7 +46,7 @@ namespace cscript{
 
 				virtual node_type parse_return_();
 
-				virtual node_type parse_type_(const lexer::token::index &index, bool allow_storage_class);
+				virtual node_type parse_type_(const lexer::token::index &index, bool allow_storage_class, bool optional);
 
 				virtual node_type parse_value_(const lexer::token::index &index);
 

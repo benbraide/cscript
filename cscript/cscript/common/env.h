@@ -78,8 +78,12 @@ namespace cscript{
 			static const type::generic::ptr_type ldouble_type;
 
 			static const type::generic::ptr_type string_type;
-
 			static const type::generic::ptr_type type_object_type;
+
+			static const type::generic::ptr_type pointer_type;
+			static const type::generic::ptr_type array_type;
+			static const type::generic::ptr_type function_type;
+
 			static const type::generic::ptr_type node_object_type;
 			static const type::generic::ptr_type storage_object_type;
 

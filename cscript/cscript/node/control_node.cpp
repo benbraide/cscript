@@ -37,8 +37,8 @@ cscript::object::generic *cscript::node::control::evaluate(){
 	object::generic *value = nullptr;
 
 	if (truth){
-		if (body != nullptr){
-			do{
+		do{
+			if (body != nullptr){
 				storage::basic block_storage(&local_storage);
 				(common::env::runtime.storage = &block_storage)->use(local_storage);
 
@@ -55,27 +55,28 @@ cscript::object::generic *cscript::node::control::evaluate(){
 					value = body->evaluate();
 
 				common::env::runtime.storage = &local_storage;
-				if (common::env::error.has()){
-					if (!iterate)
-						break;
+			}
+			
+			if (common::env::error.has()){
+				if (!iterate)
+					break;
 
-					if (!common::env::error.is_continue()){
-						if (common::env::error.is_break())
-							common::env::error.clear();
+				if (!common::env::error.is_continue()){
+					if (common::env::error.is_break())
+						common::env::error.clear();
 
-						break;
-					}
-
-					common::env::error.clear();//Continue
-				}
-				else{//Evaluate 'update'
-					update_();
-					if (common::env::error.has())
-						break;
+					break;
 				}
 
-			} while (iterate && truth_() && !common::env::error.has());
-		}
+				common::env::error.clear();//Continue
+			}
+			else{//Evaluate 'update'
+				update_();
+				if (common::env::error.has())
+					break;
+			}
+
+		} while (iterate && truth_() && !common::env::error.has());
 	}
 	else//Execute 'else' if any
 		value = else_();

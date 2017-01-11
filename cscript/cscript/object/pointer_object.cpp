@@ -12,7 +12,10 @@ cscript::object::pointer::pointer()
 
 cscript::object::pointer::pointer(const type::generic::ptr_type type)
 	: basic(common::env::address_space.add<value_type>()){
-	get_memory().info.type = std::make_shared<type::pointer>(type);
+	if (type->is_pointer() && type->query<cscript::type::pointer>() == nullptr)
+		get_memory().info.type = type;
+	else//Base type
+		get_memory().info.type = std::make_shared<type::pointer>(type);
 }
 
 cscript::object::pointer::pointer(bool){}
@@ -35,9 +38,12 @@ cscript::object::pointer::pointer(value_type value)
 cscript::object::pointer::pointer(value_type value, type::generic::ptr_type type)
 	: basic(common::env::address_space.add<value_type>()){
 	auto &memory_entry = get_memory();
-	memory_entry.info.type = std::make_shared<type::pointer>(type);
-	memory::pool::write_unchecked(memory_entry.base, value);
+	if (type->is_pointer() && type->query<cscript::type::pointer>() == nullptr)
+		memory_entry.info.type = type;
+	else//Base type
+		memory_entry.info.type = std::make_shared<type::pointer>(type);
 
+	memory::pool::write_unchecked(memory_entry.base, value);
 	auto &entry = common::env::address_space.get_entry(value);
 	if (entry.value == 0ull || (!entry.info.type->is_any() && !entry.info.type->is_same(type.get())))
 		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);

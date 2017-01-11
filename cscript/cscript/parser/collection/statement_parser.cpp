@@ -59,22 +59,10 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 	if (common::env::error.has())
 		return nullptr;
 
-	if (value != nullptr && !value->is(node::id::block)){
-		auto index = token->get_index();
-		auto halt = common::env::source_info.halt;
-		lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+	if (value != nullptr && !value->is(node::id::block))
+		return check_for_semicolon_(token->get_index(), value, false);
 
-		common::env::source_info.halt = { lexer::token_id::nil };//Disable halt
-		token = common::env::source_info.source->peek(common::env::source_info);
-		common::env::source_info.halt = halt;//Restore halt
-
-		if (token == nullptr || common::env::source_info.rule->map_index(token->get_match_index()) != lexer::token_id::semi_colon)
-			return common::env::error.set("Statement not terminated", index);
-
-		common::env::source_info.source->ignore(common::env::source_info);
-	}
-
-	return value;
+	return (value == nullptr) ? check_for_semicolon_(token->get_index(), value, true) : value;
 }
 
 void cscript::parser::collection::statement::ignore_inactive_block_(){
@@ -90,4 +78,20 @@ void cscript::parser::collection::statement::ignore_inactive_block_(){
 
 		common::env::source_info.source->ignore(common::env::source_info);
 	}
+}
+
+cscript::parser::generic::node_type cscript::parser::collection::statement::check_for_semicolon_(
+	const lexer::token::index &index, node_type value, bool optional){
+	auto halt = common::env::source_info.halt;
+	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
+
+	common::env::source_info.halt = { lexer::token_id::nil };//Disable halt
+	auto token = common::env::source_info.source->peek(common::env::source_info);
+	common::env::source_info.halt = halt;//Restore halt
+
+	if (token == nullptr || common::env::source_info.rule->map_index(token->get_match_index()) != lexer::token_id::semi_colon)
+		return optional ? value : common::env::error.set("Statement not terminated", index);
+
+	common::env::source_info.source->ignore(common::env::source_info);
+	return value;
 }

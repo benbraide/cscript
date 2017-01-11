@@ -77,7 +77,7 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	common::env::source_info.source->ignore(common::env::source_info);
 
-	auto type = parse_type_(index, true);
+	auto type = parse_type_(index, true, false);
 	if (common::env::error.has())
 		return nullptr;
 
@@ -205,9 +205,12 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	common::env::source_info.source->ignore(common::env::source_info);
 
-	auto type = parse_type_(index, false);
+	auto type = parse_type_(index, false, true);
 	if (common::env::error.has())
 		return nullptr;
+
+	if (type == nullptr)
+		return std::make_shared<node::primitive_type>(index, lexer::token_id::array_);
 
 	return std::make_shared<node::array_type>(index, type);
 }
@@ -219,9 +222,12 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	common::env::source_info.source->ignore(common::env::source_info);
 
-	auto type = parse_type_(index, false);
+	auto type = parse_type_(index, false, true);
 	if (common::env::error.has())
 		return nullptr;
+
+	if (type == nullptr)
+		return std::make_shared<node::primitive_type>(index, lexer::token_id::pointer);
 
 	return std::make_shared<node::pointer_type>(index, type);
 }
@@ -233,18 +239,21 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 	lexer::auto_skip enable_skip(common::env::source_info, &lexer::token_id_compare_collection::skip);
 	common::env::source_info.source->ignore(common::env::source_info);
 
-	auto next = common::env::source_info.source->next(common::env::source_info);
+	auto next = common::env::source_info.source->peek(common::env::source_info);
 	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
 		next->get_value() != "<"){
-		return common::env::error.set("Expected a '<'", index);
+		return std::make_shared<node::primitive_type>(index, lexer::token_id::function);
 	}
 
+	common::env::source_info.source->ignore(common::env::source_info);
 	auto halt = common::env::source_info.halt;
 	common::env::source_info.halt = builder::halt_info{ lexer::token_id::operator_symbol, ">" };//Enable halt
 
 	auto return_type = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::open_par });
-	if (common::env::error.has())
+	if (common::env::error.has()){
+		common::env::source_info.halt = halt;//Restore halt
 		return nullptr;
+	}
 
 	if (return_type == nullptr || return_type->is(node::id::auto_type) || !return_type->is(node::id::type_compatible) ||
 		return_type->is(node::id::type_with_storage)){
@@ -267,8 +276,19 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 		}
 	});
 
-	if (common::env::error.has())
+	if (common::env::error.has()){
+		common::env::source_info.halt = halt;//Restore halt
 		return nullptr;
+	}
+
+	common::env::source_info.halt = builder::halt_info{ lexer::token_id::nil };//Disable halt
+	next = common::env::source_info.source->next(common::env::source_info);
+	common::env::source_info.halt = halt;//Restore halt
+
+	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
+		next->get_value() != ">"){
+		return common::env::error.set("Expected a '>' after ')'", index);
+	}
 
 	return std::make_shared<node::function_type>(index, return_type, parameter_types);
 }
@@ -305,13 +325,14 @@ cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_
 }
 
 cscript::parser::generic::node_type cscript::parser::collection::keyword::parse_type_(
-	const lexer::token::index &index, bool allow_storage_class){
-	auto next = common::env::source_info.source->next(common::env::source_info);
+	const lexer::token::index &index, bool allow_storage_class, bool optional){
+	auto next = common::env::source_info.source->peek(common::env::source_info);
 	if (next == nullptr || common::env::source_info.rule->map_index(next->get_match_index()) != lexer::token_id::operator_symbol ||
 		next->get_value() != "<"){
-		return common::env::error.set("Expected a '<'", index);
+		return optional ? nullptr : common::env::error.set("Expected a '<'", index);
 	}
 
+	common::env::source_info.source->ignore(common::env::source_info);
 	auto type = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::operator_symbol, ">" });
 	if (common::env::error.has())
 		return nullptr;

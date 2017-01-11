@@ -41,6 +41,7 @@ namespace cscript{
 			no_dealloc		= (1 << 0x000B),
 			is_child		= (1 << 0x000C),
 			string_			= (1 << 0x000D),
+			function_base	= (1 << 0x000E),
 		};
 
 		struct address_entry_info{
