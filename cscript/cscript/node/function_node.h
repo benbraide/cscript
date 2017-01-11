@@ -28,6 +28,8 @@ namespace cscript{
 
 			virtual ptr_type get_definition() const;
 
+			virtual bool is_static() const;
+
 		protected:
 			virtual std::string print_() const override;
 

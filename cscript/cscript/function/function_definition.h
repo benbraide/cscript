@@ -28,6 +28,8 @@ namespace cscript{
 			virtual node_type get_parameters() const;
 
 		protected:
+			virtual std::nullptr_t post_arguments_copy_();
+
 			return_type_info info_;
 			node_type parameters_;
 			node_type value_;

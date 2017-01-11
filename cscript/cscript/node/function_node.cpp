@@ -68,6 +68,10 @@ cscript::node::generic::ptr_type cscript::node::function::get_definition() const
 	return definition_;
 }
 
+bool cscript::node::function::is_static() const{
+	return (CSCRIPT_IS(declaration_->query<declaration>()->get_type_attributes(), memory::address_attribute::static_));
+}
+
 std::string cscript::node::function::print_() const{
 	if (definition_ == nullptr)
 		return (declaration_->print() + "(" + parameters_->print() + ")");

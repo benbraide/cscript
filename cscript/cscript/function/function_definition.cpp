@@ -57,12 +57,15 @@ cscript::object::generic *cscript::function::definition::call(storage::generic *
 	}
 
 	if (!common::env::error.has()){
-		for (auto statement : value_->query<node::collection>()->get_list()){
-			statement->evaluate();
-			common::env::temp_storage.clear();
-			common::env::runtime.operand.constant_objects.clear();
-			if (common::env::error.has())
-				break;
+		post_arguments_copy_();
+		if (!common::env::error.has()){
+			for (auto statement : value_->query<node::collection>()->get_list()){
+				statement->evaluate();
+				common::env::temp_storage.clear();
+				common::env::runtime.operand.constant_objects.clear();
+				if (common::env::error.has())
+					break;
+			}
 		}
 	}
 
@@ -117,4 +120,8 @@ cscript::function::definition::node_type cscript::function::definition::get_valu
 
 cscript::function::definition::node_type cscript::function::definition::get_parameters() const{
 	return parameters_;
+}
+
+std::nullptr_t cscript::function::definition::post_arguments_copy_(){
+	return nullptr;
 }

@@ -92,10 +92,16 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 	}
 
 	auto id = common::env::source_info.rule->map_index(next->get_match_index());
-	if (id == lexer::token_id::operator_symbol){//Check initialization
-		if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-			return common::env::error.set("Bad declaration", value->get_index());
+	if (id == lexer::token_id::open_par){//Function
+		common::env::source_info.source->ignore(common::env::source_info);
+		common::env::parser_info.left_operand = value;
+		return common::env::function_parser.parse();
+	}
 
+	if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
+		return common::env::error.set("Bad declaration", value->get_index());
+
+	if (id == lexer::token_id::operator_symbol){//Check initialization
 		auto operator_token = next->query<lexer::operator_token>();
 		if (operator_token == nullptr || operator_token->get_id() != lexer::operator_id::assignment)
 			return value;
@@ -113,9 +119,6 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 		return nullptr;
 
 	if (id == lexer::token_id::comma){//Dependent declaration
-		if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-			return common::env::error.set("Bad declaration", value->get_index());
-
 		common::env::source_info.source->ignore(common::env::source_info);
 		auto next = common::env::source_info.source->peek(common::env::source_info);
 		if (next == nullptr)
@@ -148,15 +151,6 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 		auto declaration = std::make_shared<node::dependent_declaration>(value->get_index(), value, id_node);
 		return extend_(declaration);
 	}
-	
-	if (id == lexer::token_id::open_par){//Function
-		common::env::source_info.source->ignore(common::env::source_info);
-		common::env::parser_info.left_operand = value;
-		return common::env::function_parser.parse();
-	}
-
-	if (id_node->is(node::id::operator_value_) || id_node->is(node::id::void_type))
-		return common::env::error.set("Bad declaration", value->get_index());
 	
 	if (id == lexer::token_id::open_sq){//Array
 

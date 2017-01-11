@@ -34,6 +34,10 @@ cscript::type::generic::ptr_type cscript::node::declaration::get_type_value(){
 	return (type_value_ == nullptr) ? (type_value_ = type_->get_type()) : type_value_;
 }
 
+bool cscript::node::declaration::is_static() const{
+	return (CSCRIPT_IS(get_type_attributes(), memory::address_attribute::static_));
+}
+
 cscript::object::generic *cscript::node::declaration::allocate(){
 	return allocate(get_type_value());
 }

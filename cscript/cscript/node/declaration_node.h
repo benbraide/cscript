@@ -25,6 +25,8 @@ namespace cscript{
 
 			virtual type::generic::ptr_type get_type_value();
 
+			virtual bool is_static() const;
+
 			virtual object::generic *allocate();
 
 			virtual object::generic *allocate(type::generic::ptr_type type);
