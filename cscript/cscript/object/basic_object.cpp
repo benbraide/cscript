@@ -98,8 +98,6 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 	return common::env::error.set("Operator does not take specified operands");
 }
 
-void cscript::object::basic::initialize(){}
-
 cscript::object::generic *cscript::object::basic::evaluate(const unary_info &info){
 	if (info.left){
 		switch (info.id){
@@ -131,6 +129,8 @@ cscript::object::generic *cscript::object::basic::evaluate(const unary_info &inf
 
 	return common::env::error.set("Operator does not take specified operand");
 }
+
+void cscript::object::basic::initialize(){}
 
 bool cscript::object::basic::to_bool(){
 	common::env::error.set("Cannot convert object to boolean value");

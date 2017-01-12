@@ -122,9 +122,9 @@ namespace cscript{
 					}
 
 					auto op = get_op_();
-					memory::pool::convert_unchecked<value_type>(common::env::static_block1.get_base()) = value;
+					memory::pool::convert_unchecked<value_type>(common::env::static_block2.get_base()) = value;
 
-					return (op->compare(get_memory().base, common::env::static_block1.get_base()) != 0);
+					return (op->compare(get_memory().base, common::env::static_block2.get_base()) != 0);
 				}
 
 				static boolean::value_type boolean_value(bool value);
