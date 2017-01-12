@@ -71,6 +71,12 @@ cscript::object::generic *cscript::object::primitive::byte::evaluate(const binar
 	return basic::evaluate(info);
 }
 
+void cscript::object::primitive::byte::initialize(){
+	auto &memory_entry = get_memory();
+	memory::pool::write_unchecked(memory_entry.base, static_cast<value_type>(0));
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
+
 std::string cscript::object::primitive::byte::echo(){
 	if (is_uninitialized()){
 		common::env::error.set("Uninitialized value in expression");

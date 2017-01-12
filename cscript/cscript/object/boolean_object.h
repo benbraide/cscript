@@ -26,6 +26,8 @@ namespace cscript{
 
 				virtual generic *evaluate(const binary_info &info) override;
 
+				virtual void initialize() override;
+
 				virtual bool to_bool() override;
 
 				virtual std::string echo() override;

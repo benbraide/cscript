@@ -45,6 +45,8 @@ namespace cscript{
 
 			virtual generic *evaluate(const unary_info &info) = 0;
 
+			virtual void initialize() = 0;
+
 			virtual bool to_bool() = 0;
 
 			virtual std::string to_string() = 0;

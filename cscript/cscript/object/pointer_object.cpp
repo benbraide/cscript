@@ -131,7 +131,11 @@ cscript::object::generic *cscript::object::pointer::cast(const type::generic *ty
 	}
 
 	if (type->is_pointer()){
-		auto non_pointer = type->query<cscript::type::pointer>()->get_value();
+		auto pointer_type = type->query<cscript::type::pointer>();
+		if (pointer_type == nullptr)
+			return clone();
+
+		auto non_pointer = pointer_type->get_value();
 		if (non_pointer->is_any() || non_pointer->is_auto())
 			return clone();
 
@@ -321,6 +325,13 @@ cscript::object::generic *cscript::object::pointer::evaluate(const unary_info &i
 	return basic::evaluate(info);
 }
 
+void cscript::object::pointer::initialize(){
+	auto &memory_entry = get_memory();
+	memory::pool::write_unchecked(memory_entry.base, static_cast<value_type>(0));
+	CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
+
 bool cscript::object::pointer::to_bool(){
 	if (is_uninitialized()){
 		common::env::error.set("Uninitialized value in expression");
@@ -479,7 +490,7 @@ cscript::object::pointer_ref::pointer_ref(memory::virtual_address::value_type me
 	memory_value_ = memory_value;
 	memory_.info.type = type;
 	if (is_constant)
-		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::constant);
+		CSCRIPT_SET(memory_.attributes, memory::virtual_address::attribute::final_);
 }
 
 cscript::object::pointer_ref::~pointer_ref(){

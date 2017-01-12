@@ -39,6 +39,8 @@ namespace cscript{
 
 				virtual generic *evaluate(const unary_info &info) override;
 
+				virtual void initialize() override;
+
 				virtual std::string to_string() override;
 
 				virtual std::string echo() override;

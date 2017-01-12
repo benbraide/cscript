@@ -8,6 +8,7 @@
 
 #include "../../node/identifier_node.h"
 #include "../../node/declaration_node.h"
+#include "../../node/static_array_node.h"
 
 namespace cscript{
 	namespace parser{

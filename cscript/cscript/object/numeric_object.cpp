@@ -244,6 +244,12 @@ cscript::object::generic *cscript::object::primitive::numeric::evaluate(const un
 	return basic::evaluate(info);
 }
 
+void cscript::object::primitive::numeric::initialize(){
+	auto &memory_entry = get_memory();
+	std::memset(memory_entry.base, 0, memory_entry.info.type->get_size());
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
+
 std::string cscript::object::primitive::numeric::to_string(){
 	return to_string_(false);
 }

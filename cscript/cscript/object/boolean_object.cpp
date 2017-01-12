@@ -48,6 +48,12 @@ cscript::object::generic *cscript::object::primitive::boolean::evaluate(const bi
 	return basic::evaluate(info);
 }
 
+void cscript::object::primitive::boolean::initialize(){
+	auto &memory_entry = get_memory();
+	memory::pool::write_unchecked(get_memory().base, value_type::nil);
+	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
+}
+
 bool cscript::object::primitive::boolean::to_bool(){
 	if (is_uninitialized()){
 		common::env::error.set("Uninitialized value in expression");

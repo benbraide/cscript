@@ -4,6 +4,7 @@
 #include "../object/byte_object.h"
 #include "../object/type_object.h"
 #include "../object/function_object.h"
+#include "../object/static_array_object.h"
 #include "../object/dynamic_object.h"
 
 cscript::type::primitive::primitive(id id)
@@ -538,6 +539,10 @@ cscript::type::array::array(ptr_type value)
 
 cscript::type::array::~array(){}
 
+const cscript::type::generic *cscript::type::array::remove_pointer() const{
+	return value_.get();
+}
+
 std::string cscript::type::array::name() const{
 	return ("array<" + value_->name() + ">");
 }
@@ -547,16 +552,16 @@ std::string cscript::type::array::print() const{
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create(ptr_type this_ptr){
-	return std::make_shared<object::primitive::type_object>();
+	return std::make_shared<object::primitive::static_array>(this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create(memory::virtual_address::base_type base, ptr_type this_ptr){
-	return std::make_shared<object::primitive::type_object>(base);
+	return std::make_shared<object::primitive::static_array>(base, this_ptr);
 }
 
 std::shared_ptr<cscript::object::generic> cscript::type::array::create_ref(memory::virtual_address::value_type memory_value,
 	bool is_constant, ptr_type this_ptr){
-	return std::make_shared<object::primitive::type_object_ref>(memory_value, is_constant);
+	return std::make_shared<object::primitive::static_array_ref>(memory_value, this_ptr, is_constant);
 }
 
 const cscript::type::generic *cscript::type::array::get_bully(const generic *type) const{
@@ -602,6 +607,36 @@ bool cscript::type::array::is_same(const generic *type) const{
 
 cscript::type::generic::ptr_type cscript::type::array::get_value() const{
 	return value_;
+}
+
+cscript::type::static_array::static_array(ptr_type value, size_type size)
+	: array(value), size_(size){}
+
+cscript::type::static_array::~static_array(){}
+
+std::shared_ptr<cscript::object::generic> cscript::type::static_array::create(ptr_type this_ptr){
+	return std::make_shared<object::primitive::static_array>(this_ptr);
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::static_array::create(memory::virtual_address::base_type base, ptr_type this_ptr){
+	return std::make_shared<object::primitive::static_array>(base, this_ptr);
+}
+
+std::shared_ptr<cscript::object::generic> cscript::type::static_array::create_ref(memory::virtual_address::value_type memory_value,
+	bool is_constant, ptr_type this_ptr){
+	return std::make_shared<object::primitive::static_array_ref>(memory_value, this_ptr, is_constant);
+}
+
+cscript::type::generic::size_type cscript::type::static_array::get_size() const{
+	return ((value_->get_size() * size_) + 1);
+}
+
+std::string cscript::type::static_array::name() const{
+	return (value_->name() + "[" + std::to_string(size_) + "]");
+}
+
+std::string cscript::type::static_array::print() const{
+	return (value_->print() + "[" + std::to_string(size_) + "]");
 }
 
 cscript::type::function::function(ptr_type return_type, const list_type &parameter_types)

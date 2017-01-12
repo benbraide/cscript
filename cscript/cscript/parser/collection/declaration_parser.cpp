@@ -79,6 +79,14 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::pa
 
 cscript::parser::generic::node_type cscript::parser::collection::declaration::extend_(node_type value){
 	auto declaration = value->query<node::declaration>();
+	if (declaration == nullptr){//Try array
+		auto array_declaration = value->query<node::static_array>();
+		if (array_declaration != nullptr)
+			declaration = array_declaration->get_declaration()->query<node::declaration>();
+
+		if (declaration == nullptr)
+			return value;
+	}
 
 	auto id_node = declaration->get_identifier();
 	auto type_node = declaration->get_type();
@@ -103,6 +111,9 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 		auto operator_token = next->query<lexer::operator_token>();
 		if (operator_token == nullptr || operator_token->get_id() != lexer::operator_id::assignment)
 			return value;
+
+		if (value->query<node::declaration>() == nullptr)
+			return common::env::error.set("Cannot initialize an array", value->get_index());
 
 		common::env::source_info.source->ignore(common::env::source_info);
 		auto right_value = common::env::builder.parse_expression();
@@ -151,7 +162,25 @@ cscript::parser::generic::node_type cscript::parser::collection::declaration::ex
 	}
 	
 	if (id == lexer::token_id::open_sq){//Array
+		if (value->query<node::initialization_declaration>() != nullptr)
+			return common::env::error.set("Bad declaration", value->get_index());
 
+		auto type = value->query<node::declaration>()->get_type();
+		if (type->is(node::id::type_with_storage) && CSCRIPT_IS(type->query<node::type_with_storage_class>()->get_attributes(),
+			memory::address_attribute::ref)){
+			return common::env::error.set("Bad declaration", value->get_index());
+		}
+
+		common::env::source_info.source->ignore(common::env::source_info);
+		auto size = common::env::builder.parse_single(builder::halt_info{ lexer::token_id::close_sq });
+		if (common::env::error.has())
+			return nullptr;
+
+		if (size == nullptr)
+			return common::env::error.set("Missing array size in declaration", value->get_index());
+
+		auto declaration = std::make_shared<node::static_array>(value->get_index(), value, size);
+		return extend_(declaration);
 	}
 	
 	if (id == lexer::token_id::open_cur){//Uniform

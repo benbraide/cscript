@@ -98,6 +98,8 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 	return common::env::error.set("Operator does not take specified operands");
 }
 
+void cscript::object::basic::initialize(){}
+
 cscript::object::generic *cscript::object::basic::evaluate(const unary_info &info){
 	if (info.left){
 		switch (info.id){

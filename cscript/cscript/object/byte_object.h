@@ -28,6 +28,8 @@ namespace cscript{
 
 				virtual generic *evaluate(const binary_info &info) override;
 
+				virtual void initialize() override;
+
 				virtual std::string echo() override;
 
 				template <typename value_type>

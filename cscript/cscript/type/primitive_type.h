@@ -122,6 +122,8 @@ namespace cscript{
 
 			virtual ~array();
 
+			virtual const generic *remove_pointer() const override;
+
 			virtual std::string name() const override;
 
 			virtual std::string print() const override;
@@ -145,6 +147,29 @@ namespace cscript{
 
 		protected:
 			ptr_type value_;
+		};
+
+		class static_array : public array{
+		public:
+			static_array(ptr_type value, size_type size);
+
+			virtual ~static_array();
+
+			virtual std::shared_ptr<object::generic> create(ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create(memory::virtual_address::base_type base, ptr_type this_ptr) override;
+
+			virtual std::shared_ptr<object::generic> create_ref(memory::virtual_address::value_type memory_value,
+				bool is_constant, ptr_type this_ptr) override;
+
+			virtual size_type get_size() const override;
+
+			virtual std::string name() const override;
+
+			virtual std::string print() const override;
+
+		protected:
+			size_type size_;
 		};
 
 		class function : public primitive{
