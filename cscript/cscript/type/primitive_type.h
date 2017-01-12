@@ -9,10 +9,10 @@
 
 namespace cscript{
 	namespace type{
-		enum class boolean_value_type{
-			nil,
-			false_,
-			true_,
+		enum class boolean_value_type : char{
+			nil				= '\x0',
+			false_			= '\x1',
+			true_			= '\x2',
 		};
 
 		class primitive : public generic{

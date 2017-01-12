@@ -2,7 +2,7 @@
 #include "../common/env.h"
 
 cscript::memory::virtual_address::virtual_address(){
-	none_.info.type = common::env::byte_type;
+	none_.info.type = std::make_shared<type::primitive>(type::id::byte);
 }
 
 cscript::memory::virtual_address::~virtual_address(){

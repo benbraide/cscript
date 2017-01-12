@@ -28,6 +28,8 @@ namespace cscript{
 
 				virtual generic *evaluate(const binary_info &info) override;
 
+				virtual generic *evaluate(const unary_info &info) override;
+
 				virtual std::string echo() override;
 
 				virtual type::generic::ptr_type get_type_value() const;

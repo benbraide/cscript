@@ -28,7 +28,7 @@ cscript::object::pointer::pointer(value_type value)
 		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
 
 	memory_entry.info.type = std::make_shared<type::pointer>(entry.info.type);
-	if (entry.info.type->get_id() == cscript::type::id::char_)
+	if (entry.info.type != nullptr && entry.info.type->get_id() == cscript::type::id::char_)
 		common::env::address_space.add_string_reference(value);
 
 	memory::pool::write_unchecked(memory_entry.base, value);
@@ -47,7 +47,7 @@ cscript::object::pointer::pointer(value_type value, type::generic::ptr_type type
 	auto &entry = common::env::address_space.get_entry(value);
 	if (entry.value == 0ull || (!entry.info.type->is_any() && !entry.info.type->is_same(type.get())))
 		CSCRIPT_SET(memory_entry.attributes, memory::virtual_address::attribute::byte_aligned);
-	else if (type->get_id() == cscript::type::id::char_ && entry.info.type->get_id() == cscript::type::id::char_)
+	else if (type->get_id() == cscript::type::id::char_ && entry.info.type != nullptr && entry.info.type->get_id() == cscript::type::id::char_)
 		common::env::address_space.add_string_reference(value);
 
 	CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
@@ -66,7 +66,13 @@ cscript::object::pointer::~pointer(){
 }
 
 cscript::object::generic *cscript::object::pointer::clone(){
-	return is_uninitialized() ? nullptr : common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
+	if (is_uninitialized())
+		return nullptr;
+
+	if (is_null())
+		return common::env::temp_storage.add(std::make_shared<pointer>());
+
+	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
 }
 
 cscript::object::generic *cscript::object::pointer::cast(const type::generic *type){
@@ -402,7 +408,7 @@ bool cscript::object::pointer::is_null(){
 }
 
 bool cscript::object::pointer::is_string(){
-	if (get_type()->remove_pointer()->get_id() != type::id::char_)
+	if (is_null() || get_type()->remove_pointer()->get_id() != type::id::char_)
 		return false;
 
 	return CSCRIPT_IS(common::env::address_space.get_entry(get_value_()).attributes,

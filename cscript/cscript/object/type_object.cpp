@@ -72,6 +72,18 @@ cscript::object::generic *cscript::object::primitive::type_object::evaluate(cons
 	return basic::evaluate(info);
 }
 
+cscript::object::generic *cscript::object::primitive::type_object::evaluate(const unary_info &info){
+	if (is_uninitialized())
+		return basic::evaluate(info);
+
+	if (info.left && info.id == lexer::operator_id::sizeof_){
+		return common::env::temp_storage.add(std::make_shared<primitive::numeric>(
+			common::env::uint_type, (value_ == nullptr) ? get_type()->get_size() : value_->get_size()));
+	}
+
+	return basic::evaluate(info);
+}
+
 std::string cscript::object::primitive::type_object::echo(){
 	if (is_uninitialized()){
 		common::env::error.set("Uninitialized value in expression");

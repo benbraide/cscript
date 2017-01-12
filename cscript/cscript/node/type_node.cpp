@@ -268,7 +268,11 @@ bool cscript::node::array_type::is(id id) const{
 }
 
 cscript::object::generic *cscript::node::array_type::evaluate(){
-	return nullptr;
+	auto type_value = get_type();
+	if (type_value == nullptr)
+		return common::env::error.set("'" + base_type_->print() + "' type not found", index_);
+
+	return common::env::temp_storage.add(std::make_shared<object::primitive::type_object>(type_value));
 }
 
 cscript::type::generic::ptr_type cscript::node::array_type::get_type(){

@@ -60,6 +60,7 @@ cscript::type::primitive::primitive(id id)
 		break;
 	case type::id::any:
 	case type::id::type_:
+	case type::id::nullptr_:
 	case type::id::pointer:
 	case type::id::array_:
 	case type::id::function:
