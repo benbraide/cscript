@@ -40,19 +40,22 @@ cscript::object::generic *cscript::node::control::evaluate(){
 		do{
 			if (body != nullptr){
 				storage::basic block_storage(&local_storage);
-				(common::env::runtime.storage = &block_storage)->use(local_storage);
+				block_storage.use(local_storage);
 
 				if (statements != nullptr){
 					for (auto statement : statements->get_list()){
+						common::env::runtime = { &block_storage };
 						value = statement->evaluate();
+
 						common::env::temp_storage.clear();
-						common::env::runtime.operand.constant_objects.clear();
 						if (common::env::error.has())
 							break;
 					}
 				}
-				else//Single
+				else{//Single
+					common::env::runtime = {};
 					value = body->evaluate();
+				}
 
 				common::env::runtime.storage = &local_storage;
 			}
@@ -106,6 +109,7 @@ bool cscript::node::control::truth_(){
 	if (predicate == nullptr)
 		return true;
 
+	common::env::runtime = {};
 	auto value = predicate->evaluate();
 	if (common::env::error.has())
 		return false;

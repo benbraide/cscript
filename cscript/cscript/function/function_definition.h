@@ -17,6 +17,8 @@ namespace cscript{
 				memory::address_attribute attributes;
 			};
 
+			definition();
+
 			explicit definition(const return_type_info &info, node_type parameters, node_type value);
 
 			virtual ~definition();

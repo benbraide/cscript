@@ -16,6 +16,8 @@ using namespace cscript::lexer::source;
 using namespace cscript::parser;
 
 int main(){
+	env::initialize();
+
 	rule rule;
 	source::string ss("");
 	defined_symbols symbols;
@@ -36,17 +38,7 @@ int main(){
 			continue;
 
 		ss.reset(buffer);
-		auto lines = env::builder.parse_block(collection::builder::halt_info{ token_id::nil });
-		if (lines != nullptr){
-			for (auto statement : lines->query<node::collection>()->get_list()){
-				statement->evaluate();
-				env::temp_storage.clear();
-				env::runtime.operand.constant_objects.clear();
-				if (env::error.has())
-					break;
-			}
-		}
-
+		env::parse(ss);
 		env::error.report();
 	}
 

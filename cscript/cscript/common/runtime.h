@@ -28,6 +28,7 @@ namespace cscript{
 		struct runtime{
 			storage::generic *storage;
 			type::generic *type;
+			char *base;
 			declaration_info declaration;
 			operand_info operand;
 			std::list<object::generic *> arguments;

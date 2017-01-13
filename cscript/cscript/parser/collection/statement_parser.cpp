@@ -14,8 +14,12 @@ cscript::parser::generic::node_type cscript::parser::collection::statement::pars
 	auto token = common::env::parser_info.token;
 	switch (common::env::source_info.rule->map_index(token->get_match_index())){
 	case lexer::token_id::prep_incl:
+	{
 		common::env::source_info.source->ignore_one(token);
+		auto include_token = token->query<lexer::preprocessor_token::include>();
+		common::env::include(include_token->get_value(), include_token->is_absolute());
 		return parse();
+	}
 	case lexer::token_id::prep_def:
 		common::env::source_info.source->ignore_one(token);
 		common::env::source_info.symbols->add(token->get_value(), std::move(token->query<lexer::preprocessor_token::define>()->get_list()));

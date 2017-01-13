@@ -86,7 +86,7 @@ cscript::object::generic *cscript::object::basic::evaluate(const binary_info &in
 			common::env::address_space.copy(memory_value_, memory_entry.info.type, value->get_memory_value());
 
 		CSCRIPT_REMOVE(memory_entry.attributes, memory::virtual_address::attribute::uninitialized);
-		return post_assignment_(*operand);
+		return post_assignment_(*value);
 	}
 
 	if (is_uninitialized())

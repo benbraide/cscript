@@ -32,6 +32,75 @@ cscript::memory::virtual_address::value_type cscript::memory::virtual_address::a
 	return memory_entry.value;
 }
 
+cscript::memory::virtual_address::value_type cscript::memory::virtual_address::allocate(size_type size){
+	guard_type guard(lock_);
+	auto &entry = table::map_[add_(size, true)];
+
+	entry.info.type = common::env::byte_type;
+	CSCRIPT_SET(entry.attributes, attribute::allocated | attribute::byte_aligned);
+	CSCRIPT_REMOVE(entry.attributes, attribute::uninitialized);
+
+	return entry.value;
+}
+
+bool cscript::memory::virtual_address::shrink(value_type value, size_type size){
+	if (size == 0u)
+		return false;
+
+	guard_type guard(lock_);
+	auto entry = table::map_.find(value);
+	if (entry == table::map_.end() || !CSCRIPT_IS(entry->second.attributes, attribute::allocated) || entry->second.size <= size)
+		return false;
+
+	delete[] entry->second.base;
+	entry->second.size -= size;
+	entry->second.base = new char[entry->second.size];
+	merge_available_(entry->second.value + entry->second.size, size);
+
+	return true;
+}
+
+bool cscript::memory::virtual_address::extend(value_type &value, size_type size){
+	if (size == 0u)
+		return false;
+
+	guard_type guard(lock_);
+	auto entry = table::map_.find(value);
+	if (entry == table::map_.end() || !CSCRIPT_IS(entry->second.attributes, attribute::allocated))
+		return false;
+
+	auto offset = entry->second.value + entry->second.size;
+	if (table::map_.find(offset) == table::map_.end()){
+		auto available = available_list_.find(offset);
+		if (available != available_list_.end() && size <= available->second){//Can be extended
+			auto available_size = available->second;
+			available_list_.erase(available);
+
+			if (size < available_size)//Split
+				available_list_[offset + size] = (available_size - size);
+
+			delete[] entry->second.base;
+			entry->second.size += size;
+			entry->second.base = new char[entry->second.size];
+
+			return true;
+		}
+	}
+
+	auto extended_size = (entry->second.size + size);
+	auto attributes = entry->second.attributes;
+	auto &new_entry = table::map_[add_(extended_size, true)];
+
+	std::copy(entry->second.base, entry->second.base + entry->second.size, new_entry.base);
+	new_entry.attributes = attributes;
+	new_entry.info.type = common::env::byte_type;
+
+	remove_(value);
+	value = new_entry.value;
+
+	return true;
+}
+
 bool cscript::memory::virtual_address::remove(value_type value){
 	guard_type guard(lock_);
 	return remove_(value);

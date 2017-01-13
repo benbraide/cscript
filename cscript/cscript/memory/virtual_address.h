@@ -42,6 +42,7 @@ namespace cscript{
 			is_child		= (1 << 0x000C),
 			string_			= (1 << 0x000D),
 			function_base	= (1 << 0x000E),
+			allocated		= (1 << 0x000F),
 		};
 
 		struct address_entry_info{
@@ -94,6 +95,12 @@ namespace cscript{
 			}
 
 			value_type add(const std::string &value);
+
+			value_type allocate(size_type size);
+
+			bool shrink(value_type value, size_type size);
+
+			bool extend(value_type &value, size_type size);
 
 			bool remove(value_type value);
 

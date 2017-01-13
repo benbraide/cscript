@@ -1,5 +1,8 @@
 #include "pointer_object.h"
 #include "byte_object.h"
+#include "function_object.h"
+
+#include "../common/env.h"
 
 cscript::object::pointer::pointer()
 	: basic(common::env::address_space.add<value_type>()){
@@ -72,7 +75,12 @@ cscript::object::generic *cscript::object::pointer::clone(){
 	if (is_null())
 		return common::env::temp_storage.add(std::make_shared<pointer>());
 
-	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_()));
+	auto type = get_type();
+	auto typed_pointer = type->query<cscript::type::pointer>();
+	if (typed_pointer != nullptr)
+		type = typed_pointer->get_value();
+
+	return common::env::temp_storage.add(std::make_shared<pointer>(get_value_(), type));
 }
 
 cscript::object::generic *cscript::object::pointer::cast(const type::generic *type){
@@ -146,6 +154,12 @@ cscript::object::generic *cscript::object::pointer::cast(const type::generic *ty
 			return clone();
 
 		return common::env::temp_storage.add(std::make_shared<pointer>(get_value_(), non_pointer));
+	}
+
+	if (type->is_function()){
+		auto &entry = common::env::address_space.get_entry(get_value_());
+		auto function_object = (entry.info.object == nullptr) ? nullptr : entry.info.object->query<primitive::function_object>();
+		return (function_object == nullptr) ? nullptr : function_object->cast(type);
 	}
 
 	return nullptr;

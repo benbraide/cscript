@@ -1,5 +1,10 @@
 #include "env.h"
+
+#include "../lexer/file_source.h"
+#include "../lexer/string_source.h"
+
 #include "../object/pointer_object.h"
+#include "../object/function_object.h"
 
 thread_local cscript::lexer::source_guard cscript::common::env::source_guard;
 
@@ -99,6 +104,76 @@ cscript::parser::collection::control cscript::common::env::control_parser;
 
 cscript::parser::collection::builder cscript::common::env::builder;
 
+cscript::node::generic::ptr_type cscript::common::env::parse(lexer::generic_source &source, bool evaluate){
+	auto previous_source = source_info.source;
+	source_info.source = &source;
+
+	node::generic::ptr_type value;
+	auto statements = std::make_shared<node::collection>(lexer::token::index{ 1, 1 });
+
+	while (source.has_more()){
+		value = statement_parser.parse();
+		if (error.has() || value == nullptr)
+			break;
+
+		if (evaluate){
+			env::runtime = { &env::global_storage };
+			value->evaluate();
+
+			env::runtime = { &env::global_storage };
+			env::temp_storage.clear();
+
+			if (error.has())
+				break;
+		}
+		else//Append to list
+			statements->append(value);
+	}
+
+	if (!error.has() && source.has_more())
+		error.set("Malformed statement", source.peek(source_info)->get_index());
+
+	source_info.source = previous_source;
+	return statements;
+}
+
+cscript::node::generic::ptr_type cscript::common::env::parse(const std::string &value, bool evaluate){
+	lexer::source::string source(value);
+	return parse(source, evaluate);
+}
+
+cscript::node::generic::ptr_type cscript::common::env::include(const std::string &value, bool is_absolute){
+	boost::filesystem::path path(value);
+	if (path.is_relative()){
+		if (is_absolute)
+			path = (boost::filesystem::absolute("include") / path);
+		else if (parser_info.path.current.empty())
+			path = boost::filesystem::absolute(path);
+		else//Relative to current path
+			path = (parser_info.path.current.parent_path() / path);
+	}
+
+	if (std::find(parser_info.path.included_list.begin(), parser_info.path.included_list.end(), path) !=
+		parser_info.path.included_list.end()){//Already included
+		return nullptr;
+	}
+
+	if (!boost::filesystem::exists(path)){
+		path = (path.string() + ".csc");
+		if (!boost::filesystem::exists(path))
+			return error.set("'" + value + "' could not include path");
+	}
+
+	auto previous_current = parser_info.path.current;
+	parser_info.path.included_list.push_back(parser_info.path.current = path);
+	lexer::source::file source(path.string());
+
+	parse(source);
+	parser_info.path.current = previous_current;
+
+	return nullptr;
+}
+
 cscript::object::generic *cscript::common::env::get_object_operand(){
 	if (runtime.operand.object != nullptr || runtime.operand.node == nullptr)
 		return runtime.operand.object;
@@ -122,8 +197,34 @@ cscript::object::generic::ptr_type cscript::common::env::create_string(const std
 	return std::make_shared<object::pointer>(address_space.add(value));
 }
 
+void cscript::common::env::create_internal_function(const std::list<type::generic::ptr_type> &parameter_types,
+	type::generic::ptr_type return_type, function::external_definition::handler_type handler){
+	auto size = static_cast<int>(parameter_types.size());
+	auto function_type = std::make_shared<type::function>(return_type, parameter_types);
+	auto entry = std::make_shared<function::entry>("", &global_storage, function_type,
+		function::entry::parameter_limits{ size, size });
+
+	global_storage.store_function(entry);
+	entry->set_definition(std::make_shared<function::external_definition>(handler));
+
+	auto function_object = std::make_shared<object::primitive::function_object>(
+		reinterpret_cast<object::primitive::function_object::value_type>(entry.get()));
+
+	objects_.push_back(function_object);
+}
+
 void cscript::common::env::initialize(){
-	static auto indeterminate = std::make_shared<object::primitive::boolean>(type::boolean_value_type::nil);
+	objects_.push_back(std::make_shared<object::primitive::boolean>(type::boolean_value_type::nil));
+
+	create_internal_function({ int_type }, ullong_type, internal_functions::alloc);
+	create_internal_function({ ullong_type }, void_type, internal_functions::dealloc);
+	create_internal_function({ ullong_type, int_type }, ullong_type, internal_functions::realloc);
+	create_internal_function({ ullong_type }, bool_type, internal_functions::is_alloc);
+	create_internal_function({ ullong_type }, bool_type, internal_functions::is_valid_address);
+
+	create_internal_function({ array_type }, uint_type, internal_functions::count);
+	create_internal_function({ array_type }, any_type, internal_functions::begin);
+	create_internal_function({ array_type }, any_type, internal_functions::end);
 }
 
 void cscript::common::env::echo(const std::string &value){
@@ -139,3 +240,5 @@ bool cscript::common::env::is_constant(object::generic &object){
 	return (std::find(runtime.operand.constant_objects.begin(), runtime.operand.constant_objects.end(), &object) !=
 		runtime.operand.constant_objects.end());
 }
+
+std::list<cscript::object::generic::ptr_type> cscript::common::env::objects_;

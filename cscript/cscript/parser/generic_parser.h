@@ -3,7 +3,9 @@
 #ifndef CSCRIPT_GENERIC_PARSER_H
 #define CSCRIPT_GENERIC_PARSER_H
 
+#include <list>
 #include <memory>
+#include <boost/filesystem.hpp>
 
 #include "../node/generic_node.h"
 #include "../lexer/generic_scanner.h"
@@ -35,11 +37,17 @@ namespace cscript{
 			unary			= (1 << 0x0005),
 		};
 
+		struct path_info{
+			boost::filesystem::path current;
+			std::list<boost::filesystem::path> included_list;
+		};
+
 		struct parser_info{
 			lexer::generic_source::token_type token;
 			generic::node_type left_operand;
 			generic_context *context;
 			state states = state::nil;
+			path_info path;
 		};
 
 		class save_left_operand{

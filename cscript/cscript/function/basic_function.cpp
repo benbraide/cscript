@@ -9,10 +9,13 @@ cscript::function::basic::basic(const std::string &name, storage::generic *stora
 cscript::function::basic::~basic(){}
 
 cscript::object::generic *cscript::function::basic::call(){
+	auto runtime = common::env::runtime;
+
+	common::env::runtime.arguments.clear();
 	for (auto argument : common::env::runtime.operand.node->query<node::collection>()->get_list()){
 		common::env::runtime.arguments.push_back(argument->evaluate());
 		if (common::env::error.has()){
-			common::env::runtime.arguments.clear();
+			common::env::runtime = runtime;//Restore runtime
 			return nullptr;
 		}
 	}
@@ -20,17 +23,19 @@ cscript::object::generic *cscript::function::basic::call(){
 	auto score = 0;
 	auto matched = get_matched(score);
 	if (matched == nullptr){
-		common::env::runtime.arguments.clear();
+		common::env::runtime = runtime;//Restore runtime
 		return common::env::error.set("");
 	}
 
 	auto definition = matched->get_definition();
 	if (definition == nullptr){
-		common::env::runtime.arguments.clear();
+		common::env::runtime = runtime;//Restore runtime
 		return common::env::error.set("");
 	}
 
-	return definition->call(matched->get_storage());
+	auto value = definition->call(matched->get_storage());
+	common::env::runtime = runtime;//Restore runtime
+	return value;
 }
 
 cscript::function::generic &cscript::function::basic::add(generic &value){

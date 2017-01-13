@@ -6,6 +6,8 @@
 #include "../object/ref_object.h"
 #include "../storage/basic_storage.h"
 
+cscript::function::definition::definition(){}
+
 cscript::function::definition::definition(const return_type_info &info, node_type parameters, node_type value)
 	: info_(info), parameters_(parameters), value_(value){}
 
@@ -13,8 +15,6 @@ cscript::function::definition::~definition(){}
 
 cscript::object::generic *cscript::function::definition::call(storage::generic *storage){
 	storage::basic local_storage(storage);
-
-	auto previous_storage = common::env::runtime.storage;
 	common::env::runtime.storage = &local_storage;
 
 	pre_arguments_copy_();
@@ -27,10 +27,7 @@ cscript::object::generic *cscript::function::definition::call(storage::generic *
 	if (!common::env::error.has())
 		do_call_();
 
-	common::env::runtime.storage = previous_storage;
-	common::env::runtime.arguments.clear();
-
-	return common::env::error.has() ? nullptr : copy_return_value_(local_storage);
+	return copy_return_value_(local_storage);
 }
 
 cscript::function::definition::node_type cscript::function::definition::get_value() const{
@@ -94,10 +91,11 @@ std::nullptr_t cscript::function::definition::post_arguments_copy_(){
 }
 
 std::nullptr_t cscript::function::definition::do_call_(){
+	auto storage = common::env::runtime.storage;
 	for (auto statement : value_->query<node::collection>()->get_list()){
+		common::env::runtime = { storage };
 		statement->evaluate();
 		common::env::temp_storage.clear();
-		common::env::runtime.operand.constant_objects.clear();
 		if (common::env::error.has())
 			break;
 	}

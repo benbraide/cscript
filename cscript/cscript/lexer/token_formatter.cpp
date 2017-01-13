@@ -304,10 +304,11 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 		is_absolute = false;
 		break;
 	case token_id::symbol:
-		if (next->get_value().size() == 1u || next->get_value()[0] != '<'){
+		if (next->get_value().size() != 1u || next->get_value()[0] != '<'){
 			match.match_index = info.rule->get_error_index();
 			return [](match_info &match){ return std::make_shared<error_token>(match.index, "Missing target file path"); };
 		}
+		is_absolute = true;
 		break;
 	default:
 		match.match_index = info.rule->get_error_index();
@@ -315,7 +316,7 @@ cscript::lexer::generic_token_formatter::creator_type cscript::lexer::formatter:
 	}
 
 	std::string path;
-	char close = is_absolute ? '<' : '"', c;
+	char close = is_absolute ? '>' : '"', c;
 
 	while (info.source->has_more() && (c = info.source->get_char()) != close)
 		path.append(1, c);

@@ -8,12 +8,15 @@
 
 #include "error.h"
 #include "runtime.h"
+#include "internal_functions.h"
 
-#include "../lexer/generic_source.h"
 #include "../type/primitive_type.h"
+#include "../function/external_function_definition.h"
 
 #include "../storage/temp_storage.h"
 #include "../storage/named_storage.h"
+
+#include "../lexer/generic_source.h"
 
 #include "../parser/collection/literal_parser.h"
 #include "../parser/collection/term_parser.h"
@@ -104,6 +107,12 @@ namespace cscript{
 
 			static parser::collection::builder builder;
 
+			static node::generic::ptr_type parse(lexer::generic_source &source, bool evaluate = true);
+
+			static node::generic::ptr_type parse(const std::string &value, bool evaluate = true);
+
+			static node::generic::ptr_type include(const std::string &value, bool is_absolute);
+
 			static object::generic *get_object_operand();
 
 			static object::generic *get_integer(int value = 1);
@@ -111,6 +120,9 @@ namespace cscript{
 			static object::generic::ptr_type create_pointer(memory::address_value_type value, bool is_constant);
 
 			static object::generic::ptr_type create_string(const std::string &value);
+
+			static void create_internal_function(const std::list<type::generic::ptr_type> &parameter_types,
+				type::generic::ptr_type return_type, function::external_definition::handler_type handler);
 
 			static void initialize();
 
@@ -142,6 +154,9 @@ namespace cscript{
 
 				return string_value;
 			}
+
+		private:
+			static std::list<object::generic::ptr_type> objects_;
 		};
 	}
 }
