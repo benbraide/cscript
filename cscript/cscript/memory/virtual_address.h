@@ -59,8 +59,10 @@ namespace cscript{
 			address_entry_info info;
 		};
 
-		class virtual_address : public common::table<address_entry, address_value_type>{
+		class virtual_address : public common::log_table<address_entry, address_value_type>{
 		public:
+			typedef log_table table;
+
 			typedef address_value_type value_type;
 			typedef address_attribute attribute;
 			typedef address_entry_info entry_info;
@@ -123,6 +125,12 @@ namespace cscript{
 			bool copy(value_type destination, value_type source);
 
 			void copy_unchecked(value_type destination, value_type source, size_type size);
+
+			void set(value_type destination, int value);
+
+			bool set(value_type destination, size_type size, int value);
+
+			void set_unchecked(value_type destination, size_type size, int value);
 
 			template <typename value_type>
 			void write(address_value_type destination, generic_type type, value_type value){

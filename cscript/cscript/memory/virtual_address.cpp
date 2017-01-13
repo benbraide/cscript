@@ -185,6 +185,31 @@ void cscript::memory::virtual_address::copy_unchecked(value_type destination, va
 	copy_unchecked_(destination, source, size);
 }
 
+void cscript::memory::virtual_address::set(value_type destination, int value){
+	auto &destination_entry = get_entry(destination);
+	std::memset(destination_entry.base, value, destination_entry.size);
+}
+
+bool cscript::memory::virtual_address::set(value_type destination, size_type size, int value){
+	auto &destination_entry = get_entry(destination);
+	if (destination_entry.size < size)
+		return false;
+
+	std::memset(destination_entry.base, value, size);
+	return true;
+}
+
+void cscript::memory::virtual_address::set_unchecked(value_type destination, size_type size, int value){
+	auto offset = table::map_.begin();
+	for (auto source = reinterpret_cast<base_type>(&value); size > 0u; --size, ++source, ++destination){
+		auto base = get_bound_base_(destination, offset);
+		if (base != nullptr)
+			std::memset(base, value, 1);
+		else
+			break;
+	}
+}
+
 cscript::memory::virtual_address::value_type cscript::memory::virtual_address::add_(size_type size, bool allocate){
 	auto base = allocate ? new char[size] : nullptr;
 	if (allocate && base == nullptr)//Failed to allocate memory

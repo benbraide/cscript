@@ -219,8 +219,28 @@ void cscript::common::env::initialize(){
 	create_internal_function({ int_type }, ullong_type, internal_functions::alloc);
 	create_internal_function({ ullong_type }, void_type, internal_functions::dealloc);
 	create_internal_function({ ullong_type, int_type }, ullong_type, internal_functions::realloc);
+
 	create_internal_function({ ullong_type }, bool_type, internal_functions::is_alloc);
 	create_internal_function({ ullong_type }, bool_type, internal_functions::is_valid_address);
+	create_internal_function({ ullong_type }, bool_type, internal_functions::is_block_head);
+
+	create_internal_function({ ullong_type }, uint_type, internal_functions::get_block_size);
+	create_internal_function({ ullong_type }, any_type, internal_functions::get_block_object);
+	create_internal_function({ ullong_type }, type_object_type, internal_functions::get_block_type);
+
+	create_internal_function({ ullong_type, int_type, ullong_type }, void_type, internal_functions::copy);
+	create_internal_function({ ullong_type, int_type, int_type }, void_type, internal_functions::set);
+	create_internal_function({ any_type }, any_type, internal_functions::move);
+
+	create_internal_function({ ullong_type, int_type, ullong_type }, void_type, internal_functions::watch);
+	create_internal_function({ ullong_type, int_type, ullong_type }, void_type, internal_functions::unwatch);
+
+	create_internal_function({ int_type }, string_type, internal_functions::string_new);
+	create_internal_function({ ullong_type, int_type }, string_type, internal_functions::string_resize);
+
+	create_internal_function({ ullong_type, int_type, string_type }, string_type, internal_functions::string_insert);
+	create_internal_function({ ullong_type, int_type, uint_type }, string_type, internal_functions::string_erase);
+	create_internal_function({ ullong_type }, string_type, internal_functions::string_clear);
 
 	create_internal_function({ array_type }, uint_type, internal_functions::count);
 	create_internal_function({ array_type }, any_type, internal_functions::begin);

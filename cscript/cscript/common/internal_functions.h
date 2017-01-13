@@ -19,7 +19,33 @@ namespace cscript{
 
 			static object::generic *is_valid_address(storage::generic *storage);
 
+			static object::generic *is_block_head(storage::generic *storage);
+
+			static object::generic *get_block_size(storage::generic *storage);
+
+			static object::generic *get_block_object(storage::generic *storage);
+
+			static object::generic *get_block_type(storage::generic *storage);
+
+			static object::generic *copy(storage::generic *storage);
+
+			static object::generic *set(storage::generic *storage);
+
 			static object::generic *move(storage::generic *storage);
+
+			static object::generic *watch(storage::generic *storage);
+
+			static object::generic *unwatch(storage::generic *storage);
+
+			static object::generic *string_new(storage::generic *storage);
+
+			static object::generic *string_resize(storage::generic *storage);
+
+			static object::generic *string_insert(storage::generic *storage);
+
+			static object::generic *string_erase(storage::generic *storage);
+
+			static object::generic *string_clear(storage::generic *storage);
 
 			static object::generic *count(storage::generic *storage);
 
