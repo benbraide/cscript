@@ -63,10 +63,10 @@ cscript::object::generic *cscript::common::internal_functions::realloc(storage::
 		return env::error.set("Cannot deallocate an unallocated memory");
 
 	if (size_value < static_cast<int>(entry.size)){//Shrink
-		if (!env::address_space.shrink(value, size_value))
+		if (!env::address_space.shrink(value, entry.size - size_value))
 			return env::error.set("Memory reallocation failure");
 	}
-	else if (static_cast<int>(entry.size) < size_value && !env::address_space.extend(value, size_value))//Extend
+	else if (static_cast<int>(entry.size) < size_value && !env::address_space.extend(value, size_value - entry.size))//Extend
 		return env::error.set("Memory reallocation failure");
 
 	return env::temp_storage.add(std::make_shared<object::primitive::numeric>(env::ullong_type, value));
@@ -216,10 +216,18 @@ cscript::object::generic *cscript::common::internal_functions::set(storage::gene
 		return env::error.set("Invalid parameter in function call");
 
 	auto size_value = size->get_value<int>();
-	if (size_value <= 0)
+	if (size_value < 0)
 		return env::error.set("Cannot write requested memory block");
 
-	env::address_space.set_unchecked(address->get_value<memory::address_value_type>(), size_value, target->get_value<int>());
+	auto address_value = address->get_value<memory::address_value_type>();
+	if (size_value == 0){
+		if (env::address_space.get_entry(address_value).value == 0u)
+			return env::error.set("Target memory is invalid or not block head");
+		env::address_space.set(address_value, target->get_value<int>());
+	}
+	else
+		env::address_space.set_unchecked(address_value, size_value, target->get_value<int>());
+
 	return nullptr;
 }
 

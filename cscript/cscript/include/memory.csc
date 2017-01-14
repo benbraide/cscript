@@ -4,6 +4,10 @@ unsigned long long alloc(int size){
 	return function_object(size);
 }
 
+unsigned long long alloc(decltype(int) type){
+	return alloc(sizeof type);
+}
+
 void dealloc(unsigned long long address_value){
 	static pointer_t<byte> address = 10;
 	static function<void(unsigned long long)> function_object = address;
@@ -59,10 +63,14 @@ void copy(unsigned long long source, unsigned int size, unsigned long long desti
 	function_object(source, size, destination);
 }
 
-void set(unsigned long long destination, unsigned int size, int value){
+void set(unsigned long long destination, int size, int value){
 	static pointer_t<byte> address = 82;
-	static function<void(unsigned long long, unsigned int, int)> function_object = address;
+	static function<void(unsigned long long, int, int)> function_object = address;
 	function_object(destination, size, value);
+}
+
+void set(unsigned long long destination, int value){
+	set(destination, 0, value);
 }
 
 any move(ref any object){
